@@ -39,7 +39,7 @@ func main() {
 			result.Observe(n)
 		})
 
-	err := Tracer().WithSpan(ctx, "operation", func(ctx context.Context) error {
+	err = Tracer().WithSpan(ctx, "operation", func(ctx context.Context) error {
 		trace.SpanFromContext(ctx).AddEvent(ctx, "Nice operation!", kv.Int("bogons", 100))
 
 		trace.SpanFromContext(ctx).SetAttributes(kv.String("another", "yes"))
@@ -63,10 +63,11 @@ func Tracer() trace.Tracer {
 
 func setupUptrace(ctx context.Context) error {
 	exporter := uptrace.NewExporter(&uptrace.Config{
-		DSN: "", // copy your project here or use UPTRACE_DSN env var
+		DSN: "", // copy your project DSN here or use UPTRACE_DSN env var
 	})
 
 	hostname, _ := os.Hostname()
+	// Resource that describes this service.
 	resource := resource.New(
 		standard.ServiceNameKey.String("my-service"),
 		standard.HostNameKey.String(hostname),
@@ -90,6 +91,7 @@ func setupUptrace(ctx context.Context) error {
 
 func setupUpmetric(ctx context.Context) (*push.Controller, error) {
 	hostname, _ := os.Hostname()
+	// Resource that describes this service.
 	resource := resource.New(
 		standard.ServiceNameKey.String("my-service"),
 		standard.HostNameKey.String(hostname),
