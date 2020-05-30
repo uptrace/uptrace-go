@@ -1,3 +1,6 @@
+/*
+upmetric provides metric exporter for OpenTelemetry.
+*/
 package upmetric
 
 import (

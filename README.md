@@ -7,7 +7,7 @@
 
 uptrace-go is an exporter for [OpenTelemetry](https://opentelemetry.io/) that sends your traces and metrics to [Uptrace.dev](https://uptrace.dev).
 
-### Trace exporter
+## Trace exporter
 
 Trace exporter can be configured with the following code:
 

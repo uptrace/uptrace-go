@@ -1,3 +1,6 @@
+/*
+uptrace provides trace exporter for OpenTelemetry.
+*/
 package uptrace
 
 import (
