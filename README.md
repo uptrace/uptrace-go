@@ -9,7 +9,8 @@ uptrace-go is an exporter for [OpenTelemetry](https://opentelemetry.io/) that
 sends your traces/spans and metrics to [Uptrace.dev](https://uptrace.dev).
 Briefly the process is following:
 
-- OpenTelemetry API is used to instrument your app with spans and metrics.
+- OpenTelemetry API is used to instrument your application with spans and
+  metrics.
 - OpenTelemetry SDK and this exporter are used together to export collected
   spans to Uptrace.dev.
 - Uptrace.dev uses that information to help you pinpoint failures and find
@@ -54,7 +55,7 @@ Alternatively you can use `WithSpan` which does roughly the same:
 
 ```go
 tracer.WithSpan(ctx, "operation-name", func(ctx context.Context) error {
-    return do(ctx)
+    return doSomeWork(ctx)
 })
 ```
 
@@ -106,26 +107,26 @@ import (
     sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-exporter := uptrace.NewExporter(&uptrace.Config{
-    DSN: "", // copy your project DSN here or use UPTRACE_DSN env var
-})
-
 // Resource that describes this service.
 resource := resource.New(
     standard.ServiceNameKey.String("my-service"),
 )
 
+// Create a trace provider using Uptrace.dev exporter.
 provider, err := sdktrace.NewProvider(
     sdktrace.WithConfig(sdktrace.Config{
         Resource:       resource,
         DefaultSampler: sdktrace.AlwaysSample(),
     }),
-    sdktrace.WithBatcher(exporter, sdktrace.WithMaxExportBatchSize(10000)),
+    uptrace.WithBatcher(&uptrace.Config{
+        DSN: "", // copy your project DSN here or use UPTRACE_DSN env var
+    }),
 )
 if err != nil {
     return err
 }
 
+// Register the provider in the system.
 global.SetTraceProvider(provider)
 ```
 

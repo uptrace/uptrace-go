@@ -10,16 +10,18 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/internal"
 	apitrace "go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/sdk/export/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 // Config is the configuration to be used when initializing an exporter.
 type Config struct {
-	// DSN is a data source to connect to uptrace.dev.
+	// DSN is a data source name that is used to connect to uptrace.dev.
 	// Example: https://<key>@uptrace.dev/<project_id>
 	// The default is to use UPTRACE_DSN environment var.
 	DSN string
@@ -54,6 +56,13 @@ func NewExporter(cfg *Config) *Exporter {
 		cfg: cfg,
 	}
 	return e
+}
+
+func WithBatcher(cfg *Config) sdktrace.ProviderOption {
+	return sdktrace.WithBatcher(NewExporter(cfg),
+		sdktrace.WithBatchTimeout(5*time.Second),
+		sdktrace.WithMaxQueueSize(10000),
+		sdktrace.WithMaxExportBatchSize(10000))
 }
 
 var _ trace.SpanBatcher = (*Exporter)(nil)
