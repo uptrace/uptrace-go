@@ -1,5 +1,5 @@
 /*
-uptrace provides trace exporter for OpenTelemetry.
+uptrace provides span exporter for OpenTelemetry.
 */
 package uptrace
 
