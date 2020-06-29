@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"net/url"
-	"os"
 )
 
 type DSN struct {
@@ -15,10 +14,6 @@ type DSN struct {
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {
-	if dsnStr == "" {
-		dsnStr = os.Getenv("UPTRACE_DSN")
-	}
-
 	if dsnStr == "" {
 		return nil, fmt.Errorf("DSN is empty or missing")
 	}

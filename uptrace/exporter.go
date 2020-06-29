@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -27,6 +28,7 @@ type Config struct {
 	DSN string
 
 	// Disabled disables the exporter.
+	// The default is to use UPTRACE_DISABLED environment var.
 	Disabled bool
 
 	endpoint string
@@ -34,7 +36,17 @@ type Config struct {
 }
 
 func (cfg *Config) init() {
-	dsn, err := internal.ParseDSN(cfg.DSN)
+	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
+		cfg.Disabled = true
+		return
+	}
+
+	dstStr := cfg.DSN
+	if dsnStr == "" {
+		dsnStr = os.Getenv("UPTRACE_DSN")
+	}
+
+	dsn, err := internal.ParseDSN(dstStr)
 	if err != nil {
 		internal.Logger.Print(err.Error())
 		cfg.Disabled = true
