@@ -11,7 +11,7 @@ go get github.com/uptrace/uptrace-go
 
 ## Introduction
 
-uptrace-go is an exporter for [OpenTelemetry](https://opentelemetry.io/) that
-sends your traces/spans and metrics to [Uptrace.dev](https://uptrace.dev).
+uptrace-go is an exporter for Go that sends your traces/spans and metrics to
+[Uptrace.dev](https://uptrace.dev).
 
 See [uptrace-go documentation](https://docs.uptrace.dev/go/) for details.
