@@ -66,19 +66,24 @@ func (cfg *Config) init() {
 type Exporter struct {
 	cfg *Config
 
+	tracer apitrace.Tracer
 	client *http.Client
 }
 
 func NewExporter(cfg *Config) *Exporter {
 	cfg.init()
 
+	tracer := global.Tracer("github.com/uptrace/uptrace-go")
+
+	transport := othttp.NewTransport(http.DefaultTransport, othttp.WithTracer(tracer))
 	client := &http.Client{
-		Transport: othttp.NewTransport(http.DefaultTransport),
+		Transport: transport,
 	}
 
 	e := &Exporter{
 		cfg: cfg,
 
+		tracer: tracer,
 		client: client,
 	}
 	return e
@@ -102,9 +107,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		return
 	}
 
-	tracer := global.Tracer("github.com/uptrace/uptrace-go")
-
-	ctx, span := tracer.Start(ctx, "ExportSpans")
+	ctx, span := e.tracer.Start(ctx, "ExportSpans")
 	defer span.End()
 
 	expoSpans := make([]expoSpan, len(spans))
@@ -135,7 +138,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		kv.Int("num_trace", len(traces)),
 	)
 
-	_ = tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
+	_ = e.tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
 		if err := e.send(ctx, traces); err != nil {
 			span.SetStatus(codes.Internal, "")
 			span.AddEvent(ctx, "error",
@@ -163,7 +166,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", e.cfg.endpoint, buf)
+	req, err := http.NewRequestWithContext(ctx, "POST", e.cfg.endpoint, buf)
 	if err != nil {
 		return err
 	}
