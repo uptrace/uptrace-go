@@ -19,7 +19,6 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/instrumentation/othttp"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/codes"
@@ -74,10 +73,8 @@ func NewExporter(cfg *Config) *Exporter {
 	cfg.init()
 
 	tracer := global.Tracer("github.com/uptrace/uptrace-go")
-
-	transport := othttp.NewTransport(http.DefaultTransport, othttp.WithTracer(tracer))
 	client := &http.Client{
-		Transport: transport,
+		Timeout: 10 * time.Second,
 	}
 
 	e := &Exporter{
