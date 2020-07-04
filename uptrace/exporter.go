@@ -11,13 +11,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
+	"strconv"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/internal"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/plugin/othttp"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"google.golang.org/grpc/codes"
 )
 
 // Config is the configuration to be used when initializing an exporter.
@@ -41,12 +46,12 @@ func (cfg *Config) init() {
 		return
 	}
 
-	dstStr := cfg.DSN
+	dsnStr := cfg.DSN
 	if dsnStr == "" {
 		dsnStr = os.Getenv("UPTRACE_DSN")
 	}
 
-	dsn, err := internal.ParseDSN(dstStr)
+	dsn, err := internal.ParseDSN(dsnStr)
 	if err != nil {
 		internal.Logger.Print(err.Error())
 		cfg.Disabled = true
@@ -60,12 +65,21 @@ func (cfg *Config) init() {
 
 type Exporter struct {
 	cfg *Config
+
+	client *http.Client
 }
 
 func NewExporter(cfg *Config) *Exporter {
 	cfg.init()
+
+	client := &http.Client{
+		Transport: othttp.NewTransport(http.DefaultTransport),
+	}
+
 	e := &Exporter{
 		cfg: cfg,
+
+		client: client,
 	}
 	return e
 }
@@ -88,8 +102,13 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		return
 	}
 
+	tracer := global.Tracer("github.com/uptrace/uptrace-go")
+
+	ctx, span := tracer.Start(ctx, "ExportSpans")
+	defer span.End()
+
 	expoSpans := make([]expoSpan, len(spans))
-	m := make(map[apitrace.ID]*expoTrace)
+	m := make(map[apitrace.ID]*expoTrace, len(spans)/10)
 
 	for i, span := range spans {
 		expose := &expoSpans[i]
@@ -111,14 +130,27 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		traces = append(traces, trace)
 	}
 
-	if err := e.send(traces); err != nil {
-		logrus.WithError(err).Error("send failed")
-	}
+	span.SetAttributes(
+		kv.Int("num_span", len(spans)),
+		kv.Int("num_trace", len(traces)),
+	)
+
+	tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
+		if err := e.send(ctx, traces); err != nil {
+			span.SetStatus(codes.Internal, "")
+			span.AddEvent(ctx, "error",
+				kv.String("error.type", reflect.TypeOf(err).String()),
+				kv.String("error.message", err.Error()),
+			)
+			return err
+		}
+		return nil
+	})
 }
 
 //------------------------------------------------------------------------------
 
-func (e *Exporter) send(traces []*expoTrace) error {
+func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 	enc := internal.GetEncoder()
 	defer internal.PutEncoder(enc)
 
@@ -140,16 +172,20 @@ func (e *Exporter) send(traces []*expoTrace) error {
 	req.Header.Set("Content-Type", "application/msgpack")
 	req.Header.Set("Content-Encoding", "s2")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	_, _ = io.Copy(ioutil.Discard, resp.Body)
+	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
+		return err
+	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("got %s, wanted 200 OK", resp.Status)
+		return statusCodeError{
+			code: resp.StatusCode,
+		}
 	}
 
 	return nil
@@ -236,4 +272,14 @@ func initExpoLink(expose *expoLink, link *apitrace.Link) {
 
 func asUint64(b [8]byte) uint64 {
 	return binary.LittleEndian.Uint64(b[:])
+}
+
+//------------------------------------------------------------------------------
+
+type statusCodeError struct {
+	code int
+}
+
+func (e statusCodeError) Error() string {
+	return "got status code " + strconv.Itoa(e.code) + ", wanted 200 OK"
 }

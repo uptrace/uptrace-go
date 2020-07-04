@@ -7,4 +7,5 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/vmihailenco/msgpack/v5 v5.0.0-alpha.2
 	go.opentelemetry.io/otel v0.6.0
+	google.golang.org/grpc v1.27.1
 )
