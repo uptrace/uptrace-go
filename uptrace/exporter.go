@@ -135,7 +135,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		kv.Int("num_trace", len(traces)),
 	)
 
-	tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
+	_ = tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
 		if err := e.send(ctx, traces); err != nil {
 			span.SetStatus(codes.Internal, "")
 			span.AddEvent(ctx, "error",
