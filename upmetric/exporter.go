@@ -15,8 +15,9 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
+	"go.opentelemetry.io/otel/api/metric"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
-	"go.opentelemetry.io/otel/sdk/export/metric/aggregator"
+	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	"go.opentelemetry.io/otel/sdk/metric/controller/push"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
@@ -95,6 +96,10 @@ func NewExportPipeline(
 	return pusher
 }
 
+func (e *Exporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {
+	return export.DeltaExporter
+}
+
 func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet) error {
 	if e.cfg.Disabled {
 		return nil
@@ -109,11 +114,11 @@ func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet)
 }
 
 func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
-	return checkpointSet.ForEach(func(record export.Record) error {
-		switch agg := record.Aggregator().(type) {
-		case aggregator.Quantile:
+	return checkpointSet.ForEach(export.DeltaExporter, func(record export.Record) error {
+		switch agg := record.Aggregation().(type) {
+		case aggregation.Quantile:
 			return e.exportQuantile(record, agg)
-		case aggregator.MinMaxSumCount:
+		case aggregation.MinMaxSumCount:
 			return e.exportMMSC(record, agg)
 		default:
 			//log.Printf("unsupported aggregator type: %T", agg)
@@ -123,7 +128,7 @@ func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
 }
 
 func (e *Exporter) exportMMSC(
-	record export.Record, agg aggregator.MinMaxSumCount,
+	record export.Record, agg aggregation.MinMaxSumCount,
 ) error {
 	var expose mmsc
 
@@ -166,7 +171,7 @@ func (e *Exporter) exportMMSC(
 var quantiles = []float64{0.5, 0.75, 0.9, 0.95, 0.99}
 
 func (e *Exporter) exportQuantile(
-	record export.Record, agg aggregator.Quantile,
+	record export.Record, agg aggregation.Quantile,
 ) error {
 	var expose quantile
 
@@ -177,7 +182,7 @@ func (e *Exporter) exportQuantile(
 	desc := record.Descriptor()
 	numKind := desc.NumberKind()
 
-	if agg, ok := agg.(aggregator.Count); ok {
+	if agg, ok := agg.(aggregation.Count); ok {
 		count, err := agg.Count()
 		if err != nil {
 			return err
