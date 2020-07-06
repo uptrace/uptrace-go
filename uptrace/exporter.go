@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptrace"
 	"os"
 	"reflect"
 	"strconv"
@@ -19,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
+	othttptrace "go.opentelemetry.io/otel/instrumentation/httptrace"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/codes"
@@ -163,6 +165,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 		return err
 	}
 
+	ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
 	req, err := http.NewRequestWithContext(ctx, "POST", e.cfg.endpoint, buf)
 	if err != nil {
 		return err
