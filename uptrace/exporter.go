@@ -37,6 +37,9 @@ type Config struct {
 	// The default is to use UPTRACE_DISABLED environment var.
 	Disabled bool
 
+	// ClientTrace enables httptrace instrumentation on the HTTP client used by Uptrace.
+	ClientTrace bool
+
 	endpoint string
 	token    string
 }
@@ -165,7 +168,10 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 		return err
 	}
 
-	ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
+	if e.cfg.ClientTrace {
+		ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "POST", e.cfg.endpoint, buf)
 	if err != nil {
 		return err
