@@ -74,6 +74,8 @@ type Exporter struct {
 	client *http.Client
 }
 
+var _ trace.SpanBatcher = (*Exporter)(nil)
+
 func NewExporter(cfg *Config) *Exporter {
 	cfg.init()
 
@@ -91,11 +93,30 @@ func NewExporter(cfg *Config) *Exporter {
 	return e
 }
 
-func WithBatcher(cfg *Config) sdktrace.ProviderOption {
-	return sdktrace.WithBatcher(NewExporter(cfg),
-		sdktrace.WithBatchTimeout(5*time.Second),
+// WithBatcher is like OpenTelemetry WithBatcher but it comes with with recommended options:
+//   - WithBatchTimeout(5 * time.Second)
+//   - WithMaxQueueSize(10000)
+//   - WithMaxExportBatchSize(10000)
+func WithBatcher(cfg *Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.ProviderOption {
+	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
+}
+
+// WithBatcher is like OpenTelemetry WithBatcher but it comes with with recommended options:
+//   - WithBatchTimeout(5 * time.Second)
+//   - WithMaxQueueSize(10000)
+//   - WithMaxExportBatchSize(10000)
+func NewBatchSpanProcessor(
+	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
+) (*sdktrace.BatchSpanProcessor, error) {
+	return sdktrace.NewBatchSpanProcessor(NewExporter(cfg), baseOpts(opts)...)
+}
+
+func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProcessorOption {
+	return append([]sdktrace.BatchSpanProcessorOption{
+		sdktrace.WithBatchTimeout(5 * time.Second),
 		sdktrace.WithMaxQueueSize(10000),
-		sdktrace.WithMaxExportBatchSize(10000))
+		sdktrace.WithMaxExportBatchSize(10000),
+	}, opts...)
 }
 
 var _ trace.SpanBatcher = (*Exporter)(nil)
