@@ -59,6 +59,8 @@ func EncodeValue(enc *msgpack.Encoder, v value.Value) {
 		_ = enc.EncodeFloat64(v.AsFloat64())
 	case value.STRING:
 		_ = enc.EncodeString(v.AsString())
+	case value.ARRAY:
+		_ = enc.Encode(v.AsArray())
 	default:
 		logrus.WithField("type", v.Type()).Error("unknown type")
 	}
