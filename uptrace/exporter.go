@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"os"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -37,6 +36,9 @@ type Config struct {
 	// The default is to use UPTRACE_DISABLED environment var.
 	Disabled bool
 
+	// Trace enables Uptrace exporter instrumentation.
+	Trace bool
+
 	// ClientTrace enables httptrace instrumentation on the HTTP client used by Uptrace.
 	ClientTrace bool
 
@@ -60,6 +62,10 @@ func (cfg *Config) init() {
 		internal.Logger.Print(err.Error())
 		cfg.Disabled = true
 		return
+	}
+
+	if cfg.ClientTrace {
+		cfg.Trace = true
 	}
 
 	cfg.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
@@ -130,8 +136,16 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		return
 	}
 
-	ctx, span := e.tracer.Start(ctx, "ExportSpans")
-	defer span.End()
+	var span apitrace.Span
+
+	if e.cfg.Trace {
+		ctx, span = e.tracer.Start(ctx, "ExportSpans")
+		defer span.End()
+
+		span.SetAttributes(
+			kv.Int("num_span", len(spans)),
+		)
+	}
 
 	expoSpans := make([]expoSpan, len(spans))
 	m := make(map[apitrace.ID]*expoTrace, len(spans)/10)
@@ -156,27 +170,22 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		traces = append(traces, trace)
 	}
 
-	span.SetAttributes(
-		kv.Int("num_span", len(spans)),
-		kv.Int("num_trace", len(traces)),
-	)
-
-	_ = e.tracer.WithSpan(ctx, "send", func(ctx context.Context) error {
-		if err := e.send(ctx, traces); err != nil {
-			span.SetStatus(codes.Internal, "")
-			span.AddEvent(ctx, "error",
-				kv.String("error.type", reflect.TypeOf(err).String()),
-				kv.String("error.message", err.Error()),
-			)
-			return err
-		}
-		return nil
-	})
+	if err := e.send(ctx, traces); err != nil {
+		span.SetStatus(codes.Internal, "")
+		span.RecordError(ctx, err)
+	}
 }
 
 //------------------------------------------------------------------------------
 
 func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
+	var span apitrace.Span
+
+	if e.cfg.Trace {
+		ctx, span = e.tracer.Start(ctx, "send")
+		defer span.End()
+	}
+
 	enc := internal.GetEncoder()
 	defer internal.PutEncoder(enc)
 
@@ -189,7 +198,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 		return err
 	}
 
-	if e.cfg.ClientTrace {
+	if e.cfg.Trace && e.cfg.ClientTrace {
 		ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
 	}
 
