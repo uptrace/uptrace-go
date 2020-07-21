@@ -252,6 +252,11 @@ type expoSpan struct {
 	Events   []expoEvent      `msgpack:"events"`
 	Links    []expoLink       `msgpack:"links"`
 	Resource internal.KVSlice `msgpack:"resource,omitempty"`
+
+	Tracer struct {
+		Name    string `msgpack:"name"`
+		Version string `msgpack:"version"`
+	} `msgpack:"tracer"`
 }
 
 func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
@@ -283,6 +288,9 @@ func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
 	if span.Resource != nil {
 		expose.Resource = span.Resource.Attributes()
 	}
+
+	expose.Tracer.Name = span.InstrumentationLibrary.Name
+	expose.Tracer.Version = span.InstrumentationLibrary.Version
 }
 
 type expoEvent struct {
