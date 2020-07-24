@@ -63,6 +63,7 @@ func EncodeValue(enc *msgpack.Encoder, v value.Value) {
 		_ = enc.Encode(v.AsArray())
 	default:
 		logrus.WithField("type", v.Type()).Error("unknown type")
+		_ = enc.EncodeString("unknown " + v.Type().String())
 	}
 }
 
