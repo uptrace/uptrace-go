@@ -8,10 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel/api/kv"
-	"go.opentelemetry.io/otel/api/kv/value"
 )
 
-type KVMap map[kv.Key]value.Value
+type KVMap map[kv.Key]kv.Value
 
 func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 	_ = enc.EncodeMapLen(len(m))
@@ -41,25 +40,25 @@ func EncodeKey(enc *msgpack.Encoder, k kv.Key) {
 	_ = enc.EncodeString(string(k))
 }
 
-func EncodeValue(enc *msgpack.Encoder, v value.Value) {
+func EncodeValue(enc *msgpack.Encoder, v kv.Value) {
 	switch v.Type() {
-	case value.BOOL:
+	case kv.BOOL:
 		_ = enc.EncodeBool(v.AsBool())
-	case value.INT32:
+	case kv.INT32:
 		_ = enc.EncodeInt32(v.AsInt32())
-	case value.INT64:
+	case kv.INT64:
 		_ = enc.EncodeInt64(v.AsInt64())
-	case value.UINT32:
+	case kv.UINT32:
 		_ = enc.EncodeUint32(v.AsUint32())
-	case value.UINT64:
+	case kv.UINT64:
 		_ = enc.EncodeUint64(v.AsUint64())
-	case value.FLOAT32:
+	case kv.FLOAT32:
 		_ = enc.EncodeFloat32(v.AsFloat32())
-	case value.FLOAT64:
+	case kv.FLOAT64:
 		_ = enc.EncodeFloat64(v.AsFloat64())
-	case value.STRING:
+	case kv.STRING:
 		_ = enc.EncodeString(v.AsString())
-	case value.ARRAY:
+	case kv.ARRAY:
 		_ = enc.Encode(v.AsArray())
 	default:
 		logrus.WithField("type", v.Type()).Error("unknown type")
