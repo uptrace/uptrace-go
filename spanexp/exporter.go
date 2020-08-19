@@ -105,6 +105,8 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		span.SetAttributes(
 			kv.Int("num_span", len(spans)),
 		)
+	} else {
+		span = apitrace.NoopSpan{}
 	}
 
 	expoSpans := make([]expoSpan, len(spans))

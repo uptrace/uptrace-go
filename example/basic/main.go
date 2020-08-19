@@ -23,10 +23,13 @@ func main() {
 		},
 	})
 
+	defer upclient.Close()
+	defer upclient.ReportPanic(ctx)
+
 	tracer := upclient.Tracer("github.com/uptrace/uptrace-go/example/basic")
 
 	err := tracer.WithSpan(ctx, "operation", func(ctx context.Context) error {
-		trace.SpanFromContext(ctx).AddEvent(ctx, "Nice operation!", kv.Int("bogons", 100))
+		trace.SpanFromContext(ctx).AddEvent(ctx, "type1", kv.Int("bogons", 100))
 
 		trace.SpanFromContext(ctx).SetAttributes(kv.String("another", "yes"))
 
@@ -36,5 +39,5 @@ func main() {
 		panic(err)
 	}
 
-	select {}
+	panic("something went wrong")
 }

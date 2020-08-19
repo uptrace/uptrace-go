@@ -2,6 +2,7 @@ package uptrace
 
 import (
 	"context"
+	"runtime"
 	"sync"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -41,6 +42,7 @@ func NewClient(cfg *Config) *Client {
 
 // Closes closes the client releasing associated resources.
 func (c *Client) Close() error {
+	runtime.Gosched()
 	c.provider.UnregisterSpanProcessor(c.sp)
 	return nil
 }
@@ -56,6 +58,29 @@ func (c *Client) ReportError(ctx context.Context, err error, opts ...apitrace.Er
 	}
 
 	span.RecordError(ctx, err, opts...)
+}
+
+// ReportPanic is used with defer to report panics.
+func (c *Client) ReportPanic(ctx context.Context) {
+	val := recover()
+	if val == nil {
+		return
+	}
+
+	span := apitrace.SpanFromContext(ctx)
+	if !span.IsRecording() {
+		ctx, span = c.tracer.Start(ctx, dummySpanName)
+		defer span.End()
+	}
+
+	span.AddEvent(
+		ctx,
+		"log",
+		kv.String("log.severity", "panic"),
+		kv.Any("log.message", val),
+	)
+
+	panic(val)
 }
 
 //------------------------------------------------------------------------------
