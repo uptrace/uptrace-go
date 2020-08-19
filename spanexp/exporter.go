@@ -1,7 +1,7 @@
 /*
-uptrace provides span exporter for OpenTelemetry.
+spanexp provides span exporter for OpenTelemetry.
 */
-package uptrace
+package spanexp
 
 import (
 	"context"
@@ -11,11 +11,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptrace"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
+	"github.com/uptrace/uptrace-go/upconfig"
+
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
@@ -25,94 +26,21 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-// Config is the configuration to be used when initializing an exporter.
-type Config struct {
-	// DSN is a data source name that is used to connect to uptrace.dev.
-	// Example: https://<key>@uptrace.dev/<project_id>
-	// The default is to use UPTRACE_DSN environment var.
-	DSN string
-
-	// Disabled disables the exporter.
-	// The default is to use UPTRACE_DISABLED environment var.
-	Disabled bool
-
-	// Trace enables Uptrace exporter instrumentation.
-	Trace bool
-
-	// ClientTrace enables httptrace instrumentation on the HTTP client used by Uptrace.
-	ClientTrace bool
-
-	endpoint string
-	token    string
-}
-
-func (cfg *Config) init() {
-	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
-		cfg.Disabled = true
-		return
-	}
-
-	dsnStr := cfg.DSN
-	if dsnStr == "" {
-		dsnStr = os.Getenv("UPTRACE_DSN")
-	}
-
-	dsn, err := internal.ParseDSN(dsnStr)
-	if err != nil {
-		internal.Logger.Print(err.Error())
-		cfg.Disabled = true
-		return
-	}
-
-	if cfg.ClientTrace {
-		cfg.Trace = true
-	}
-
-	cfg.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
-		dsn.Scheme, dsn.Host, dsn.ProjectID)
-	cfg.token = dsn.Token
-}
-
-type Exporter struct {
-	cfg *Config
-
-	tracer apitrace.Tracer
-	client *http.Client
-}
-
-var _ trace.SpanBatcher = (*Exporter)(nil)
-
-func NewExporter(cfg *Config) *Exporter {
-	cfg.init()
-
-	tracer := global.Tracer("github.com/uptrace/uptrace-go")
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	e := &Exporter{
-		cfg: cfg,
-
-		tracer: tracer,
-		client: client,
-	}
-	return e
-}
-
-// WithBatcher is like OpenTelemetry WithBatcher but it comes with with recommended options:
+// WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options:
 //   - WithBatchTimeout(5 * time.Second)
 //   - WithMaxQueueSize(10000)
 //   - WithMaxExportBatchSize(10000)
-func WithBatcher(cfg *Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.ProviderOption {
+func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.ProviderOption {
 	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
 }
 
-// WithBatcher is like OpenTelemetry WithBatcher but it comes with with recommended options:
+// NewBatchSpanProcessor is like OpenTelemetry NewBatchSpanProcessor
+// but it comes with recommended options:
 //   - WithBatchTimeout(5 * time.Second)
 //   - WithMaxQueueSize(10000)
 //   - WithMaxExportBatchSize(10000)
 func NewBatchSpanProcessor(
-	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
+	cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption,
 ) (*sdktrace.BatchSpanProcessor, error) {
 	return sdktrace.NewBatchSpanProcessor(NewExporter(cfg), baseOpts(opts)...)
 }
@@ -123,6 +51,38 @@ func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProc
 		sdktrace.WithMaxQueueSize(10000),
 		sdktrace.WithMaxExportBatchSize(10000),
 	}, opts...)
+}
+
+type Exporter struct {
+	cfg *upconfig.Config
+
+	endpoint string
+	token    string
+
+	tracer apitrace.Tracer
+}
+
+var _ trace.SpanBatcher = (*Exporter)(nil)
+
+func NewExporter(cfg *upconfig.Config) *Exporter {
+	cfg.Init()
+
+	dsn, err := internal.ParseDSN(cfg.DSN)
+	if err != nil {
+		internal.Logger.Print(err.Error())
+		cfg.Disabled = true
+	}
+
+	e := &Exporter{
+		cfg: cfg,
+
+		endpoint: fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
+			dsn.Scheme, dsn.Host, dsn.ProjectID),
+		token: dsn.Token,
+
+		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
+	}
+	return e
 }
 
 var _ trace.SpanBatcher = (*Exporter)(nil)
@@ -202,16 +162,16 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 		ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", e.cfg.endpoint, buf)
+	req, err := http.NewRequestWithContext(ctx, "POST", e.endpoint, buf)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+e.cfg.token)
+	req.Header.Set("Authorization", "Bearer "+e.token)
 	req.Header.Set("Content-Type", "application/msgpack")
 	req.Header.Set("Content-Encoding", "s2")
 
-	resp, err := e.client.Do(req)
+	resp, err := e.cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -222,9 +182,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return statusCodeError{
-			code: resp.StatusCode,
-		}
+		return statusCodeError{code: resp.StatusCode}
 	}
 
 	return nil
@@ -241,13 +199,14 @@ type expoSpan struct {
 	ID       uint64 `msgpack:"id"`
 	ParentID uint64 `msgpack:"parentId"`
 
-	Name          string           `msgpack:"name"`
-	Kind          string           `msgpack:"kind"`
-	StartTime     int64            `msgpack:"startTime"`
-	EndTime       int64            `msgpack:"endTime"`
-	StatusCode    uint32           `msgpack:"statusCode"`
-	StatusMessage string           `msgpack:"statusMessage"`
-	Attrs         internal.KVSlice `msgpack:"attrs"`
+	Name      string           `msgpack:"name"`
+	Kind      string           `msgpack:"kind"`
+	StartTime int64            `msgpack:"startTime"`
+	EndTime   int64            `msgpack:"endTime"`
+	Attrs     internal.KVSlice `msgpack:"attrs"`
+
+	StatusCode    uint32 `msgpack:"statusCode"`
+	StatusMessage string `msgpack:"statusMessage"`
 
 	Events   []expoEvent      `msgpack:"events"`
 	Links    []expoLink       `msgpack:"links"`
@@ -267,9 +226,10 @@ func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
 	expose.Kind = span.SpanKind.String()
 	expose.StartTime = span.StartTime.UnixNano()
 	expose.EndTime = span.EndTime.UnixNano()
+	expose.Attrs = span.Attributes
+
 	expose.StatusCode = uint32(span.StatusCode)
 	expose.StatusMessage = span.StatusMessage
-	expose.Attrs = span.Attributes
 
 	if len(span.MessageEvents) > 0 {
 		expose.Events = make([]expoEvent, len(span.MessageEvents))
