@@ -2,8 +2,8 @@ dist: xenial
 language: go
 
 go:
-  - 1.13.x
   - 1.14.x
+  - 1.15.x
   - tip
 
 matrix:
@@ -16,4 +16,5 @@ env:
 go_import_path: github.com/uptrace/uptrace-go
 
 before_install:
-  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go
+    env GOPATH)/bin v1.27.0

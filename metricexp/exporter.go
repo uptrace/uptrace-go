@@ -1,7 +1,7 @@
 /*
-upmetric provides metric exporter for OpenTelemetry.
+metricexp provides metric exporter for OpenTelemetry.
 */
-package upmetric
+package metricexp
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/internal"
+	"github.com/uptrace/uptrace-go/upconfig"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
 	"go.opentelemetry.io/otel/api/metric"
@@ -22,35 +23,11 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
-// Config is the configuration to be used when initializing an exporter.
-type Config struct {
-	// DSN is a data source to connect to uptrace.dev.
-	// Example: https://<key>@uptrace.dev/<project_id>
-	// The default is to use UPTRACE_DSN environment var.
-	DSN string
-
-	// Disabled disables the exporter.
-	Disabled bool
+type Exporter struct {
+	cfg *upconfig.Config
 
 	endpoint string
 	token    string
-}
-
-func (cfg *Config) init() {
-	dsn, err := internal.ParseDSN(cfg.DSN)
-	if err != nil {
-		internal.Logger.Print(err.Error())
-		cfg.Disabled = true
-		return
-	}
-
-	cfg.endpoint = fmt.Sprintf("%s://%s/api/v1/projects/%s/metrics",
-		dsn.Scheme, dsn.Host, dsn.ProjectID)
-	cfg.token = dsn.Token
-}
-
-type Exporter struct {
-	cfg *Config
 
 	mmsc      []mmsc
 	quantiles []quantile
@@ -58,10 +35,21 @@ type Exporter struct {
 
 var _ export.Exporter = (*Exporter)(nil)
 
-func NewRawExporter(cfg *Config) *Exporter {
-	cfg.init()
+func NewRawExporter(cfg *upconfig.Config) *Exporter {
+	cfg.Init()
+
+	dsn, err := internal.ParseDSN(cfg.DSN)
+	if err != nil {
+		internal.Logger.Print(err.Error())
+		cfg.Disabled = true
+	}
+
 	return &Exporter{
 		cfg: cfg,
+
+		endpoint: fmt.Sprintf("%s://%s/api/v1/projects/%s/metrics",
+			dsn.Scheme, dsn.Host, dsn.ProjectID),
+		token: dsn.Token,
 	}
 }
 
@@ -71,7 +59,7 @@ func NewRawExporter(cfg *Config) *Exporter {
 // 	pipeline := stdout.InstallNewPipeline(stdout.Config{...})
 // 	defer pipeline.Stop()
 // 	... Done
-func InstallNewPipeline(config *Config, options ...push.Option) *push.Controller {
+func InstallNewPipeline(config *upconfig.Config, options ...push.Option) *push.Controller {
 	options = append(options, push.WithPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
 	global.SetMeterProvider(ctrl.Provider())
@@ -81,7 +69,7 @@ func InstallNewPipeline(config *Config, options ...push.Option) *push.Controller
 // NewExportPipeline sets up a complete export pipeline with the recommended setup,
 // chaining a NewRawExporter into the recommended selectors and integrators.
 func NewExportPipeline(
-	config *Config, options ...push.Option,
+	config *upconfig.Config, options ...push.Option,
 ) *push.Controller {
 	exporter := NewRawExporter(config)
 
@@ -121,7 +109,7 @@ func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
 		case aggregation.MinMaxSumCount:
 			return e.exportMMSC(record, agg)
 		default:
-			//log.Printf("unsupported aggregator type: %T", agg)
+			// log.Printf("unsupported aggregator type: %T", agg)
 			return nil
 		}
 	})
@@ -259,12 +247,12 @@ func (e *Exporter) send(out map[string]interface{}) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", e.cfg.endpoint, buf)
+	req, err := http.NewRequest("POST", e.endpoint, buf)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+e.cfg.token)
+	req.Header.Set("Authorization", "Bearer "+e.token)
 	req.Header.Set("Content-Type", "application/msgpack")
 	req.Header.Set("Content-Encoding", "s2")
 
