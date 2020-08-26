@@ -17,13 +17,13 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/upconfig"
 
+	otelhttptrace "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace"
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
-	othttptrace "go.opentelemetry.io/otel/instrumentation/httptrace"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"google.golang.org/grpc/codes"
 )
 
 // WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options:
@@ -104,7 +104,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 		defer span.End()
 
 		span.SetAttributes(
-			kv.Int("num_span", len(spans)),
+			label.Int("num_span", len(spans)),
 		)
 	} else {
 		span = apitrace.NoopSpan{}
@@ -162,7 +162,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 	}
 
 	if e.cfg.Trace && e.cfg.ClientTrace {
-		ctx = httptrace.WithClientTrace(ctx, othttptrace.NewClientTrace(ctx))
+		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", e.endpoint, buf)

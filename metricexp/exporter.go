@@ -15,11 +15,12 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/upconfig"
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/kv"
 	"go.opentelemetry.io/otel/api/metric"
+	"go.opentelemetry.io/otel/label"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	"go.opentelemetry.io/otel/sdk/metric/controller/push"
+	"go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
@@ -75,7 +76,7 @@ func NewExportPipeline(
 
 	// Not stateful.
 	pusher := push.New(
-		simple.NewWithInexpensiveDistribution(),
+		basic.New(simple.NewWithInexpensiveDistribution(), export.DeltaExporter),
 		exporter,
 		options...,
 	)
@@ -202,7 +203,7 @@ func exportCommon(record export.Record, expose *baseRecord) error {
 
 	if iter := record.Labels().Iter(); iter.Len() > 0 {
 		attrs := record.Resource().Attributes()
-		labels := make([]kv.KeyValue, 0, len(attrs)+iter.Len())
+		labels := make([]label.KeyValue, 0, len(attrs)+iter.Len())
 		labels = append(labels, attrs...)
 
 		for iter.Next() {

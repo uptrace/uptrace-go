@@ -10,8 +10,8 @@ import (
 	"github.com/uptrace/uptrace-go/upconfig"
 
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/kv"
 	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -76,8 +76,8 @@ func (c *Client) ReportPanic(ctx context.Context) {
 	span.AddEvent(
 		ctx,
 		"log",
-		kv.String("log.severity", "panic"),
-		kv.Any("log.message", val),
+		label.String("log.severity", "panic"),
+		label.Any("log.message", val),
 	)
 
 	panic(val)
@@ -103,9 +103,9 @@ func (c *Client) _setupTracing() {
 
 	var err error
 
-	kvs := make([]kv.KeyValue, 0, len(c.cfg.Resource))
+	kvs := make([]label.KeyValue, 0, len(c.cfg.Resource))
 	for k, v := range c.cfg.Resource {
-		kvs = append(kvs, kv.Any(k, v))
+		kvs = append(kvs, label.Any(k, v))
 	}
 
 	var res *resource.Resource

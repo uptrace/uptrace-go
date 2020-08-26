@@ -7,10 +7,10 @@ import (
 	"github.com/klauspost/compress/s2"
 	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
-	"go.opentelemetry.io/otel/api/kv"
+	"go.opentelemetry.io/otel/label"
 )
 
-type KVMap map[kv.Key]kv.Value
+type KVMap map[label.Key]label.Value
 
 func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 	_ = enc.EncodeMapLen(len(m))
@@ -23,7 +23,7 @@ func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 //------------------------------------------------------------------------------
 
-type KVSlice []kv.KeyValue
+type KVSlice []label.KeyValue
 
 func (slice KVSlice) EncodeMsgpack(enc *msgpack.Encoder) error {
 	_ = enc.EncodeMapLen(len(slice))
@@ -36,29 +36,29 @@ func (slice KVSlice) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 //------------------------------------------------------------------------------
 
-func EncodeKey(enc *msgpack.Encoder, k kv.Key) {
+func EncodeKey(enc *msgpack.Encoder, k label.Key) {
 	_ = enc.EncodeString(string(k))
 }
 
-func EncodeValue(enc *msgpack.Encoder, v kv.Value) {
+func EncodeValue(enc *msgpack.Encoder, v label.Value) {
 	switch v.Type() {
-	case kv.BOOL:
+	case label.BOOL:
 		_ = enc.EncodeBool(v.AsBool())
-	case kv.INT32:
+	case label.INT32:
 		_ = enc.EncodeInt32(v.AsInt32())
-	case kv.INT64:
+	case label.INT64:
 		_ = enc.EncodeInt64(v.AsInt64())
-	case kv.UINT32:
+	case label.UINT32:
 		_ = enc.EncodeUint32(v.AsUint32())
-	case kv.UINT64:
+	case label.UINT64:
 		_ = enc.EncodeUint64(v.AsUint64())
-	case kv.FLOAT32:
+	case label.FLOAT32:
 		_ = enc.EncodeFloat32(v.AsFloat32())
-	case kv.FLOAT64:
+	case label.FLOAT64:
 		_ = enc.EncodeFloat64(v.AsFloat64())
-	case kv.STRING:
+	case label.STRING:
 		_ = enc.EncodeString(v.AsString())
-	case kv.ARRAY:
+	case label.ARRAY:
 		_ = enc.Encode(v.AsArray())
 	default:
 		logrus.WithField("type", v.Type()).Error("unknown type")
