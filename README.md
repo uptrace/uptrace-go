@@ -1,7 +1,8 @@
-# Uptrace Go exporter for OpenTelemetry
+# Uptrace for Go
 
 [![Build Status](https://travis-ci.org/uptrace/uptrace-go.svg?branch=master)](https://travis-ci.org/uptrace/uptrace-go)
 [![GoDoc](https://godoc.org/github.com/uptrace/uptrace-go?status.svg)](https://pkg.go.dev/github.com/uptrace/uptrace-go?tab=doc)
+[![Documentation](https://img.shields.io/badge/docs-uptrace-brightgreen)](https://docs.uptrace.dev/go/)
 
 ## Installation
 
@@ -11,7 +12,7 @@ go get github.com/uptrace/uptrace-go
 
 ## Introduction
 
-uptrace-go is an exporter for Go that sends your traces/spans and metrics to
-[Uptrace.dev](https://uptrace.dev).
+uptrace-go is a client for Go that sends your traces/spans to [Uptrace.dev](https://uptrace.dev)
+using OpenTelemetry.
 
 See [uptrace-go documentation](https://docs.uptrace.dev/go/) for details.

@@ -67,21 +67,22 @@ var _ trace.SpanBatcher = (*Exporter)(nil)
 func NewExporter(cfg *upconfig.Config) *Exporter {
 	cfg.Init()
 
+	e := &Exporter{
+		cfg: cfg,
+
+		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
+	}
+
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
 		internal.Logger.Print(err.Error())
 		cfg.Disabled = true
+	} else {
+		e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
+			dsn.Scheme, dsn.Host, dsn.ProjectID)
+		e.token = dsn.Token
 	}
 
-	e := &Exporter{
-		cfg: cfg,
-
-		endpoint: fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
-			dsn.Scheme, dsn.Host, dsn.ProjectID),
-		token: dsn.Token,
-
-		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
-	}
 	return e
 }
 

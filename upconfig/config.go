@@ -8,7 +8,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-// Config is the configuration to be used when initializing an exporter.
+// Config is the configuration to be used when initializing a client.
 type Config struct {
 	// DSN is a data source name that is used to connect to uptrace.dev.
 	// Example: https://<key>@uptrace.dev/<project_id>
