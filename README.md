@@ -16,7 +16,7 @@ go get github.com/uptrace/uptrace-go
 
 ## Introduction
 
-uptrace-go is a client for Go that sends your traces/spans to [Uptrace.dev](https://uptrace.dev)
-using OpenTelemetry.
+uptrace-go is the official Uptrace client for Go that sends your traces/spans to
+[Uptrace.dev](https://uptrace.dev) using OpenTelemetry.
 
 See [uptrace-go documentation](https://docs.uptrace.dev/go/) for details.

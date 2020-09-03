@@ -11,7 +11,7 @@ require (
 	go.opentelemetry.io/otel v0.11.0
 	go.opentelemetry.io/otel/sdk v0.11.0
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
+	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/grpc v1.31.1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
