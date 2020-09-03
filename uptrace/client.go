@@ -68,9 +68,9 @@ func (c *Client) ReportPanic(ctx context.Context) {
 	}
 
 	span := apitrace.SpanFromContext(ctx)
-	if !span.IsRecording() {
+	isRecording := span.IsRecording()
+	if !isRecording {
 		ctx, span = c.tracer.Start(ctx, dummySpanName)
-		defer span.End()
 	}
 
 	span.AddEvent(
@@ -80,6 +80,12 @@ func (c *Client) ReportPanic(ctx context.Context) {
 		label.Any("log.message", val),
 	)
 
+	if !isRecording {
+		// Can't use `defer span.End()` because it recovers from panic too.
+		span.End()
+	}
+
+	// Re-throw the panic.
 	panic(val)
 }
 
