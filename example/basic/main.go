@@ -26,7 +26,7 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	upclient.ReportError(ctx, errors.New("some error"))
+	upclient.ReportError(ctx, errors.New("Hello from uptrace-go!"))
 
 	tracer := upclient.Tracer("github.com/uptrace/uptrace-go/example/basic")
 	ctx, span := tracer.Start(ctx, "main span")
