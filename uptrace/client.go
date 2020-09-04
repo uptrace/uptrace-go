@@ -33,11 +33,14 @@ type Client struct {
 func NewClient(cfg *Config) *Client {
 	cfg.Init()
 
-	return &Client{
+	client := &Client{
 		cfg: cfg,
 
 		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
 	}
+	client.setupTracing()
+
+	return client
 }
 
 // Closes closes the client releasing associated resources.
@@ -49,8 +52,6 @@ func (c *Client) Close() error {
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
 func (c *Client) ReportError(ctx context.Context, err error, opts ...apitrace.ErrorOption) {
-	c.setupTracing()
-
 	span := apitrace.SpanFromContext(ctx)
 	if !span.IsRecording() {
 		ctx, span = c.tracer.Start(ctx, dummySpanName)
@@ -93,16 +94,10 @@ func (c *Client) ReportPanic(ctx context.Context) {
 
 // Tracer returns a named tracer that exports span to Uptrace.
 func (c *Client) Tracer(name string) apitrace.Tracer {
-	c.setupTracing()
-
 	return global.Tracer(name)
 }
 
 func (c *Client) setupTracing() {
-	c.setupTracingOnce.Do(c._setupTracing)
-}
-
-func (c *Client) _setupTracing() {
 	if c.cfg.Disabled {
 		return
 	}
