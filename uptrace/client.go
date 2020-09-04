@@ -3,7 +3,6 @@ package uptrace
 import (
 	"context"
 	"runtime"
-	"sync"
 
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -25,9 +24,8 @@ type Client struct {
 
 	tracer apitrace.Tracer
 
-	setupTracingOnce sync.Once
-	sp               sdktrace.SpanProcessor
-	provider         *sdktrace.Provider
+	sp       sdktrace.SpanProcessor
+	provider *sdktrace.Provider
 }
 
 func NewClient(cfg *Config) *Client {

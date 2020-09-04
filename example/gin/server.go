@@ -37,8 +37,8 @@ func main() {
 		},
 	})
 	defer upclient.Close()
+	defer upclient.ReportPanic(ctx)
 
-	// Make sure!
 	tracer = upclient.Tracer("gin-tracer")
 
 	router := gin.Default()
