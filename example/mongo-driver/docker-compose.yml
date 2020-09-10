@@ -1,0 +1,24 @@
+version: '3.7'
+services:
+  mongo-server:
+    image: mongo
+    networks:
+      - example
+
+  go-server:
+    environment:
+      - UPTRACE_DSN
+    build:
+      dockerfile: $PWD/Dockerfile
+      context: ../..
+    command:
+      - '/bin/sh'
+      - '-c'
+      - '/go/bin/mongo'
+    networks:
+      - example
+    depends_on:
+      - mongo-server
+
+networks:
+  example:

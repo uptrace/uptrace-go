@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -25,21 +26,11 @@ var (
 func main() {
 	ctx := context.Background()
 
-	log.Printf("using UPTRACE_DSN=%q", os.Getenv("UPTRACE_DSN"))
-
-	hostname, _ := os.Hostname()
-	upclient = uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-
-		Resource: map[string]interface{}{
-			"hostname": hostname,
-		},
-	})
+	upclient = setupUptrace()
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	tracer = upclient.Tracer("gin-tracer")
+	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	router := gin.Default()
 	router.SetHTMLTemplate(profileTemplate())
@@ -49,6 +40,22 @@ func main() {
 	if err := router.Run(":9999"); err != nil {
 		upclient.ReportError(ctx, err)
 	}
+}
+
+func setupUptrace() *uptrace.Client {
+	log.Printf("using UPTRACE_DSN=%q", os.Getenv("UPTRACE_DSN"))
+
+	hostname, _ := os.Hostname()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+
+		Resource: map[string]interface{}{
+			"hostname": hostname,
+		},
+	})
+
+	return upclient
 }
 
 func profileTemplate() *template.Template {

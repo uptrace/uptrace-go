@@ -7,6 +7,8 @@ require (
 	github.com/klauspost/compress v1.10.11
 	github.com/sirupsen/logrus v1.6.0
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
+	go.mongodb.org/mongo-driver v1.4.1
+	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver v0.11.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace v0.11.0
 	go.opentelemetry.io/otel v0.11.0
 	go.opentelemetry.io/otel/sdk v0.11.0
