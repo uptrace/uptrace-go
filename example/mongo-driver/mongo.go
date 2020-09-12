@@ -69,7 +69,7 @@ func setupUptrace() *uptrace.Client {
 // a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
 func run(ctx context.Context, db *mongo.Database) error {
-	coll := db.Collection("inventory_insert")
+	coll := db.Collection("inventory")
 
 	_, err := coll.InsertOne(
 		ctx,
