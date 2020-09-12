@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -50,7 +49,9 @@ func main() {
 }
 
 func setupUptrace() *uptrace.Client {
-	log.Printf("using UPTRACE_DSN=%q", os.Getenv("UPTRACE_DSN"))
+	if os.Getenv("UPTRACE_DSN") == "" {
+		panic("UPTRACE_DSN is empty or missing")
+	}
 
 	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
@@ -74,7 +75,7 @@ func userProfileEndpoint(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	html := fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`, username, name)
+	html := fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
 	return c.HTML(http.StatusOK, html)
 }
 

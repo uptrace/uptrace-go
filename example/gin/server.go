@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 
@@ -43,7 +42,9 @@ func main() {
 }
 
 func setupUptrace() *uptrace.Client {
-	log.Printf("using UPTRACE_DSN=%q", os.Getenv("UPTRACE_DSN"))
+	if os.Getenv("UPTRACE_DSN") == "" {
+		panic("UPTRACE_DSN is empty or missing")
+	}
 
 	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
