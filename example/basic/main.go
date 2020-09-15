@@ -11,17 +11,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-
-	hostname, _ := os.Hostname()
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-
-		Resource: map[string]interface{}{
-			"service.name": "my-service",
-			"hostname":     hostname,
-		},
-	})
+	upclient := setupUptrace()
 
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
@@ -49,4 +39,22 @@ func main() {
 
 	// This panic will be reported to Uptrace thanks to ReportPanic above.
 	panic("something went wrong")
+}
+
+func setupUptrace() *uptrace.Client {
+	if os.Getenv("UPTRACE_DSN") == "" {
+		panic("UPTRACE_DSN is empty or missing")
+	}
+
+	hostname, _ := os.Hostname()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+
+		Resource: map[string]interface{}{
+			"hostname": hostname,
+		},
+	})
+
+	return upclient
 }

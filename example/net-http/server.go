@@ -4,21 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/uptrace/uptrace-go/uptrace"
-	otelecho "go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo"
+	otelhttp "go.opentelemetry.io/contrib/instrumentation/net/http"
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("echo-tracer")
+	tracer   = global.Tracer("github.com/my/repo")
 )
 
 func main() {
@@ -31,19 +30,26 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("hello from Uptrace!"))
 
-	e := echo.New()
-	e.Use(otelecho.Middleware("service-name"))
-	e.Use(middleware.Recover())
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		ctx := c.Request().Context()
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+	// Your app handler.
+	var handler http.Handler
+	handler = http.HandlerFunc(userProfileEndpoint)
 
-		e.DefaultHTTPErrorHandler(err, c)
+	// Wrap it with OpenTelemetry plugin.
+	handler = otelhttp.WithRouteTag("/profiles/:username", handler)
+	handler = otelhttp.NewHandler(handler, "server-name")
+
+	// Register handler.
+	http.Handle("/profiles/", handler)
+
+	srv := &http.Server{
+		Addr:    ":9999",
+		Handler: handler,
 	}
 
-	e.GET("/profiles/:username", userProfileEndpoint)
-
-	e.Logger.Fatal(e.Start(":9999"))
+	if err := srv.ListenAndServe(); err != nil {
+		upclient.ReportError(ctx, err)
+		panic(err)
+	}
 }
 
 func setupUptrace() *uptrace.Client {
@@ -64,17 +70,19 @@ func setupUptrace() *uptrace.Client {
 	return upclient
 }
 
-func userProfileEndpoint(c echo.Context) error {
-	ctx := c.Request().Context()
+func userProfileEndpoint(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 
-	username := c.Param("username")
+	username := strings.Replace(req.URL.Path, "/profiles/", "", 1)
+
 	name, err := selectUser(ctx, username)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		w.WriteHeader(http.StatusNotFound)
+		io.WriteString(w, err.Error())
+		return
 	}
 
-	html := fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
-	return c.HTML(http.StatusOK, html)
+	fmt.Fprintf(w, `<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
 }
 
 func selectUser(ctx context.Context, username string) (string, error) {

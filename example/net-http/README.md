@@ -1,4 +1,4 @@
-# Echo instrumentation example
+# net/http instrumentation example
 
 To run this example:
 
