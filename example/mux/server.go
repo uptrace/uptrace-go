@@ -15,8 +15,6 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-const profileTmpl = "profile"
-
 var (
 	upclient *uptrace.Client
 	tracer   = global.Tracer("mux-tracer")
