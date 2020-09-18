@@ -113,9 +113,11 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 	expoSpans := make([]expoSpan, len(spans))
 	m := make(map[apitrace.ID]*expoTrace, len(spans)/10)
 
+	sampler := e.cfg.Sampler.Description()
 	for i, span := range spans {
 		expose := &expoSpans[i]
 		initExpoSpan(expose, span)
+		expose.Sampler = sampler
 
 		if trace, ok := m[span.SpanContext.TraceID]; ok {
 			trace.Spans = append(trace.Spans, expose)
@@ -219,6 +221,7 @@ type expoSpan struct {
 		Name    string `msgpack:"name"`
 		Version string `msgpack:"version"`
 	} `msgpack:"tracer"`
+	Sampler string `msgpack:"sampler"`
 }
 
 func initExpoSpan(expose *expoSpan, span *trace.SpanData) {

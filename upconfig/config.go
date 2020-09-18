@@ -53,6 +53,10 @@ func (cfg *Config) Init() {
 		cfg.DSN = os.Getenv("UPTRACE_DSN")
 	}
 
+	if cfg.Sampler == nil {
+		cfg.Sampler = sdktrace.AlwaysSample()
+	}
+
 	if cfg.HTTPClient == nil {
 		cfg.HTTPClient = &http.Client{
 			Timeout: 10 * time.Second,

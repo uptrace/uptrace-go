@@ -15,10 +15,11 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-type Config = upconfig.Config
-
 const dummySpanName = "__dummy__"
 
+type Config = upconfig.Config
+
+// Client represents Uptrace client.
 type Client struct {
 	cfg *Config
 
