@@ -63,7 +63,8 @@ func main() {
 
 	if err := cmd.Start(); err != nil {
 		span.RecordError(ctx, err)
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 
 	span.SetAttributes(label.Int("process.pid", cmd.Process.Pid))
@@ -85,7 +86,7 @@ func main() {
 		}
 
 		span.RecordError(ctx, err)
-		log.Fatal(err)
+		return
 	}
 }
 
