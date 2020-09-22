@@ -94,7 +94,7 @@ func setupUptrace() *uptrace.Client {
 	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
 		Resource: map[string]interface{}{
-			"hostname": hostname,
+			"host.name": hostname,
 		},
 	})
 	return upclient
