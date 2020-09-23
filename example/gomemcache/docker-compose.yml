@@ -13,7 +13,7 @@ services:
     networks:
       - example
   memcached-server:
-    image: memcached:1.6.6-alpine
+    image: memcached:1.6.7-alpine
     networks:
       - example
 networks:
