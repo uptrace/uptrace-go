@@ -12,6 +12,8 @@ services:
       - '/go/bin/client'
     networks:
       - example
+    depends_on:
+      - memcached-server
   memcached-server:
     image: memcached:1.6.6-alpine
     networks:

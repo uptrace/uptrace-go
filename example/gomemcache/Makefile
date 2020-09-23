@@ -1,4 +1,4 @@
-all: build up test
+all: build up
 
 build:
 	docker-compose build
@@ -8,4 +8,3 @@ down:
 	docker-compose down
 logs:
 	docker-compose logs gomemcache-client
-

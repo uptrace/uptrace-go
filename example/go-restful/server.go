@@ -10,7 +10,7 @@ import (
 
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/uptrace/uptrace-go/uptrace"
-	restfultrace "go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful"
+	otelrestful "go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/label"
 )
@@ -29,7 +29,7 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
-	filter := restfultrace.OTelFilter("service-name")
+	filter := otelrestful.OTelFilter("service-name")
 	restful.DefaultContainer.Filter(filter)
 
 	ws := &restful.WebService{}
