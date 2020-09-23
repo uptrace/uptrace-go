@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
+	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/label"
 )
 
@@ -18,7 +19,7 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("Hello from uptrace-go!"))
 
-	tracer := upclient.Tracer("github.com/uptrace/uptrace-go/example/basic")
+	tracer := global.Tracer("github.com/uptrace/uptrace-go/example/basic")
 	ctx, span := tracer.Start(ctx, "main span")
 
 	{
