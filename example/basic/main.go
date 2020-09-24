@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -37,9 +38,10 @@ func main() {
 	}
 
 	span.End()
+	fmt.Printf("trace: %s\n\n", upclient.TraceURL(span))
 
 	// This panic will be reported to Uptrace thanks to ReportPanic above.
-	panic("something went wrong")
+	panic("testing panic recovery")
 }
 
 func setupUptrace() *uptrace.Client {

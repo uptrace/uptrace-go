@@ -2,13 +2,16 @@ package uptrace
 
 import (
 	"context"
+	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/spanexp"
 	"github.com/uptrace/uptrace-go/upconfig"
 
 	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 	apitrace "go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -22,6 +25,7 @@ type Config = upconfig.Config
 // Client represents Uptrace client.
 type Client struct {
 	cfg *Config
+	dsn *internal.DSN
 
 	tracer apitrace.Tracer
 
@@ -39,6 +43,10 @@ func NewClient(cfg *Config) *Client {
 	}
 	client.setupTracing()
 
+	if dsn, err := internal.ParseDSN(cfg.DSN); err == nil {
+		client.dsn = dsn
+	}
+
 	return client
 }
 
@@ -47,6 +55,13 @@ func (c *Client) Close() error {
 	runtime.Gosched()
 	c.provider.UnregisterSpanProcessor(c.sp)
 	return nil
+}
+
+// TraceURL returns the trace URL for the span.
+func (c *Client) TraceURL(span trace.Span) string {
+	host := strings.TrimPrefix(c.dsn.Host, "api.")
+	return fmt.Sprintf("%s://%s/%s/search/%s",
+		c.dsn.Scheme, host, c.dsn.ProjectID, span.SpanContext().TraceID)
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
