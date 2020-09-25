@@ -9,7 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
-	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace v0.11.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace v0.12.0
 	go.opentelemetry.io/otel v0.11.0
 	go.opentelemetry.io/otel/sdk v0.11.0
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
