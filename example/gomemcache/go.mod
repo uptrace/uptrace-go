@@ -7,5 +7,5 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/uptrace/uptrace-go v0.1.7
 	go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache v0.11.0
-	go.opentelemetry.io/otel v0.11.0
+	go.opentelemetry.io/otel v0.12.0
 )
