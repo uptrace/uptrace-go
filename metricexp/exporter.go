@@ -63,7 +63,7 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 func InstallNewPipeline(config *upconfig.Config, options ...push.Option) *push.Controller {
 	options = append(options, push.WithPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
-	global.SetMeterProvider(ctrl.Provider())
+	global.SetMeterProvider(ctrl.MeterProvider())
 	return ctrl
 }
 

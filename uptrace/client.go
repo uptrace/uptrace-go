@@ -30,7 +30,7 @@ type Client struct {
 	tracer apitrace.Tracer
 
 	sp       sdktrace.SpanProcessor
-	provider *sdktrace.Provider
+	provider *sdktrace.TracerProvider
 }
 
 func NewClient(cfg *Config) *Client {
@@ -116,8 +116,6 @@ func (c *Client) setupTracing() {
 		return
 	}
 
-	var err error
-
 	kvs := make([]label.KeyValue, 0, len(c.cfg.Resource))
 	for k, v := range c.cfg.Resource {
 		kvs = append(kvs, label.Any(k, v))
@@ -128,23 +126,13 @@ func (c *Client) setupTracing() {
 		res = resource.New(kvs...)
 	}
 
-	c.provider, err = sdktrace.NewProvider(
+	c.provider = sdktrace.NewTracerProvider(
 		sdktrace.WithConfig(sdktrace.Config{
 			Resource:       res,
 			DefaultSampler: c.cfg.Sampler,
 		}),
 	)
-	if err != nil {
-		internal.Logger.Printf("NewProvider failed: %s", err)
-		return
-	}
-
-	c.sp, err = spanexp.NewBatchSpanProcessor(c.cfg)
-	if err != nil {
-		internal.Logger.Printf("NewBatchSpanProcessor failed: %s", err)
-		return
-	}
-
+	c.sp = spanexp.NewBatchSpanProcessor(c.cfg)
 	c.provider.RegisterSpanProcessor(c.sp)
-	global.SetTraceProvider(c.provider)
+	global.SetTracerProvider(c.provider)
 }

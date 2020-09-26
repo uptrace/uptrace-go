@@ -17,7 +17,7 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/upconfig"
 
-	otelhttptrace "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/api/global"
 	apitrace "go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
@@ -30,7 +30,7 @@ import (
 //   - WithBatchTimeout(5 * time.Second)
 //   - WithMaxQueueSize(10000)
 //   - WithMaxExportBatchSize(10000)
-func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.ProviderOption {
+func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.TracerProviderOption {
 	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
 }
 
@@ -41,7 +41,7 @@ func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption
 //   - WithMaxExportBatchSize(10000)
 func NewBatchSpanProcessor(
 	cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption,
-) (*sdktrace.BatchSpanProcessor, error) {
+) *sdktrace.BatchSpanProcessor {
 	return sdktrace.NewBatchSpanProcessor(NewExporter(cfg), baseOpts(opts)...)
 }
 
@@ -62,7 +62,7 @@ type Exporter struct {
 	tracer apitrace.Tracer
 }
 
-var _ trace.SpanBatcher = (*Exporter)(nil)
+var _ trace.SpanExporter = (*Exporter)(nil)
 
 func NewExporter(cfg *upconfig.Config) *Exporter {
 	cfg.Init()
@@ -86,28 +86,28 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 	return e
 }
 
-var _ trace.SpanBatcher = (*Exporter)(nil)
+var _ trace.SpanExporter = (*Exporter)(nil)
 
-func (e *Exporter) Close() error {
+func (e *Exporter) Shutdown(context.Context) error {
 	return nil
 }
 
-func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
+func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) error {
 	if e.cfg.Disabled {
-		return
+		return nil
 	}
 
-	var span apitrace.Span
+	var currSpan apitrace.Span
 
 	if e.cfg.Trace {
-		ctx, span = e.tracer.Start(ctx, "ExportSpans")
-		defer span.End()
+		ctx, currSpan = e.tracer.Start(ctx, "ExportSpans")
+		defer currSpan.End()
 
-		span.SetAttributes(
+		currSpan.SetAttributes(
 			label.Int("num_span", len(spans)),
 		)
 	} else {
-		span = apitrace.NoopSpan{}
+		currSpan = apitrace.SpanFromContext(context.Background())
 	}
 
 	expoSpans := make([]expoSpan, len(spans))
@@ -136,9 +136,11 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) {
 	}
 
 	if err := e.send(ctx, traces); err != nil {
-		span.SetStatus(codes.Internal, "")
-		span.RecordError(ctx, err)
+		currSpan.SetStatus(codes.Internal, "")
+		currSpan.RecordError(ctx, err)
 	}
+
+	return nil
 }
 
 //------------------------------------------------------------------------------
