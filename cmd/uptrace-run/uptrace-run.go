@@ -27,6 +27,13 @@ var tracer = global.Tracer("github.com/uptrace/uptrace-go")
 func main() {
 	flag.Parse()
 
+	var exitCode int
+	defer func() {
+		if exitCode != 0 {
+			os.Exit(exitCode)
+		}
+	}()
+
 	var args []string
 
 	if strings.IndexByte(*cmdFlag, ' ') >= 0 {
@@ -64,6 +71,7 @@ func main() {
 	if err := cmd.Start(); err != nil {
 		span.RecordError(ctx, err)
 		log.Print(err)
+		exitCode = 1
 		return
 	}
 
@@ -79,14 +87,17 @@ func main() {
 	}
 
 	if err != nil {
+		span.RecordError(ctx, err)
 		if err, ok := err.(*exec.ExitError); ok {
+			exitCode = err.ExitCode()
 			span.SetAttributes(
-				label.Int("process.exit_code", err.ExitCode()),
+				label.Int("process.exit_code", exitCode),
 			)
+			return
 		}
 
-		span.RecordError(ctx, err)
-		return
+		log.Print(err)
+		exitCode = 1
 	}
 }
 
