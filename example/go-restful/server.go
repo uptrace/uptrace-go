@@ -10,7 +10,7 @@ import (
 
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/uptrace/uptrace-go/uptrace"
-	otelrestful "go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/label"
 )
