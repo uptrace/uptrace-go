@@ -3,15 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	mongotrace "go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 )
 
 var upclient *uptrace.Client
@@ -26,7 +24,7 @@ func main() {
 	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	opt := options.Client()
-	opt.Monitor = mongotrace.NewMonitor("mongo-service")
+	opt.Monitor = otelmongo.NewMonitor("mongo-service")
 	opt.ApplyURI("mongodb://mongo-server:27017")
 
 	mdb, err := mongo.Connect(ctx, opt)
@@ -47,7 +45,9 @@ func main() {
 }
 
 func setupUptrace() *uptrace.Client {
-	log.Printf("using UPTRACE_DSN=%q", os.Getenv("UPTRACE_DSN"))
+	if os.Getenv("UPTRACE_DSN") == "" {
+		panic("UPTRACE_DSN is empty or missing")
+	}
 
 	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
