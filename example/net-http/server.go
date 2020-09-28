@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	otelhttp "go.opentelemetry.io/contrib/instrumentation/net/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/label"
 )
