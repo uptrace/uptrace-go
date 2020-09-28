@@ -4,17 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	otelmacaron "go.opentelemetry.io/contrib/instrumentation/macaron"
+	"go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron"
 	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
 	"gopkg.in/macaron.v1"
 )
-
-const profileTmpl = "profile"
 
 var (
 	upclient *uptrace.Client
@@ -34,13 +32,7 @@ func main() {
 	m.Get("/profiles/:username", userProfileEndpoint)
 	m.Use(otelmacaron.Middleware("service-name"))
 
-	if err := router.Run(":9999"); err != nil {
-		upclient.ReportError(ctx, err)
-	}
-}
-
-func userProfileEndpoint() string {
-	return "Hello world!"
+	m.Run(9999)
 }
 
 func setupUptrace() *uptrace.Client {
@@ -62,13 +54,12 @@ func setupUptrace() *uptrace.Client {
 }
 
 func userProfileEndpoint(c *macaron.Context) string {
-	ctx := c.Request.Context()
+	ctx := c.Req.Context()
 
-	username := c.Param("username")
+	username := c.Params("username")
 	name, err := selectUser(ctx, username)
 	if err != nil {
-		ctx.Error(http.StatusNotFound, err)
-		return
+		trace.SpanFromContext(ctx).RecordError(ctx, err)
 	}
 
 	return fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
