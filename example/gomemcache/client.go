@@ -8,7 +8,7 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/uptrace/uptrace-go/uptrace"
-	otelgomemcache "go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 )
@@ -29,7 +29,7 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
-	mc := otelgomemcache.NewClientWithTracing(
+	mc := otelmemcache.NewClientWithTracing(
 		memcache.New("memcached-server:11211"),
 	)
 
@@ -56,7 +56,7 @@ func setupUptrace() *uptrace.Client {
 	return upclient
 }
 
-func doMemcacheOperations(ctx context.Context, mc *otelgomemcache.Client) {
+func doMemcacheOperations(ctx context.Context, mc *otelmemcache.Client) {
 	mc = mc.WithContext(ctx)
 
 	err := mc.Add(&memcache.Item{
