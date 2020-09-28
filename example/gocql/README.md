@@ -1,4 +1,4 @@
-# Gomemcache instrumentation example
+# Gocql instrumentation example
 
 To run this example:
 
