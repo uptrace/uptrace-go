@@ -73,6 +73,7 @@ github.com/uptrace/uptrace-go v0.1.4 h1:GzFTxb6apgSB9GSWNVpasjCsITtA5CG3uMtjuFnY
 github.com/uptrace/uptrace-go v0.1.4/go.mod h1:21e/L4//BT4byYM9xtqrcEz/1Mxku6oE4CePWMkUCaA=
 github.com/uptrace/uptrace-go v0.1.7 h1:QbPdZh0ht0Pl+N16SQwWBWsgxznYw31IN2XKhXFjofc=
 github.com/uptrace/uptrace-go v0.1.7/go.mod h1:fXBxUGyJFlir/Na1jRJZrF/RGojICs6kZN+IUxSoc/Y=
+github.com/uptrace/uptrace-go v0.2.0/go.mod h1:XXwpI7Wku1gjqKpRq//OS60IE08OG2ISC8GYPAGNqCw=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1 h1:d71/KA0LhvkrJ/Ok+Wx9qK7bU8meKA1Hk0jpVI5kJjk=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1/go.mod h1:xlngVLeyQ/Qi05oQxhQ+oTuqa03RjMwMfk/7/TCs+QI=
@@ -85,6 +86,7 @@ go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful v0.11
 go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful v0.11.0/go.mod h1:r7rk36PuYBdBRVevYJwDQu/wpZ4oe1Xp3yRYvQZksPw=
 go.opentelemetry.io/contrib/instrumentation/net/http/httptrace v0.11.0 h1:mMHMO/0IFn9AGzjeckFHMFIfGuQSGKQMrTidedpFqUI=
 go.opentelemetry.io/contrib/instrumentation/net/http/httptrace v0.11.0/go.mod h1:r85rZjRYKYzeQnA6pwrLgYN07jvXcLqIt9H0syOLzb8=
+go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.12.0/go.mod h1:qm9qu8TxyiO4PzVpw2xHAjBnD2meYULZ2glPKjARdZI=
 go.opentelemetry.io/otel v0.11.0 h1:IN2tzQa9Gc4ZVKnTaMbPVcHjvzOdg5n9QfnmlqiET7E=
 go.opentelemetry.io/otel v0.11.0/go.mod h1:G8UCk+KooF2HLkgo8RHX9epABH/aRGYET7gQOqBVdB0=
 go.opentelemetry.io/otel v0.12.0 h1:bwWaPd/h2q+U6KdKaAiOS5GLwOMd1LDt9iNaeyIoAI8=
@@ -92,6 +94,7 @@ go.opentelemetry.io/otel v0.12.0/go.mod h1:dlSNewoRYikTkotEnxdmuBHgzT+k/idJSfDv/
 go.opentelemetry.io/otel/exporters/stdout v0.11.0/go.mod h1:XP4gbV2Ikc7/ZyTGtwrA7/FzrhWJr3nfRU+LRvhxY24=
 go.opentelemetry.io/otel/sdk v0.11.0 h1:bkDMymVj6gIkPfgC5ci5atq0OYbfUHSn8NvsmyfyMq4=
 go.opentelemetry.io/otel/sdk v0.11.0/go.mod h1:XbZ6MrzIZ+d+qr7pH0FwHIbCnANMvXYgkq4afL/IUMQ=
+go.opentelemetry.io/otel/sdk v0.12.0/go.mod h1:u3joRdxhrS1hUf9xSFH8vgdXdujQ3jxXxZl3loZFSqs=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
@@ -109,6 +112,7 @@ golang.org/x/net v0.0.0-20200822124328-c89045814202 h1:VvcQYSHwXgi7W+TpUR6A9g6Up
 golang.org/x/net v0.0.0-20200822124328-c89045814202/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
 golang.org/x/net v0.0.0-20200904194848-62affa334b73 h1:MXfv8rhZWmFeqX3GNZRsd6vOLoaCHjYEX3qkRo3YBUA=
 golang.org/x/net v0.0.0-20200904194848-62affa334b73/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
+golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
@@ -122,6 +126,7 @@ golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a h1:i47hUS795cOydZI4AwJQCKXOr
 golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20 h1:4X356008q5SA3YXu8PiRap39KFmy4Lf6sGlceJKZQsU=
 golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
