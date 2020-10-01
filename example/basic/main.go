@@ -18,9 +18,13 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
+	// Use upclient to report errors when there is no active span.
 	upclient.ReportError(ctx, errors.New("Hello from uptrace-go!"))
 
-	tracer := global.Tracer("github.com/uptrace/uptrace-go/example/basic")
+	// Create a tracer.
+	tracer := global.Tracer("github.com/your/repo")
+
+	// Start active span.
 	ctx, span := tracer.Start(ctx, "main span")
 
 	{
