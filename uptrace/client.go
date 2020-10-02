@@ -39,7 +39,7 @@ func NewClient(cfg *Config) *Client {
 	client := &Client{
 		cfg: cfg,
 
-		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
+		tracer: global.Tracer(cfg.TracerName),
 	}
 	client.setupTracing()
 
@@ -106,9 +106,25 @@ func (c *Client) ReportPanic(ctx context.Context) {
 
 //------------------------------------------------------------------------------
 
-// Tracer returns a named tracer that exports span to Uptrace.
+// Tracer is a shortcut for global.Tracer that returns a named tracer.
 func (c *Client) Tracer(name string) apitrace.Tracer {
 	return global.Tracer(name)
+}
+
+// WithSpan is a helper that wraps the function with a span and records the returned error.
+func (c *Client) WithSpan(
+	ctx context.Context,
+	name string,
+	fn func(ctx context.Context, span trace.Span) error,
+) error {
+	ctx, span := c.tracer.Start(ctx, name)
+	defer span.End()
+
+	if err := fn(ctx, span); err != nil {
+		span.RecordError(ctx, err)
+		return err
+	}
+	return nil
 }
 
 func (c *Client) setupTracing() {

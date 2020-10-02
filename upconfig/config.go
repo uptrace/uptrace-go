@@ -19,6 +19,10 @@ type Config struct {
 	// These attributes will be copied to every span and event.
 	Resource map[string]interface{}
 
+	// Name of the tracer used by Uptrace client.
+	// Default is github.com/uptrace/uptrace-go.
+	TracerName string
+
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
 
@@ -51,6 +55,10 @@ func (cfg *Config) Init() {
 
 	if cfg.DSN == "" {
 		cfg.DSN = os.Getenv("UPTRACE_DSN")
+	}
+
+	if cfg.TracerName == "" {
+		cfg.TracerName = "github.com/uptrace/uptrace-go"
 	}
 
 	if cfg.Sampler == nil {
