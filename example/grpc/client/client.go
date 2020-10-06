@@ -25,8 +25,8 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("hello from grpc client!"))
 
-	dialOption := grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(tracer))
-	conn, err := grpc.Dial("grpc-server:9999", grpc.WithInsecure(), dialOption)
+	otelInterceptor := grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(tracer))
+	conn, err := grpc.Dial("grpc-server:9999", grpc.WithInsecure(), otelInterceptor)
 	if err != nil {
 		upclient.ReportError(ctx, err)
 		log.Print(err)

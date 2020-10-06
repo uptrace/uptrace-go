@@ -41,8 +41,8 @@ func main() {
 		return
 	}
 
-	opt := grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor(tracer))
-	server := grpc.NewServer(opt)
+	otelInterceptor := grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor(tracer))
+	server := grpc.NewServer(otelInterceptor)
 
 	api.RegisterHelloServiceServer(server, &helloServer{})
 	if err := server.Serve(lis); err != nil {
