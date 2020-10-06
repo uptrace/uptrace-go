@@ -9,4 +9,3 @@ down:
 	docker-compose down
 logs:
 	docker-compose logs grpc-server grpc-client
-

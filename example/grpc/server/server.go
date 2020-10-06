@@ -3,23 +3,18 @@ package main
 import (
 	"context"
 	"errors"
-	"net"
-	"time"
-	"log"
-
 	"grpc/api"
 	"grpc/config"
+	"log"
+	"net"
+	"time"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/api/global"
 	"google.golang.org/grpc"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = global.Tracer("grpc-server-tracer")
-)
+var tracer = global.Tracer("grpc-server-tracer")
 
 type helloServer struct {
 	api.HelloServiceServer
@@ -27,14 +22,13 @@ type helloServer struct {
 
 func (s *helloServer) SayHello(ctx context.Context, in *api.HelloRequest) (*api.HelloResponse, error) {
 	time.Sleep(50 * time.Millisecond)
-
 	return &api.HelloResponse{Reply: "Hello " + in.Greeting}, nil
 }
 
 func main() {
 	ctx := context.Background()
 
-	upclient = config.SetupUptrace()
+	upclient := config.SetupUptrace()
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -43,7 +37,7 @@ func main() {
 	lis, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		upclient.ReportError(ctx, err)
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 
@@ -53,7 +47,7 @@ func main() {
 	api.RegisterHelloServiceServer(server, &helloServer{})
 	if err := server.Serve(lis); err != nil {
 		upclient.ReportError(ctx, err)
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 }

@@ -3,28 +3,23 @@ package main
 import (
 	"context"
 	"errors"
-	"time"
-	"log"
-
 	"grpc/api"
 	"grpc/config"
+	"log"
+	"time"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/api/global"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = global.Tracer("grpc-client-tracer")
-)
+var tracer = global.Tracer("grpc-client-tracer")
 
 func main() {
 	ctx := context.Background()
 
-	upclient = config.SetupUptrace()
+	upclient := config.SetupUptrace()
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -34,16 +29,15 @@ func main() {
 	conn, err := grpc.Dial("grpc-server:9999", grpc.WithInsecure(), dialOption)
 	if err != nil {
 		upclient.ReportError(ctx, err)
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	defer func() { _ = conn.Close() }()
 
 	client := api.NewHelloServiceClient(conn)
-	err = sayHello(ctx, client)
-	if err != nil {
+	if err := sayHello(ctx, client); err != nil {
 		upclient.ReportError(ctx, err)
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 }
