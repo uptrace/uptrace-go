@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  go-redis-client:
+    environment:
+      - UPTRACE_DSN
+    build:
+      dockerfile: $PWD/Dockerfile
+      context: ../..
+    command:
+      - '/bin/sh'
+      - '-c'
+      - '/go/bin/client'
+    networks:
+      - example
+    depends_on:
+      - redis-server
+
+  redis-server:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - example
+
+networks:
+  example:
