@@ -7,7 +7,7 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/uptrace/uptrace-go v0.2.0
-	go.mongodb.org/mongo-driver v1.4.1
+	go.mongodb.org/mongo-driver v1.4.2
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver v0.11.0
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.12.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
