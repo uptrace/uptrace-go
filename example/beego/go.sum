@@ -341,6 +341,7 @@ go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mI
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.20.2/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
+go.opentelemetry.io v0.1.0 h1:EANZoRCOP+A3faIlw/iN6YEWoYb1vleZRKm1EvH8T48=
 go.opentelemetry.io/contrib v0.12.0 h1:vLtYifaYQD8i9ncT07vLqUmo2RivECfpNJ2kv3YKnK0=
 go.opentelemetry.io/contrib v0.12.0/go.mod h1:onlxH6TKFRkW2Xgc5IO37kPYz3v7wMzh/FrBxsQxCt4=
 go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego v0.12.0 h1:88WbHEPvEh0lclkxE2gUs+7L5uPI/6/nN5gwXWYiyF0=
@@ -353,6 +354,8 @@ go.opentelemetry.io/contrib/propagators v0.12.0 h1:X+BFc/3zD/WGrt3rgNdz7/6zqbRdY
 go.opentelemetry.io/contrib/propagators v0.12.0/go.mod h1:2cKNY+NJQjmzJkFyf8U4OyHABIxCi53ERyOjV2Tulyc=
 go.opentelemetry.io/otel v0.12.0 h1:bwWaPd/h2q+U6KdKaAiOS5GLwOMd1LDt9iNaeyIoAI8=
 go.opentelemetry.io/otel v0.12.0/go.mod h1:dlSNewoRYikTkotEnxdmuBHgzT+k/idJSfDv/FxEnOY=
+go.opentelemetry.io/otel v0.13.0 h1:2isEnyzjjJZq6r2EKMsFj4TxiQiexsM04AVhwbR/oBA=
+go.opentelemetry.io/otel v0.13.0/go.mod h1:dlSNewoRYikTkotEnxdmuBHgzT+k/idJSfDv/FxEnOY=
 go.opentelemetry.io/otel/sdk v0.12.0 h1:YVUyDXsGvFWjhJxGXT4kBcGdfoTbo1vSGjbGRUdRh5U=
 go.opentelemetry.io/otel/sdk v0.12.0/go.mod h1:u3joRdxhrS1hUf9xSFH8vgdXdujQ3jxXxZl3loZFSqs=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=

@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.12.0
-	go.opentelemetry.io/otel v0.12.0
+	go.opentelemetry.io/otel v0.13.0
 	go.opentelemetry.io/otel/sdk v0.12.0
 	golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321 // indirect
 	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
