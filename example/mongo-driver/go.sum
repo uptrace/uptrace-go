@@ -137,6 +137,8 @@ github.com/uptrace/uptrace-go v0.1.7 h1:QbPdZh0ht0Pl+N16SQwWBWsgxznYw31IN2XKhXFj
 github.com/uptrace/uptrace-go v0.1.7/go.mod h1:fXBxUGyJFlir/Na1jRJZrF/RGojICs6kZN+IUxSoc/Y=
 github.com/uptrace/uptrace-go v0.2.0 h1:t+1LKs9W2CyDqI8TUokqwUrEwBIOJG53pmkIFKAuKp4=
 github.com/uptrace/uptrace-go v0.2.0/go.mod h1:XXwpI7Wku1gjqKpRq//OS60IE08OG2ISC8GYPAGNqCw=
+github.com/uptrace/uptrace-go v0.3.0 h1:oDpO64VaVqeU+b4DUDjnjVNiuQWwF9g9LJo1K7VzdhM=
+github.com/uptrace/uptrace-go v0.3.0/go.mod h1:XeP0n0y2VR7M62w89OWIJpO2q2nJi+WLqChSDqU2m8I=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1 h1:d71/KA0LhvkrJ/Ok+Wx9qK7bU8meKA1Hk0jpVI5kJjk=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1/go.mod h1:xlngVLeyQ/Qi05oQxhQ+oTuqa03RjMwMfk/7/TCs+QI=
@@ -214,6 +216,7 @@ golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321 h1:lleNcKRbcaC8MqgLwghIkzZ2J
 golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
 golang.org/x/net v0.0.0-20200927032502-5d4f70055728 h1:5wtQIAulKU5AbLQOkjxl32UufnIOqgBX72pS0AV14H0=
 golang.org/x/net v0.0.0-20200927032502-5d4f70055728/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
+golang.org/x/net v0.0.0-20201009032441-dbdefad45b89 h1:1GKfLldebiSdhTlt3nalwrb7L40Tixr/0IH+kSbRgmk=
 golang.org/x/net v0.0.0-20201009032441-dbdefad45b89/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
