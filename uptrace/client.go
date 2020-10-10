@@ -106,9 +106,14 @@ func (c *Client) ReportPanic(ctx context.Context) {
 
 //------------------------------------------------------------------------------
 
-// Tracer is a shortcut for global.Tracer that returns a named tracer.
+// TracerProvider returns a tracer provider.
+func (c *Client) TracerProvider() apitrace.TracerProvider {
+	return c.provider
+}
+
+// Tracer returns a named tracer.
 func (c *Client) Tracer(name string) apitrace.Tracer {
-	return global.Tracer(name)
+	return c.provider.Tracer(name)
 }
 
 // WithSpan is a helper that wraps the function with a span and records the returned error.
