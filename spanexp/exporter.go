@@ -136,7 +136,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 	}
 
 	if err := e.send(ctx, traces); err != nil {
-		currSpan.SetStatus(codes.Internal, "")
+		currSpan.SetStatus(codes.Error, "")
 		currSpan.RecordError(ctx, err)
 	}
 
