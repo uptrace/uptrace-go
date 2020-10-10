@@ -7,7 +7,7 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/uptrace/uptrace-go v0.2.0
+	github.com/uptrace/uptrace-go v0.3.0
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.13.0 // indirect
 	go.opentelemetry.io/otel v0.13.0
