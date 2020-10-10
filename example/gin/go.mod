@@ -11,8 +11,8 @@ require (
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/ugorji/go v1.1.9 // indirect
 	github.com/uptrace/uptrace-go v0.2.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.12.0
-	go.opentelemetry.io/otel v0.12.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.13.0
+	go.opentelemetry.io/otel v0.13.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200927032502-5d4f70055728 // indirect
 	golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c // indirect
