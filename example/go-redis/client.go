@@ -23,15 +23,20 @@ func main() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "redis-server:6379",
 	})
-	rdb.AddHook(&redisext.OpenTelemetryHook{})
 	defer rdb.Close()
 
-	err := traceRedisCommands(ctx, rdb)
-	if err != nil {
+	rdb.AddHook(&redisext.OpenTelemetryHook{})
+
+	ctx, span := tracer.Start(ctx, "redis-main-span")
+	defer span.End()
+
+	if err := redisCommands(ctx, rdb); err != nil {
 		upclient.ReportError(ctx, err)
 		log.Println(err.Error())
 		return
 	}
+
+	log.Println("trace", upclient.TraceURL(span))
 }
 
 func setupUptrace() *uptrace.Client {
@@ -52,21 +57,16 @@ func setupUptrace() *uptrace.Client {
 	return upclient
 }
 
-func traceRedisCommands(ctx context.Context, rdb *redis.Client) error {
-	ctx, span := tracer.Start(ctx, "redis-commands")
-	defer span.End()
-
-	err := rdb.Set(ctx, "foo", "bar", 0).Err()
-	if err != nil {
+func redisCommands(ctx context.Context, rdb *redis.Client) error {
+	if err := rdb.Set(ctx, "foo", "bar", 0).Err(); err != nil {
 		return err
 	}
 
-	err = rdb.Get(ctx, "foo").Err()
-	if err != nil {
+	if err := rdb.Get(ctx, "foo").Err(); err != nil {
 		return err
 	}
 
-	_, err = rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.Set(ctx, "foo", "bar2", 0)
 		pipe.Get(ctx, "foo")
 		return nil

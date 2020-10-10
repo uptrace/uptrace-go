@@ -15,15 +15,12 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = global.Tracer("github.com/my/repo")
-)
+var tracer = global.Tracer("github.com/my/repo")
 
 func main() {
 	ctx := context.Background()
 
-	upclient = setupUptrace()
+	upclient := setupUptrace()
 
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)

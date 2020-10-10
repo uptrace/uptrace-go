@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -10,14 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
+	"go.opentelemetry.io/otel/api/global"
 )
 
-var upclient *uptrace.Client
+var tracer = global.Tracer("mongodb-tracer")
 
 func main() {
 	ctx := context.Background()
 
-	upclient = setupUptrace()
+	upclient := setupUptrace()
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -30,18 +32,26 @@ func main() {
 	mdb, err := mongo.Connect(ctx, opt)
 	if err != nil {
 		upclient.ReportError(ctx, err)
-		panic(err)
+		log.Print(err)
+		return
 	}
 
 	if err := mdb.Ping(ctx, nil); err != nil {
 		upclient.ReportError(ctx, err)
-		panic(err)
+		log.Print(err)
+		return
 	}
+
+	ctx, span := tracer.Start(ctx, "mongodb-main-span")
+	defer span.End()
 
 	if err := run(ctx, mdb.Database("example")); err != nil {
 		upclient.ReportError(ctx, err)
-		panic(err)
+		log.Print(err)
+		return
 	}
+
+	log.Println("trace", upclient.TraceURL(span))
 }
 
 func setupUptrace() *uptrace.Client {

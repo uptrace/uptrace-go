@@ -3,18 +3,16 @@ package main
 import (
 	"context"
 	"errors"
-	"grpc/api"
-	"grpc/config"
 	"log"
 	"time"
 
+	"github.com/uptrace/uptrace-go/example/grpc/api"
+	"github.com/uptrace/uptrace-go/example/grpc/config"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel/api/global"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
-
-var tracer = global.Tracer("grpc-client-tracer")
 
 func main() {
 	ctx := context.Background()
@@ -25,8 +23,11 @@ func main() {
 
 	upclient.ReportError(ctx, errors.New("hello from grpc client!"))
 
-	otelInterceptor := grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(tracer))
-	conn, err := grpc.Dial("grpc-server:9999", grpc.WithInsecure(), otelInterceptor)
+	conn, err := grpc.Dial("grpc-server:9999",
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+	)
 	if err != nil {
 		upclient.ReportError(ctx, err)
 		log.Print(err)
