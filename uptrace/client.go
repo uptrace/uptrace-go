@@ -60,7 +60,7 @@ func (c *Client) Close() error {
 // TraceURL returns the trace URL for the span.
 func (c *Client) TraceURL(span trace.Span) string {
 	host := strings.TrimPrefix(c.dsn.Host, "api.")
-	return fmt.Sprintf("%s://%s/%s/search/%s",
+	return fmt.Sprintf("%s://%s/%s/search?q=%s",
 		c.dsn.Scheme, host, c.dsn.ProjectID, span.SpanContext().TraceID)
 }
 

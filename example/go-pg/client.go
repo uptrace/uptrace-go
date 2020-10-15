@@ -21,14 +21,14 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	options := &pg.Options{
+	db := pg.Connect(&pg.Options{
 		Addr:     "postgresql-server:5432",
 		User:     "postgres",
 		Database: "example",
-	}
-	db := pg.Connect(options)
-	db.AddQueryHook(pgext.OpenTelemetryHook{})
+	})
 	defer db.Close()
+
+	db.AddQueryHook(pgext.OpenTelemetryHook{})
 
 	if err := createBookTable(ctx, db); err != nil {
 		upclient.ReportError(ctx, err)
