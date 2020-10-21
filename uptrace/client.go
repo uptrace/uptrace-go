@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -155,5 +156,13 @@ func (c *Client) setupTracing() {
 	)
 	c.sp = spanexp.NewBatchSpanProcessor(c.cfg)
 	c.provider.RegisterSpanProcessor(c.sp)
+
+	if c.cfg.PrettyPrint {
+		exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
+		if err == nil {
+			c.provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
+		}
+	}
+
 	global.SetTracerProvider(c.provider)
 }

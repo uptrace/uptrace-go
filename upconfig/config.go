@@ -29,6 +29,9 @@ type Config struct {
 	// HTTPClient that is used to send data to Uptrace.
 	HTTPClient *http.Client
 
+	// PrettyPrint pretty prints spans to the stdout.
+	PrettyPrint bool
+
 	// Disabled disables the exporter.
 	// The default is to use UPTRACE_DISABLED environment var.
 	Disabled bool
