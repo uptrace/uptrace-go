@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -17,7 +18,7 @@ type Config struct {
 
 	// Resource contains attributes representing an entity that produces telemetry.
 	// These attributes will be copied to every span and event.
-	Resource map[string]interface{}
+	Resource *resource.Resource
 
 	// Name of the tracer used by Uptrace client.
 	// Default is github.com/uptrace/uptrace-go.

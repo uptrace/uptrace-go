@@ -15,7 +15,6 @@ import (
 	apitrace "go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -138,19 +137,9 @@ func (c *Client) setupTracing() {
 		return
 	}
 
-	kvs := make([]label.KeyValue, 0, len(c.cfg.Resource))
-	for k, v := range c.cfg.Resource {
-		kvs = append(kvs, label.Any(k, v))
-	}
-
-	var res *resource.Resource
-	if len(kvs) > 0 {
-		res = resource.New(kvs...)
-	}
-
 	c.provider = sdktrace.NewTracerProvider(
 		sdktrace.WithConfig(sdktrace.Config{
-			Resource:       res,
+			Resource:       c.cfg.Resource,
 			DefaultSampler: c.cfg.Sampler,
 		}),
 	)
