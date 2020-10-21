@@ -51,14 +51,9 @@ func setupUptrace() *uptrace.Client {
 		panic("UPTRACE_DSN is empty or missing")
 	}
 
-	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN enar
 		DSN: "",
-
-		Resource: map[string]interface{}{
-			"host.name": hostname,
-		},
 	})
 
 	return upclient
