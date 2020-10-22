@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/semconv"
 )
 
 const outputLimit = 1024
@@ -25,7 +28,13 @@ var (
 var tracer = global.Tracer("github.com/uptrace/uptrace-go")
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
+
+	if *cmdFlag == "" {
+		usage()
+		os.Exit(2)
+	}
 
 	var exitCode int
 	defer func() {
@@ -101,12 +110,15 @@ func main() {
 	}
 }
 
+func usage() {
+	fmt.Fprintf(os.Stderr, `usage: uptrace-run [flags] -cmd="/path/to/executable"`+"\n")
+	flag.PrintDefaults()
+}
+
 func setupUptrace() *uptrace.Client {
 	hostname, _ := os.Hostname()
 	upclient := uptrace.NewClient(&uptrace.Config{
-		Resource: map[string]interface{}{
-			"host.name": hostname,
-		},
+		Resource: resource.New(semconv.HostNameKey.String(hostname)),
 	})
 	return upclient
 }
