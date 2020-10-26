@@ -1,7 +1,7 @@
 # Uptrace for Go
 
 [![Build Status](https://travis-ci.org/uptrace/uptrace-go.svg?branch=master)](https://travis-ci.org/uptrace/uptrace-go)
-[![GoDoc](https://godoc.org/github.com/uptrace/uptrace-go?status.svg)](https://pkg.go.dev/github.com/uptrace/uptrace-go?tab=doc)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go)
 [![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/)
 
 <a href="https://docs.uptrace.dev/go/">
