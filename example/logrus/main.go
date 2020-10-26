@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -26,7 +27,11 @@ func main() {
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()
 
-	logrus.WithContext(ctx).Error("hello")
+	// You must use WithContext to propagate the active span.
+	logrus.WithContext(ctx).
+		WithError(errors.New("hello world")).
+		WithField("foo", "bar").
+		Error("something failed")
 
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
 }
