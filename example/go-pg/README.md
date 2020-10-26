@@ -1,4 +1,6 @@
-# Go-pg instrumentation example
+# go-pg instrumentation example
+
+[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-go-pg/)
 
 To run this example:
 

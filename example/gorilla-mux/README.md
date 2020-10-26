@@ -1,5 +1,7 @@
 # Mux instrumentation example
 
+[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-gorilla-mux/)
+
 To run this example:
 
 ```bash

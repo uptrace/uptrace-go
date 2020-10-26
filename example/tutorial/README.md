@@ -1,6 +1,6 @@
 # Tutorial
 
-This is an application written for tutorial
+This is an application written for the tutorial
 [Instrumenting Go application with OpenTelemetry](https://docs.uptrace.dev/go-tutorial/). It can be
 run with:
 
