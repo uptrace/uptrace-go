@@ -42,10 +42,7 @@ func main() {
 	}
 
 	span.End()
-	fmt.Printf("trace: %s\n\n", upclient.TraceURL(span))
-
-	// This panic will be reported to Uptrace thanks to ReportPanic above.
-	panic("testing panic recovery")
+	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
 }
 
 func setupUptrace() *uptrace.Client {
