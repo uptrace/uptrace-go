@@ -54,6 +54,8 @@ github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/uptrace/uptrace-go v0.4.1 h1:vnOga9VTaI/Qa6tXdElJqqQSu9OAYX4CkZ0qQFm/A8Q=
 github.com/uptrace/uptrace-go v0.4.1/go.mod h1:BnBB3O6BMIAv5am66zvQOxJ+luIsFsU5PkYpwydhkiE=
+github.com/uptrace/uptrace-go v0.4.2 h1:GtYmOcGXql1BIWqgi/U4+bW1VDH+uQjCci+qb8yqnEQ=
+github.com/uptrace/uptrace-go v0.4.2/go.mod h1:BnBB3O6BMIAv5am66zvQOxJ+luIsFsU5PkYpwydhkiE=
 github.com/uptrace/uptrace-go/extra/otellogrus v0.1.0 h1:f3LnxkqEuCJCfcEzbbzT4yNbdz7U9e7KVbW2zoLIbrc=
 github.com/uptrace/uptrace-go/extra/otellogrus v0.1.0/go.mod h1:qcaR/tFm8kTwdyVlz/BORl/XJD+RzZ4CuoxdxgjPGl4=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=

@@ -140,6 +140,8 @@ github.com/uptrace/uptrace-go v0.2.0 h1:t+1LKs9W2CyDqI8TUokqwUrEwBIOJG53pmkIFKAu
 github.com/uptrace/uptrace-go v0.2.0/go.mod h1:XXwpI7Wku1gjqKpRq//OS60IE08OG2ISC8GYPAGNqCw=
 github.com/uptrace/uptrace-go v0.3.0 h1:oDpO64VaVqeU+b4DUDjnjVNiuQWwF9g9LJo1K7VzdhM=
 github.com/uptrace/uptrace-go v0.3.0/go.mod h1:XeP0n0y2VR7M62w89OWIJpO2q2nJi+WLqChSDqU2m8I=
+github.com/uptrace/uptrace-go v0.4.2 h1:GtYmOcGXql1BIWqgi/U4+bW1VDH+uQjCci+qb8yqnEQ=
+github.com/uptrace/uptrace-go v0.4.2/go.mod h1:BnBB3O6BMIAv5am66zvQOxJ+luIsFsU5PkYpwydhkiE=
 github.com/vmihailenco/msgpack/v4 v4.3.11/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1 h1:d71/KA0LhvkrJ/Ok+Wx9qK7bU8meKA1Hk0jpVI5kJjk=
 github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1/go.mod h1:xlngVLeyQ/Qi05oQxhQ+oTuqa03RjMwMfk/7/TCs+QI=

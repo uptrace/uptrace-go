@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.32 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/uptrace/uptrace-go v0.3.0
+	github.com/uptrace/uptrace-go v0.4.2
 	go.mongodb.org/mongo-driver v1.4.2
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.13.0
 	go.opentelemetry.io/otel v0.13.0

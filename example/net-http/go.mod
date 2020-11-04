@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/uptrace/uptrace-go v0.3.0
+	github.com/uptrace/uptrace-go v0.4.2
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.13.0
 	go.opentelemetry.io/otel v0.13.0
 )

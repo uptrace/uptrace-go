@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/golang/protobuf v1.4.2
-	github.com/uptrace/uptrace-go v0.3.0
+	github.com/uptrace/uptrace-go v0.4.2
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.13.0
 	go.opentelemetry.io/otel v0.13.0
 	google.golang.org/grpc v1.33.0
