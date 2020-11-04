@@ -64,6 +64,7 @@ type LoggingHook struct {
 
 var _ logrus.Hook = (*LoggingHook)(nil)
 
+// NewLoggingHook returns a logrus hook.
 func NewLoggingHook(opts ...Option) *LoggingHook {
 	hook := &LoggingHook{
 		levels: []logrus.Level{
@@ -82,17 +83,22 @@ func NewLoggingHook(opts ...Option) *LoggingHook {
 	return hook
 }
 
+// Fire is a logrus hook that is fired on a new log entry.
 func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 	ctx := entry.Context
 	if ctx == nil {
 		return nil
 	}
 
-	msg := entry.Message
+	span := trace.SpanFromContext(ctx)
+	if !span.IsRecording() {
+		return nil
+	}
+
 	attrs := make([]label.KeyValue, 0, len(entry.Data)+2+3)
 
 	attrs = append(attrs, logSeverityKey.String(levelString(entry.Level)))
-	attrs = append(attrs, logMessageKey.String(msg))
+	attrs = append(attrs, logMessageKey.String(entry.Message))
 
 	if entry.Caller != nil {
 		if entry.Caller.Function != "" {
@@ -108,9 +114,8 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 		if k == "error" {
 			if err, ok := v.(error); ok {
 				typ := reflect.TypeOf(err).String()
-				msg = err.Error()
 				attrs = append(attrs, exceptionTypeKey.String(typ))
-				attrs = append(attrs, exceptionMessageKey.String(msg))
+				attrs = append(attrs, exceptionMessageKey.String(err.Error()))
 				continue
 			}
 		}
@@ -118,16 +123,16 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 		attrs = append(attrs, label.Any(k, v))
 	}
 
-	span := trace.SpanFromContext(ctx)
 	span.AddEvent(ctx, "log", attrs...)
 
 	if entry.Level <= hook.errorStatusLevel {
-		span.SetStatus(codes.Error, "")
+		span.SetStatus(codes.Error, entry.Message)
 	}
 
 	return nil
 }
 
+// Levels returns logrus levels on which this hook is fired.
 func (hook *LoggingHook) Levels() []logrus.Level {
 	return hook.levels
 }
