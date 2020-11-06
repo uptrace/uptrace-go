@@ -9,6 +9,6 @@ require (
 	github.com/uptrace/uptrace-go v0.3.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.13.0
 	go.opentelemetry.io/otel v0.13.0
-	google.golang.org/grpc v1.33.0
+	google.golang.org/grpc v1.33.2
 	google.golang.org/protobuf v1.25.0
 )
