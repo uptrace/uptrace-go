@@ -8,15 +8,15 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/macaron.v1"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("macaron-tracer")
+	tracer   = otel.Tracer("macaron-tracer")
 )
 
 func main() {
@@ -54,7 +54,7 @@ func userProfileEndpoint(c *macaron.Context) string {
 	username := c.Params("username")
 	name, err := selectUser(ctx, username)
 	if err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 
 	return fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)

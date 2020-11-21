@@ -10,13 +10,13 @@ import (
 	"github.com/gocql/gocql"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gocql/gocql/otelgocql"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("gocql-tracer")
+	tracer   = otel.Tracer("gocql-tracer")
 )
 
 const keyspace = "gocql_example"
@@ -92,7 +92,7 @@ func insertBooks(ctx context.Context, session *gocql.Session) {
 		)
 	}
 	if err := session.ExecuteBatch(batch.WithContext(ctx)); err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 }
 
@@ -123,7 +123,7 @@ func updateBook(ctx context.Context, session *gocql.Session, bookID string) {
 		).
 		WithContext(ctx).
 		Exec(); err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 }
 
@@ -132,7 +132,7 @@ func deleteBook(ctx context.Context, session *gocql.Session, bookID string) {
 		Query("DELETE FROM book WHERE id = ?", bookID).
 		WithContext(ctx).
 		Exec(); err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 }
 

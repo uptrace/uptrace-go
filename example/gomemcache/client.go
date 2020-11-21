@@ -9,13 +9,13 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("memcache-tracer")
+	tracer   = otel.Tracer("memcache-tracer")
 )
 
 func main() {
@@ -59,21 +59,21 @@ func doMemcacheOperations(ctx context.Context, mc *otelmemcache.Client) {
 		Value: []byte("bar"),
 	})
 	if err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 
 	_, err = mc.Get("foo")
 	if err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 
 	_, err = mc.Get("hello")
 	if err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 
 	err = mc.Delete("foo")
 	if err != nil {
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 	}
 }

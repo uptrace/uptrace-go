@@ -14,9 +14,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/upconfig"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/metric"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/metric"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	"go.opentelemetry.io/otel/sdk/metric/controller/push"
@@ -63,7 +63,7 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 func InstallNewPipeline(config *upconfig.Config, options ...push.Option) *push.Controller {
 	options = append(options, push.WithPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
-	global.SetMeterProvider(ctrl.MeterProvider())
+	otel.SetMeterProvider(ctrl.MeterProvider())
 	return ctrl
 }
 
@@ -76,7 +76,7 @@ func NewExportPipeline(
 
 	// Not stateful.
 	pusher := push.New(
-		basic.New(simple.NewWithInexpensiveDistribution(), export.DeltaExporter),
+		basic.New(simple.NewWithInexpensiveDistribution(), export.DeltaExportKindSelector()),
 		exporter,
 		options...,
 	)
@@ -86,7 +86,7 @@ func NewExportPipeline(
 }
 
 func (e *Exporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {
-	return export.DeltaExporter
+	return export.DeltaExportKind
 }
 
 func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet) error {
@@ -103,7 +103,7 @@ func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet)
 }
 
 func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
-	return checkpointSet.ForEach(export.DeltaExporter, func(record export.Record) error {
+	return checkpointSet.ForEach(export.DeltaExportKindSelector(), func(record export.Record) error {
 		switch agg := record.Aggregation().(type) {
 		case aggregation.Quantile:
 			return e.exportQuantile(record, agg)
@@ -197,7 +197,7 @@ func exportCommon(record export.Record, expose *baseRecord) error {
 
 	expose.Name = desc.Name()
 	expose.Description = desc.Description()
-	expose.Kind = int8(desc.MetricKind()) // use string?
+	expose.NumberKind = int8(desc.NumberKind()) // use string?
 	expose.Unit = string(desc.Unit())
 	expose.Time = time.Now().UnixNano()
 
@@ -276,7 +276,7 @@ type baseRecord struct {
 	Name        string           `msgpack:"name"`
 	Description string           `msgpack:"description"`
 	Unit        string           `msgpack:"unit"`
-	Kind        int8             `msgpack:"kind"`
+	NumberKind  int8             `msgpack:"numberKind"`
 	Labels      internal.KVSlice `msgpack:"labels"`
 
 	Time int64 `msgpack:"time"`

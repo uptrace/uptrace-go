@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/extra/otellogrus"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 	// Add OpenTelemetry logging hook.
 	logrus.AddHook(otellogrus.NewLoggingHook())
 
-	tracer := global.Tracer("example")
+	tracer := otel.Tracer("example")
 
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()

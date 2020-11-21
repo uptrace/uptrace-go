@@ -18,12 +18,12 @@ import (
 	"github.com/uptrace/uptrace-go/upconfig"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
-	"go.opentelemetry.io/otel/api/global"
-	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	apitrace "go.opentelemetry.io/otel/trace"
 )
 
 // WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options:
@@ -70,7 +70,7 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 	e := &Exporter{
 		cfg: cfg,
 
-		tracer: global.Tracer("github.com/uptrace/uptrace-go"),
+		tracer: otel.Tracer("github.com/uptrace/uptrace-go"),
 	}
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
@@ -111,7 +111,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 	}
 
 	expoSpans := make([]expoSpan, len(spans))
-	m := make(map[apitrace.ID]*expoTrace, len(spans)/10)
+	m := make(map[apitrace.TraceID]*expoTrace, len(spans)/10)
 
 	sampler := e.cfg.Sampler.Description()
 	for i, span := range spans {
@@ -136,8 +136,8 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 	}
 
 	if err := e.send(ctx, traces); err != nil {
-		currSpan.SetStatus(codes.Error, "")
-		currSpan.RecordError(ctx, err)
+		currSpan.SetStatus(codes.Error, err.Error())
+		currSpan.RecordError(err)
 	}
 
 	return nil
@@ -198,8 +198,8 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 //------------------------------------------------------------------------------
 
 type expoTrace struct {
-	ID    apitrace.ID `msgpack:"id"`
-	Spans []*expoSpan `msgpack:"spans"`
+	ID    apitrace.TraceID `msgpack:"id"`
+	Spans []*expoSpan      `msgpack:"spans"`
 }
 
 type expoSpan struct {
@@ -274,7 +274,7 @@ func initExpoEvent(expose *expoEvent, event *trace.Event) {
 }
 
 type expoLink struct {
-	TraceID apitrace.ID      `msgpack:"traceId"`
+	TraceID apitrace.TraceID `msgpack:"traceId"`
 	SpanID  uint64           `msgpack:"spanId"`
 	Attrs   internal.KVSlice `msgpack:"attrs"`
 }

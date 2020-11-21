@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/semconv"
@@ -25,7 +25,7 @@ var (
 	timeoutFlag = flag.Duration("timeout", time.Hour, "command timeout")
 )
 
-var tracer = global.Tracer("github.com/uptrace/uptrace-go")
+var tracer = otel.Tracer("github.com/uptrace/uptrace-go")
 
 func main() {
 	flag.Usage = usage
@@ -78,7 +78,7 @@ func main() {
 	cmd.Stderr = io.MultiWriter(os.Stderr, stderr)
 
 	if err := cmd.Start(); err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		log.Print(err)
 		exitCode = 1
 		return
@@ -96,7 +96,7 @@ func main() {
 	}
 
 	if err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		if err, ok := err.(*exec.ExitError); ok {
 			exitCode = err.ExitCode()
 			span.SetAttributes(

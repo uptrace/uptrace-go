@@ -11,13 +11,13 @@ import (
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("restful-tracer")
+	tracer   = otel.Tracer("restful-tracer")
 )
 
 func main() {

@@ -9,13 +9,13 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 )
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("beego-tracer")
+	tracer   = otel.Tracer("beego-tracer")
 )
 
 func main() {

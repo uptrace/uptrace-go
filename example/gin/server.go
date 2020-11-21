@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 )
 
@@ -19,7 +19,7 @@ const profileTmpl = "profile"
 
 var (
 	upclient *uptrace.Client
-	tracer   = global.Tracer("gin-tracer")
+	tracer   = otel.Tracer("gin-tracer")
 )
 
 func main() {

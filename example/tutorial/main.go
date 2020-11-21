@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 )
 
-var tracer = global.Tracer("go-example-app")
+var tracer = otel.Tracer("go-example-app")
 
 func main() {
 	upclient := uptrace.NewClient(&uptrace.Config{
@@ -28,13 +28,13 @@ func main() {
 
 	countryInfo, err := fetchCountryInfo(ctx)
 	if err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return
 	}
 
 	countryCode, countryName, err := parseCountryInfo(ctx, countryInfo)
 	if err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return
 	}
 
@@ -52,14 +52,14 @@ func fetchCountryInfo(ctx context.Context) (string, error) {
 
 	resp, err := http.Get("https://ip2c.org/self")
 	if err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return "", err
 	}
 
@@ -78,7 +78,7 @@ func parseCountryInfo(ctx context.Context, s string) (code, country string, _ er
 	parts := strings.Split(s, ";")
 	if len(parts) < 4 {
 		err := fmt.Errorf("ip2c: can't parse response: %q", s)
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return "", "", err
 	}
 	return parts[1], parts[3], nil

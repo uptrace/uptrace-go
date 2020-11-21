@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -18,22 +18,26 @@ func main() {
 	defer upclient.ReportPanic(ctx)
 
 	// Create a tracer.
-	tracer := global.Tracer("github.com/your/repo")
+	tracer := otel.Tracer("github.com/your/repo")
 
 	{
-		ctx, span := tracer.Start(ctx, "trace1")
+		ctx, trace1 := tracer.Start(ctx, "trace1")
+
+		_, span := tracer.Start(ctx, "child1")
 		span.End()
 
-		_, span = tracer.Start(ctx, "child1")
-		span.End()
+		trace1.End()
+		fmt.Printf("trace1: %s\n", upclient.TraceURL(span))
 	}
 
 	{
-		ctx, span := tracer.Start(ctx, "trace2")
+		ctx, trace2 := tracer.Start(ctx, "trace2")
+
+		_, span := tracer.Start(ctx, "child1")
 		span.End()
 
-		_, span = tracer.Start(ctx, "child1")
-		span.End()
+		trace2.End()
+		fmt.Printf("trace2: %s\n", upclient.TraceURL(span))
 	}
 }
 
@@ -61,8 +65,6 @@ type CustomSampler struct {
 }
 
 func (s CustomSampler) ShouldSample(params sdktrace.SamplingParameters) sdktrace.SamplingResult {
-	log.Println("ShouldSample", params.Name)
-
 	if params.Name == "trace2" {
 		// Drop traces with such name.
 		return sdktrace.SamplingResult{

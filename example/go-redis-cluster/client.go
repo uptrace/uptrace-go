@@ -6,13 +6,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-redis/redis/extra/redisotel"
 	"github.com/go-redis/redis/v8"
-	"github.com/go-redis/redisext"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 )
 
-var tracer = global.Tracer("go-redis-cluster-tracer")
+var tracer = otel.Tracer("go-redis-cluster-tracer")
 
 func main() {
 	ctx := context.Background()
@@ -26,13 +26,13 @@ func main() {
 
 		NewClient: func(opt *redis.Options) *redis.Client {
 			node := redis.NewClient(opt)
-			node.AddHook(redisext.OpenTelemetryHook{})
+			node.AddHook(&redisotel.TracingHook{})
 			return node
 		},
 	})
 	defer rdb.Close()
 
-	rdb.AddHook(redisext.OpenTelemetryHook{})
+	rdb.AddHook(&redisotel.TracingHook{})
 
 	ctx, span := tracer.Start(ctx, "redis-main-span")
 	defer span.End()

@@ -11,11 +11,11 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 )
 
-var tracer = global.Tracer("github.com/my/repo")
+var tracer = otel.Tracer("github.com/my/repo")
 
 func main() {
 	ctx := context.Background()

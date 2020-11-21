@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-pg/pg/extra/pgotel"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
-	"github.com/go-pg/pgext"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 )
 
-var tracer = global.Tracer("go-pg-tracer")
+var tracer = otel.Tracer("go-pg-tracer")
 
 func main() {
 	ctx := context.Background()
@@ -28,7 +28,7 @@ func main() {
 	})
 	defer db.Close()
 
-	db.AddQueryHook(pgext.OpenTelemetryHook{})
+	db.AddQueryHook(&pgotel.TracingHook{})
 
 	if err := createBookTable(ctx, db); err != nil {
 		upclient.ReportError(ctx, err)

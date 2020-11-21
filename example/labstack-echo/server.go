@@ -11,12 +11,12 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 )
 
-var tracer = global.Tracer("echo-tracer")
+var tracer = otel.Tracer("echo-tracer")
 
 func main() {
 	ctx := context.Background()
@@ -32,7 +32,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		ctx := c.Request().Context()
-		trace.SpanFromContext(ctx).RecordError(ctx, err)
+		trace.SpanFromContext(ctx).RecordError(err)
 
 		e.DefaultHTTPErrorHandler(err, c)
 	}

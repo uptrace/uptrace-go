@@ -6,9 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -123,7 +123,7 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 		attrs = append(attrs, label.Any(k, v))
 	}
 
-	span.AddEvent(ctx, "log", attrs...)
+	span.AddEvent("log", trace.WithAttributes(attrs...))
 
 	if entry.Level <= hook.errorStatusLevel {
 		span.SetStatus(codes.Error, entry.Message)

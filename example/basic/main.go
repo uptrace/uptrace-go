@@ -7,8 +7,9 @@ import (
 	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -22,22 +23,22 @@ func main() {
 	upclient.ReportError(ctx, errors.New("Hello from uptrace-go!"))
 
 	// Create a tracer.
-	tracer := global.Tracer("github.com/your/repo")
+	tracer := otel.Tracer("github.com/your/repo")
 
 	// Start active span.
 	ctx, span := tracer.Start(ctx, "main span")
 
 	{
-		ctx, span := tracer.Start(ctx, "child1")
+		_, span := tracer.Start(ctx, "child1")
 		span.SetAttributes(label.String("key1", "value1"))
-		span.AddEvent(ctx, "event-name", label.String("foo", "bar"))
+		span.AddEvent("event-name", trace.WithAttributes(label.String("foo", "bar")))
 		span.End()
 	}
 
 	{
-		ctx, span := tracer.Start(ctx, "child2")
+		_, span := tracer.Start(ctx, "child2")
 		span.SetAttributes(label.String("key2", "value2"))
-		span.AddEvent(ctx, "event-name", label.String("foo", "baz"))
+		span.AddEvent("event-name", trace.WithAttributes(label.String("foo", "baz")))
 		span.End()
 	}
 

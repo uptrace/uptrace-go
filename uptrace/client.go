@@ -10,12 +10,11 @@ import (
 	"github.com/uptrace/uptrace-go/spanexp"
 	"github.com/uptrace/uptrace-go/upconfig"
 
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/trace"
-	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const dummySpanName = "__dummy__"
@@ -27,7 +26,7 @@ type Client struct {
 	cfg *Config
 	dsn *internal.DSN
 
-	tracer apitrace.Tracer
+	tracer trace.Tracer
 
 	sp       sdktrace.SpanProcessor
 	provider *sdktrace.TracerProvider
@@ -39,7 +38,7 @@ func NewClient(cfg *Config) *Client {
 	client := &Client{
 		cfg: cfg,
 
-		tracer: global.Tracer(cfg.TracerName),
+		tracer: otel.Tracer(cfg.TracerName),
 	}
 	client.setupTracing()
 
@@ -65,14 +64,14 @@ func (c *Client) TraceURL(span trace.Span) string {
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
-func (c *Client) ReportError(ctx context.Context, err error, opts ...apitrace.ErrorOption) {
-	span := apitrace.SpanFromContext(ctx)
+func (c *Client) ReportError(ctx context.Context, err error, opts ...trace.EventOption) {
+	span := trace.SpanFromContext(ctx)
 	if !span.IsRecording() {
-		ctx, span = c.tracer.Start(ctx, dummySpanName)
+		_, span = c.tracer.Start(ctx, dummySpanName)
 		defer span.End()
 	}
 
-	span.RecordError(ctx, err, opts...)
+	span.RecordError(err, opts...)
 }
 
 // ReportPanic is used with defer to report panics.
@@ -82,17 +81,18 @@ func (c *Client) ReportPanic(ctx context.Context) {
 		return
 	}
 
-	span := apitrace.SpanFromContext(ctx)
+	span := trace.SpanFromContext(ctx)
 	isRecording := span.IsRecording()
 	if !isRecording {
-		ctx, span = c.tracer.Start(ctx, dummySpanName)
+		_, span = c.tracer.Start(ctx, dummySpanName)
 	}
 
 	span.AddEvent(
-		ctx,
 		"log",
-		label.String("log.severity", "panic"),
-		label.Any("log.message", val),
+		trace.WithAttributes(
+			label.String("log.severity", "panic"),
+			label.Any("log.message", val),
+		),
 	)
 
 	if !isRecording {
@@ -107,12 +107,12 @@ func (c *Client) ReportPanic(ctx context.Context) {
 //------------------------------------------------------------------------------
 
 // TracerProvider returns a tracer provider.
-func (c *Client) TracerProvider() apitrace.TracerProvider {
+func (c *Client) TracerProvider() trace.TracerProvider {
 	return c.provider
 }
 
 // Tracer returns a named tracer.
-func (c *Client) Tracer(name string) apitrace.Tracer {
+func (c *Client) Tracer(name string) trace.Tracer {
 	return c.provider.Tracer(name)
 }
 
@@ -126,7 +126,7 @@ func (c *Client) WithSpan(
 	defer span.End()
 
 	if err := fn(ctx, span); err != nil {
-		span.RecordError(ctx, err)
+		span.RecordError(err)
 		return err
 	}
 	return nil
@@ -153,5 +153,5 @@ func (c *Client) setupTracing() {
 		}
 	}
 
-	global.SetTracerProvider(c.provider)
+	otel.SetTracerProvider(c.provider)
 }
