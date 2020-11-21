@@ -5,3 +5,7 @@ all:
 	env GOOS=linux GOARCH=386 go test ./...
 	go vet ./...
 	golangci-lint run
+
+tag:
+	git tag $(VERSION)
+	git tag extra/otellogrus/$(VERSION)

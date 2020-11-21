@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/semconv"
 )
 
 const outputLimit = 1024
@@ -58,7 +57,7 @@ func main() {
 		defer cancel()
 	}
 
-	upclient := setupUptrace()
+	upclient := setupUptrace(ctx)
 
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
@@ -115,10 +114,14 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func setupUptrace() *uptrace.Client {
-	hostname, _ := os.Hostname()
+func setupUptrace(ctx context.Context) *uptrace.Client {
+	resource, err := resource.New(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	upclient := uptrace.NewClient(&uptrace.Config{
-		Resource: resource.New(semconv.HostNameKey.String(hostname)),
+		Resource: resource,
 	})
 	return upclient
 }
