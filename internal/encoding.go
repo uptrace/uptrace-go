@@ -2,10 +2,10 @@ package internal
 
 import (
 	"bytes"
+	"context"
 	"sync"
 
 	"github.com/klauspost/compress/s2"
-	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel/label"
 )
@@ -61,8 +61,8 @@ func EncodeValue(enc *msgpack.Encoder, v label.Value) {
 	case label.ARRAY:
 		_ = enc.Encode(v.AsArray())
 	default:
-		logrus.WithField("type", v.Type()).Error("unknown type")
-		_ = enc.EncodeString("unknown " + v.Type().String())
+		Logger.Printf(context.TODO(), "unknown otel type: %s", v.Type())
+		_ = enc.EncodeString("unknown otel type: " + v.Type().String())
 	}
 }
 

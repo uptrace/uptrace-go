@@ -75,7 +75,7 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
-		internal.Logger.Print(err.Error())
+		internal.Logger.Printf(context.TODO(), err.Error())
 		cfg.Disabled = true
 	} else {
 		e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",

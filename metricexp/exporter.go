@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/upconfig"
 	"go.opentelemetry.io/otel"
@@ -231,7 +230,7 @@ func (e *Exporter) flush() {
 		}
 
 		if err := e.send(out); err != nil {
-			logrus.WithError(err).Error("send failed")
+			internal.Logger.Printf(context.TODO(), "send failed: %s", err)
 		}
 	}(e.mmsc, e.quantiles)
 
