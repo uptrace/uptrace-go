@@ -1,10 +1,12 @@
 package upconfig
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
 
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -20,15 +22,19 @@ type Config struct {
 	// These attributes will be copied to every span and event.
 	Resource *resource.Resource
 
-	// Name of the tracer used by Uptrace client.
-	// Default is github.com/uptrace/uptrace-go.
-	TracerName string
+	// Global TextMapPropagator used by OpenTelemetry.
+	// The default is propagation.TraceContext and propagation.Baggage.
+	TextMapPropagator propagation.TextMapPropagator
 
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
 
 	// HTTPClient that is used to send data to Uptrace.
 	HTTPClient *http.Client
+
+	// Name of the tracer used by Uptrace client.
+	// The default is github.com/uptrace/uptrace-go.
+	TracerName string
 
 	// PrettyPrint pretty prints spans to the stdout.
 	PrettyPrint bool
@@ -59,6 +65,20 @@ func (cfg *Config) Init() {
 
 	if cfg.DSN == "" {
 		cfg.DSN = os.Getenv("UPTRACE_DSN")
+	}
+
+	if cfg.Resource == nil {
+		resource, err := resource.New(context.TODO())
+		if err == nil {
+			cfg.Resource = resource
+		}
+	}
+
+	if cfg.TextMapPropagator == nil {
+		cfg.TextMapPropagator = propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		)
 	}
 
 	if cfg.TracerName == "" {
