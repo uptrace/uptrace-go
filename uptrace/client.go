@@ -40,7 +40,9 @@ func NewClient(cfg *Config) *Client {
 
 		tracer: otel.Tracer(cfg.TracerName),
 	}
+
 	client.setupTracing()
+	otel.SetTextMapPropagator(cfg.TextMapPropagator)
 
 	if dsn, err := internal.ParseDSN(cfg.DSN); err == nil {
 		client.dsn = dsn
