@@ -212,7 +212,7 @@ type expoSpan struct {
 	EndTime   int64            `msgpack:"endTime"`
 	Attrs     internal.KVSlice `msgpack:"attrs"`
 
-	StatusCode    uint32 `msgpack:"statusCode"`
+	StatusCode    string `msgpack:"statusCode"`
 	StatusMessage string `msgpack:"statusMessage"`
 
 	Events   []expoEvent      `msgpack:"events"`
@@ -236,7 +236,7 @@ func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
 	expose.EndTime = span.EndTime.UnixNano()
 	expose.Attrs = span.Attributes
 
-	expose.StatusCode = uint32(span.StatusCode)
+	expose.StatusCode = expoStatusCode(span.StatusCode)
 	expose.StatusMessage = span.StatusMessage
 
 	if len(span.MessageEvents) > 0 {
@@ -287,6 +287,19 @@ func initExpoLink(expose *expoLink, link *apitrace.Link) {
 
 func asUint64(b [8]byte) uint64 {
 	return binary.LittleEndian.Uint64(b[:])
+}
+
+func expoStatusCode(code codes.Code) string {
+	switch code {
+	case codes.Unset:
+		return "unset"
+	case codes.Ok:
+		return "ok"
+	case codes.Error:
+		return "error"
+	default:
+		return "unset"
+	}
 }
 
 //------------------------------------------------------------------------------

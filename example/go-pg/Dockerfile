@@ -1,4 +1,5 @@
 FROM golang:alpine AS base
+
 COPY . /src/
 WORKDIR /src/example/go-pg
 
