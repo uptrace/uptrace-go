@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -43,10 +42,6 @@ func main() {
 }
 
 func setupUptrace() *uptrace.Client {
-	if os.Getenv("UPTRACE_DSN") == "" {
-		panic("UPTRACE_DSN is empty or missing")
-	}
-
 	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"os"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.mongodb.org/mongo-driver/bson"
@@ -55,10 +54,6 @@ func main() {
 }
 
 func setupUptrace() *uptrace.Client {
-	if os.Getenv("UPTRACE_DSN") == "" {
-		panic("UPTRACE_DSN is empty or missing")
-	}
-
 	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",

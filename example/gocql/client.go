@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -68,10 +67,6 @@ func newCassandraCluster(keyspace string) *gocql.ClusterConfig {
 }
 
 func setupUptrace() *uptrace.Client {
-	if os.Getenv("UPTRACE_DSN") == "" {
-		panic("UPTRACE_DSN is empty or missing")
-	}
-
 	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN enar
 		DSN: "",

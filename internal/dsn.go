@@ -15,7 +15,7 @@ type DSN struct {
 
 func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsnStr == "" {
-		return nil, fmt.Errorf("DSN is empty or missing")
+		return nil, fmt.Errorf("UPTRACE_DSN is empty or missing")
 	}
 
 	u, err := url.Parse(dsnStr)

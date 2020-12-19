@@ -6,6 +6,7 @@ package spanexp
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -75,7 +76,7 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
-		internal.Logger.Printf(context.TODO(), err.Error())
+		internal.Logger.Printf(context.TODO(), err.Error()+" (client is disabled)")
 		cfg.Disabled = true
 	} else {
 		e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
@@ -136,6 +137,8 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 	}
 
 	if err := e.send(ctx, traces); err != nil {
+		internal.Logger.Printf(ctx, "send failed: %s", err)
+
 		currSpan.SetStatus(codes.Error, err.Error())
 		currSpan.RecordError(err)
 	}
@@ -182,17 +185,36 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return err
+	defer func() {
+		_, _ = io.Copy(ioutil.Discard, resp.Body)
+		resp.Body.Close()
+	}()
+
+	if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+		msg := decodeErrorMessage(resp.Body)
+		return statusCodeError{
+			code: resp.StatusCode,
+			msg:  msg,
+		}
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return statusCodeError{code: resp.StatusCode}
+		return statusCodeError{
+			code: resp.StatusCode,
+		}
 	}
 
 	return nil
+}
+
+func decodeErrorMessage(r io.Reader) string {
+	m := make(map[string]interface{})
+	if err := json.NewDecoder(r).Decode(&m); err != nil {
+		return err.Error()
+	}
+	msg, _ := m["message"].(string)
+	return msg
 }
 
 //------------------------------------------------------------------------------
@@ -306,8 +328,12 @@ func expoStatusCode(code codes.Code) string {
 
 type statusCodeError struct {
 	code int
+	msg  string
 }
 
 func (e statusCodeError) Error() string {
-	return "got status code " + strconv.Itoa(e.code) + ", wanted 200 OK"
+	if e.msg != "" {
+		return fmt.Sprintf("status=%d: %s", e.code, e.msg)
+	}
+	return "got status=" + strconv.Itoa(e.code) + ", wanted 200 OK"
 }

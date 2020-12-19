@@ -19,6 +19,14 @@ import (
 
 const dummySpanName = "__dummy__"
 
+var defaultDSN = &internal.DSN{
+	ProjectID: "<project_id>",
+	Token:     "<token>",
+
+	Scheme: "https",
+	Host:   "api.uptrace.dev",
+}
+
 type Config = upconfig.Config
 
 // Client represents Uptrace client.
@@ -46,6 +54,8 @@ func NewClient(cfg *Config) *Client {
 
 	if dsn, err := internal.ParseDSN(cfg.DSN); err == nil {
 		client.dsn = dsn
+	} else {
+		client.dsn = defaultDSN
 	}
 
 	return client
