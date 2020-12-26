@@ -12,7 +12,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptrace"
+	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -27,19 +29,19 @@ import (
 	apitrace "go.opentelemetry.io/otel/trace"
 )
 
-// WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options:
-//   - WithBatchTimeout(5 * time.Second)
-//   - WithMaxQueueSize(10000)
-//   - WithMaxExportBatchSize(10000)
+const (
+	maxQueueSize = 2000
+	batchSize    = 2000
+	batchTimeout = 5 * time.Second
+)
+
+// WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options.
 func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.TracerProviderOption {
 	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
 }
 
 // NewBatchSpanProcessor is like OpenTelemetry NewBatchSpanProcessor
-// but it comes with recommended options:
-//   - WithBatchTimeout(5 * time.Second)
-//   - WithMaxQueueSize(10000)
-//   - WithMaxExportBatchSize(10000)
+// but it comes with recommended options.
 func NewBatchSpanProcessor(
 	cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption,
 ) *sdktrace.BatchSpanProcessor {
@@ -48,14 +50,17 @@ func NewBatchSpanProcessor(
 
 func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProcessorOption {
 	return append([]sdktrace.BatchSpanProcessorOption{
-		sdktrace.WithBatchTimeout(5 * time.Second),
-		sdktrace.WithMaxQueueSize(10000),
-		sdktrace.WithMaxExportBatchSize(10000),
+		sdktrace.WithBatchTimeout(batchTimeout),
+		sdktrace.WithMaxQueueSize(maxQueueSize),
+		sdktrace.WithMaxExportBatchSize(batchSize),
 	}, opts...)
 }
 
 type Exporter struct {
 	cfg *upconfig.Config
+
+	wg sync.WaitGroup
+	rl *internal.Gate
 
 	endpoint string
 	token    string
@@ -70,6 +75,7 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 
 	e := &Exporter{
 		cfg: cfg,
+		rl:  internal.NewGate(runtime.NumCPU()),
 
 		tracer: otel.Tracer("github.com/uptrace/uptrace-go"),
 	}
@@ -90,6 +96,7 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 var _ trace.SpanExporter = (*Exporter)(nil)
 
 func (e *Exporter) Shutdown(context.Context) error {
+	e.wg.Wait()
 	return nil
 }
 
@@ -107,48 +114,43 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 		currSpan.SetAttributes(
 			label.Int("num_span", len(spans)),
 		)
-	} else {
-		currSpan = apitrace.SpanFromContext(context.Background())
 	}
 
 	expoSpans := make([]expoSpan, len(spans))
-	m := make(map[apitrace.TraceID]*expoTrace, len(spans)/10)
 
 	sampler := e.cfg.Sampler.Description()
 	for i, span := range spans {
 		expose := &expoSpans[i]
 		initExpoSpan(expose, span)
 		expose.Sampler = sampler
+	}
 
-		if trace, ok := m[span.SpanContext.TraceID]; ok {
-			trace.Spans = append(trace.Spans, expose)
-		} else {
-			m[span.SpanContext.TraceID] = &expoTrace{
-				ID:    span.SpanContext.TraceID,
-				Spans: []*expoSpan{expose},
+	e.wg.Add(1)
+	e.rl.Start()
+
+	go func() {
+		if currSpan != nil {
+			defer currSpan.End()
+		}
+		defer e.rl.Done()
+		defer e.wg.Done()
+
+		if err := e.send(ctx, expoSpans); err != nil {
+			internal.Logger.Printf(ctx, "send failed: %s", err)
+
+			if currSpan != nil {
+				currSpan.SetStatus(codes.Error, err.Error())
+				currSpan.RecordError(err)
 			}
 		}
-	}
-
-	traces := make([]*expoTrace, 0, len(m))
-
-	for _, trace := range m {
-		traces = append(traces, trace)
-	}
-
-	if err := e.send(ctx, traces); err != nil {
-		internal.Logger.Printf(ctx, "send failed: %s", err)
-
-		currSpan.SetStatus(codes.Error, err.Error())
-		currSpan.RecordError(err)
-	}
+	}()
 
 	return nil
 }
 
 //------------------------------------------------------------------------------
 
-func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
+func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 	var span apitrace.Span
 
 	if e.cfg.Trace {
@@ -160,7 +162,7 @@ func (e *Exporter) send(ctx context.Context, traces []*expoTrace) error {
 	defer internal.PutEncoder(enc)
 
 	out := map[string]interface{}{
-		"traces": traces,
+		"spans": spans,
 	}
 
 	buf, err := enc.EncodeS2(out)
@@ -219,14 +221,10 @@ func decodeErrorMessage(r io.Reader) string {
 
 //------------------------------------------------------------------------------
 
-type expoTrace struct {
-	ID    apitrace.TraceID `msgpack:"id"`
-	Spans []*expoSpan      `msgpack:"spans"`
-}
-
 type expoSpan struct {
-	ID       uint64 `msgpack:"id"`
-	ParentID uint64 `msgpack:"parentId"`
+	ID       uint64           `msgpack:"id"`
+	ParentID uint64           `msgpack:"parentId"`
+	TraceID  apitrace.TraceID `msgpack:"traceId"`
 
 	Name      string           `msgpack:"name"`
 	Kind      string           `msgpack:"kind"`
@@ -251,6 +249,7 @@ type expoSpan struct {
 func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
 	expose.ID = asUint64(span.SpanContext.SpanID)
 	expose.ParentID = asUint64(span.ParentSpanID)
+	expose.TraceID = span.SpanContext.TraceID
 
 	expose.Name = span.Name
 	expose.Kind = span.SpanKind.String()
