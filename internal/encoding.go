@@ -90,7 +90,7 @@ func (enc *Encoder) Encode(v interface{}) (*bytes.Buffer, error) {
 	return &enc.buf, nil
 }
 
-func (enc *Encoder) EncodeS2(v interface{}) (*bytes.Buffer, error) {
+func (enc *Encoder) EncodeS2(v interface{}) ([]byte, error) {
 	s2w := getS2Writer()
 	defer putS2Writer(s2w)
 
@@ -105,7 +105,7 @@ func (enc *Encoder) EncodeS2(v interface{}) (*bytes.Buffer, error) {
 	if err := s2w.Close(); err != nil {
 		return nil, err
 	}
-	return &enc.buf, nil
+	return enc.buf.Bytes(), nil
 }
 
 var encPool = sync.Pool{

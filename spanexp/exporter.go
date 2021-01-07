@@ -4,6 +4,7 @@ spanexp provides span exporter for OpenTelemetry.
 package spanexp
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -175,7 +176,7 @@ func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 		"spans": spans,
 	}
 
-	buf, err := enc.EncodeS2(out)
+	data, err := enc.EncodeS2(out)
 	if err != nil {
 		return err
 	}
@@ -184,16 +185,7 @@ func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", e.endpoint, buf)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+e.token)
-	req.Header.Set("Content-Type", "application/msgpack")
-	req.Header.Set("Content-Encoding", "s2")
-
-	resp, err := e.cfg.HTTPClient.Do(req)
+	resp, err := e.postWithRetry(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -218,6 +210,29 @@ func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 	}
 
 	return nil
+}
+
+func (e *Exporter) postWithRetry(ctx context.Context, data []byte) (resp *http.Response, err error) {
+	for attempt := 0; attempt < 3; attempt++ {
+		if err := internal.Backoff(ctx, attempt, time.Second, 3*time.Second); err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "POST", e.endpoint, bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", "Bearer "+e.token)
+		req.Header.Set("Content-Type", "application/msgpack")
+		req.Header.Set("Content-Encoding", "s2")
+
+		resp, err = e.cfg.HTTPClient.Do(req)
+		if err == nil {
+			return resp, nil
+		}
+	}
+	return resp, err
 }
 
 func decodeErrorMessage(r io.Reader) string {
