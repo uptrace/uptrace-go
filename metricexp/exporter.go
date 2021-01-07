@@ -6,9 +6,6 @@ package metricexp
 import (
 	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -239,36 +236,17 @@ func (e *Exporter) flush() {
 }
 
 func (e *Exporter) send(out map[string]interface{}) error {
+	ctx := context.Background()
+
 	enc := internal.GetEncoder()
 	defer internal.PutEncoder(enc)
 
-	buf, err := enc.EncodeS2(out)
+	data, err := enc.EncodeS2(out)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", e.endpoint, buf)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+e.token)
-	req.Header.Set("Content-Type", "application/msgpack")
-	req.Header.Set("Content-Encoding", "s2")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, _ = io.Copy(ioutil.Discard, resp.Body)
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("got %s, wanted 200 OK", resp.Status)
-	}
-
-	return nil
+	return internal.PostWithRetry(ctx, e.cfg.HTTPClient, e.endpoint, e.token, data)
 }
 
 type baseRecord struct {

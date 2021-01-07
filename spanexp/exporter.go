@@ -4,17 +4,11 @@ spanexp provides span exporter for OpenTelemetry.
 package spanexp
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"net/http/httptrace"
 	"runtime"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -162,9 +156,8 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 //------------------------------------------------------------------------------
 
 func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
-	var span apitrace.Span
-
 	if e.cfg.Trace {
+		var span apitrace.Span
 		ctx, span = e.tracer.Start(ctx, "send")
 		defer span.End()
 	}
@@ -185,63 +178,7 @@ func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}
 
-	resp, err := e.postWithRetry(ctx, data)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		_, _ = io.Copy(ioutil.Discard, resp.Body)
-		resp.Body.Close()
-	}()
-
-	if resp.StatusCode >= 400 && resp.StatusCode < 500 {
-		msg := decodeErrorMessage(resp.Body)
-		return statusCodeError{
-			code: resp.StatusCode,
-			msg:  msg,
-		}
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return statusCodeError{
-			code: resp.StatusCode,
-		}
-	}
-
-	return nil
-}
-
-func (e *Exporter) postWithRetry(ctx context.Context, data []byte) (resp *http.Response, err error) {
-	for attempt := 0; attempt < 3; attempt++ {
-		if err := internal.Backoff(ctx, attempt, time.Second, 3*time.Second); err != nil {
-			return nil, err
-		}
-
-		req, err := http.NewRequestWithContext(ctx, "POST", e.endpoint, bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("Authorization", "Bearer "+e.token)
-		req.Header.Set("Content-Type", "application/msgpack")
-		req.Header.Set("Content-Encoding", "s2")
-
-		resp, err = e.cfg.HTTPClient.Do(req)
-		if err == nil {
-			return resp, nil
-		}
-	}
-	return resp, err
-}
-
-func decodeErrorMessage(r io.Reader) string {
-	m := make(map[string]interface{})
-	if err := json.NewDecoder(r).Decode(&m); err != nil {
-		return err.Error()
-	}
-	msg, _ := m["message"].(string)
-	return msg
+	return internal.PostWithRetry(ctx, e.cfg.HTTPClient, e.endpoint, e.token, data)
 }
 
 //------------------------------------------------------------------------------
@@ -346,18 +283,4 @@ func expoStatusCode(code codes.Code) string {
 	default:
 		return "unset"
 	}
-}
-
-//------------------------------------------------------------------------------
-
-type statusCodeError struct {
-	code int
-	msg  string
-}
-
-func (e statusCodeError) Error() string {
-	if e.msg != "" {
-		return fmt.Sprintf("status=%d: %s", e.code, e.msg)
-	}
-	return "got status=" + strconv.Itoa(e.code) + ", wanted 200 OK"
 }
