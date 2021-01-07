@@ -36,7 +36,8 @@ type Client struct {
 
 	tracer trace.Tracer
 
-	sp       sdktrace.SpanProcessor
+	sp       *spanexp.Exporter
+	bsp      *sdktrace.BatchSpanProcessor
 	provider *sdktrace.TracerProvider
 }
 
@@ -64,7 +65,8 @@ func NewClient(cfg *Config) *Client {
 // Closes closes the client releasing associated resources.
 func (c *Client) Close() error {
 	runtime.Gosched()
-	c.provider.UnregisterSpanProcessor(c.sp)
+	c.provider.UnregisterSpanProcessor(c.bsp)
+	_ = c.sp.Shutdown(context.TODO())
 	return nil
 }
 
@@ -155,8 +157,13 @@ func (c *Client) setupTracing() {
 			DefaultSampler: c.cfg.Sampler,
 		}),
 	)
-	c.sp = spanexp.NewBatchSpanProcessor(c.cfg)
-	c.provider.RegisterSpanProcessor(c.sp)
+	c.sp = spanexp.NewExporter(c.cfg)
+	c.bsp = sdktrace.NewBatchSpanProcessor(c.sp,
+		sdktrace.WithBatchTimeout(spanexp.BatchTimeout),
+		sdktrace.WithMaxQueueSize(spanexp.MaxQueueSize),
+		sdktrace.WithMaxExportBatchSize(spanexp.BatchSize),
+	)
+	c.provider.RegisterSpanProcessor(c.bsp)
 
 	if c.cfg.PrettyPrint {
 		exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())

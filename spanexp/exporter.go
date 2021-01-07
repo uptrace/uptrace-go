@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -30,9 +31,9 @@ import (
 )
 
 const (
-	maxQueueSize = 2000
-	batchSize    = 2000
-	batchTimeout = 5 * time.Second
+	MaxQueueSize = 10000
+	BatchSize    = 5000
+	BatchTimeout = 5 * time.Second
 )
 
 // WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options.
@@ -50,9 +51,9 @@ func NewBatchSpanProcessor(
 
 func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProcessorOption {
 	return append([]sdktrace.BatchSpanProcessorOption{
-		sdktrace.WithBatchTimeout(batchTimeout),
-		sdktrace.WithMaxQueueSize(maxQueueSize),
-		sdktrace.WithMaxExportBatchSize(batchSize),
+		sdktrace.WithBatchTimeout(BatchTimeout),
+		sdktrace.WithMaxQueueSize(MaxQueueSize),
+		sdktrace.WithMaxExportBatchSize(BatchSize),
 	}, opts...)
 }
 
@@ -66,6 +67,8 @@ type Exporter struct {
 	token    string
 
 	tracer apitrace.Tracer
+
+	closed uint32
 }
 
 var _ trace.SpanExporter = (*Exporter)(nil)
@@ -96,6 +99,13 @@ func NewExporter(cfg *upconfig.Config) *Exporter {
 var _ trace.SpanExporter = (*Exporter)(nil)
 
 func (e *Exporter) Shutdown(context.Context) error {
+	if !atomic.CompareAndSwapUint32(&e.closed, 0, 1) {
+		return nil
+	}
+	if e.cfg.Disabled {
+		return nil
+	}
+
 	e.wg.Wait()
 	return nil
 }
