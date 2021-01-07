@@ -71,7 +71,7 @@ func postWithRetry(
 	client *http.Client,
 	endpoint, token string,
 	data []byte,
-) (resp *http.Response, err error) {
+) (resp *http.Response, lastErr error) {
 	for attempt := 0; attempt < 3; attempt++ {
 		if err := Backoff(ctx, attempt, time.Second, 3*time.Second); err != nil {
 			return nil, err
@@ -86,10 +86,10 @@ func postWithRetry(
 		req.Header.Set("Content-Type", "application/msgpack")
 		req.Header.Set("Content-Encoding", "s2")
 
-		resp, err = client.Do(req)
-		if err == nil {
+		resp, lastErr = client.Do(req)
+		if lastErr == nil {
 			return resp, nil
 		}
 	}
-	return resp, err
+	return nil, lastErr
 }
