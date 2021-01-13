@@ -1,4 +1,4 @@
-package upconfig
+package spanexp
 
 import (
 	"context"
@@ -6,10 +6,15 @@ import (
 	"os"
 	"time"
 
+	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/semconv"
 )
+
+// SpanFilter is a function that is used to filter and change Uptrace spans.
+type SpanFilter func(*Span) bool
 
 // Config is the configuration to be used when initializing a client.
 type Config struct {
@@ -30,6 +35,9 @@ type Config struct {
 	// Global TextMapPropagator used by OpenTelemetry.
 	// The default is propagation.TraceContext and propagation.Baggage.
 	TextMapPropagator propagation.TextMapPropagator
+
+	// Filters are functions that are used to filter and change Uptrace spans.
+	Filters []SpanFilter
 
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
@@ -57,7 +65,7 @@ type Config struct {
 	inited bool
 }
 
-func Init(cfg *Config) {
+func (cfg *Config) Init() {
 	if cfg.inited {
 		return
 	}
@@ -76,6 +84,24 @@ func Init(cfg *Config) {
 		resource, err := resource.New(context.TODO())
 		if err == nil {
 			cfg.Resource = resource
+		}
+	}
+
+	{
+		var kvs []label.KeyValue
+
+		if cfg.ServiceName != "" {
+			kvs = append(kvs, semconv.ServiceNameKey.String(cfg.ServiceName))
+		}
+		if cfg.ServiceVersion != "" {
+			kvs = append(kvs, semconv.ServiceNameKey.String(cfg.ServiceName))
+		}
+
+		if len(kvs) > 0 {
+			cfg.Resource = resource.Merge(
+				resource.NewWithAttributes(kvs...),
+				cfg.Resource,
+			)
 		}
 	}
 

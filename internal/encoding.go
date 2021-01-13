@@ -23,9 +23,9 @@ func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 //------------------------------------------------------------------------------
 
-type KVSlice []label.KeyValue
+type KeyValueSlice []label.KeyValue
 
-func (slice KVSlice) EncodeMsgpack(enc *msgpack.Encoder) error {
+func (slice KeyValueSlice) EncodeMsgpack(enc *msgpack.Encoder) error {
 	_ = enc.EncodeMapLen(len(slice))
 	for _, el := range slice {
 		EncodeKey(enc, el.Key)

@@ -23,7 +23,7 @@ const keyspace = "gocql_example"
 func main() {
 	ctx := context.Background()
 
-	upclient = setupUptrace()
+	upclient = newUptraceClient()
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -66,7 +66,7 @@ func newCassandraCluster(keyspace string) *gocql.ClusterConfig {
 	return cluster
 }
 
-func setupUptrace() *uptrace.Client {
+func newUptraceClient() *uptrace.Client {
 	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN enar
 		DSN: "",

@@ -250,11 +250,11 @@ func (e *Exporter) send(out map[string]interface{}) error {
 }
 
 type baseRecord struct {
-	Name        string           `msgpack:"name"`
-	Description string           `msgpack:"description"`
-	Unit        string           `msgpack:"unit"`
-	NumberKind  int8             `msgpack:"numberKind"`
-	Labels      internal.KVSlice `msgpack:"labels"`
+	Name        string                 `msgpack:"name"`
+	Description string                 `msgpack:"description"`
+	Unit        string                 `msgpack:"unit"`
+	NumberKind  int8                   `msgpack:"numberKind"`
+	Labels      internal.KeyValueSlice `msgpack:"labels"`
 
 	Time int64 `msgpack:"time"`
 }

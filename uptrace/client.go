@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"github.com/uptrace/uptrace-go/internal/upconfig"
 	"github.com/uptrace/uptrace-go/spanexp"
 
 	"go.opentelemetry.io/otel"
@@ -27,8 +26,6 @@ var defaultDSN = &internal.DSN{
 	Host:   "api.uptrace.dev",
 }
 
-type Config = upconfig.Config
-
 // Client represents Uptrace client.
 type Client struct {
 	cfg *Config
@@ -41,8 +38,11 @@ type Client struct {
 	provider *sdktrace.TracerProvider
 }
 
-func NewClient(cfg *Config) *Client {
-	upconfig.Init(cfg)
+func NewClient(cfg *Config, opts ...Option) *Client {
+	cfg.Init()
+	for _, opt := range opts {
+		opt(cfg)
+	}
 
 	client := &Client{
 		cfg: cfg,

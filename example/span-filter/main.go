@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/uptrace/uptrace-go/spanexp"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
@@ -52,7 +53,13 @@ func newUptraceClient() *uptrace.Client {
 
 		ServiceName:    "test",
 		ServiceVersion: "v1.0.0",
-	})
+	}, uptrace.WithFilter(spanFilter))
 
 	return upclient
+}
+
+func spanFilter(span *spanexp.Span) bool {
+	span.Name += " [filter]"
+
+	return true // true keeps the span
 }

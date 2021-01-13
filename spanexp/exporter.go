@@ -5,7 +5,6 @@ package spanexp
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"net/http/httptrace"
 	"runtime"
@@ -14,7 +13,6 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"github.com/uptrace/uptrace-go/internal/upconfig"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel"
@@ -32,14 +30,16 @@ const (
 )
 
 // WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options.
-func WithBatcher(cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption) sdktrace.TracerProviderOption {
+func WithBatcher(
+	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
+) sdktrace.TracerProviderOption {
 	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
 }
 
 // NewBatchSpanProcessor is like OpenTelemetry NewBatchSpanProcessor
 // but it comes with recommended options.
 func NewBatchSpanProcessor(
-	cfg *upconfig.Config, opts ...sdktrace.BatchSpanProcessorOption,
+	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
 ) *sdktrace.BatchSpanProcessor {
 	return sdktrace.NewBatchSpanProcessor(NewExporter(cfg), baseOpts(opts)...)
 }
@@ -53,7 +53,7 @@ func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProc
 }
 
 type Exporter struct {
-	cfg *upconfig.Config
+	cfg *Config
 
 	wg sync.WaitGroup
 	rl *internal.Gate
@@ -68,8 +68,8 @@ type Exporter struct {
 
 var _ trace.SpanExporter = (*Exporter)(nil)
 
-func NewExporter(cfg *upconfig.Config) *Exporter {
-	upconfig.Init(cfg)
+func NewExporter(cfg *Config) *Exporter {
+	cfg.Init()
 
 	e := &Exporter{
 		cfg: cfg,
@@ -121,13 +121,23 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 		)
 	}
 
-	expoSpans := make([]expoSpan, len(spans))
+	outSpans := make([]Span, 0, len(spans))
 
 	sampler := e.cfg.Sampler.Description()
-	for i, span := range spans {
-		expose := &expoSpans[i]
-		initExpoSpan(expose, span)
-		expose.Sampler = sampler
+	for _, span := range spans {
+		outSpans = append(outSpans, Span{})
+		out := &outSpans[len(outSpans)-1]
+
+		initUptraceSpan(out, span)
+		out.Sampler = sampler
+
+		if !e.filter(out) {
+			outSpans = outSpans[:len(outSpans)-1]
+		}
+	}
+
+	if len(outSpans) == 0 {
+		return nil
 	}
 
 	e.wg.Add(1)
@@ -140,7 +150,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 		defer e.rl.Done()
 		defer e.wg.Done()
 
-		if err := e.send(ctx, expoSpans); err != nil {
+		if err := e.send(ctx, outSpans); err != nil {
 			internal.Logger.Printf(ctx, "send failed: %s", err)
 
 			if currSpan != nil {
@@ -153,9 +163,18 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 	return nil
 }
 
+func (e *Exporter) filter(span *Span) bool {
+	for _, filter := range e.cfg.Filters {
+		if !filter(span) {
+			return false
+		}
+	}
+	return true
+}
+
 //------------------------------------------------------------------------------
 
-func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
+func (e *Exporter) send(ctx context.Context, spans []Span) error {
 	if e.cfg.Trace {
 		var span apitrace.Span
 		ctx, span = e.tracer.Start(ctx, "send")
@@ -179,108 +198,4 @@ func (e *Exporter) send(ctx context.Context, spans []expoSpan) error {
 	}
 
 	return internal.PostWithRetry(ctx, e.cfg.HTTPClient, e.endpoint, e.token, data)
-}
-
-//------------------------------------------------------------------------------
-
-type expoSpan struct {
-	ID       uint64           `msgpack:"id"`
-	ParentID uint64           `msgpack:"parentId"`
-	TraceID  apitrace.TraceID `msgpack:"traceId"`
-
-	Name      string           `msgpack:"name"`
-	Kind      string           `msgpack:"kind"`
-	StartTime int64            `msgpack:"startTime"`
-	EndTime   int64            `msgpack:"endTime"`
-	Attrs     internal.KVSlice `msgpack:"attrs"`
-
-	StatusCode    string `msgpack:"statusCode"`
-	StatusMessage string `msgpack:"statusMessage"`
-
-	Events   []expoEvent      `msgpack:"events"`
-	Links    []expoLink       `msgpack:"links"`
-	Resource internal.KVSlice `msgpack:"resource,omitempty"`
-
-	Tracer struct {
-		Name    string `msgpack:"name"`
-		Version string `msgpack:"version"`
-	} `msgpack:"tracer"`
-	Sampler string `msgpack:"sampler"`
-}
-
-func initExpoSpan(expose *expoSpan, span *trace.SpanData) {
-	expose.ID = asUint64(span.SpanContext.SpanID)
-	expose.ParentID = asUint64(span.ParentSpanID)
-	expose.TraceID = span.SpanContext.TraceID
-
-	expose.Name = span.Name
-	expose.Kind = span.SpanKind.String()
-	expose.StartTime = span.StartTime.UnixNano()
-	expose.EndTime = span.EndTime.UnixNano()
-	expose.Attrs = span.Attributes
-
-	expose.StatusCode = expoStatusCode(span.StatusCode)
-	expose.StatusMessage = span.StatusMessage
-
-	if len(span.MessageEvents) > 0 {
-		expose.Events = make([]expoEvent, len(span.MessageEvents))
-		for i := range span.MessageEvents {
-			initExpoEvent(&expose.Events[i], &span.MessageEvents[i])
-		}
-	}
-
-	if len(span.Links) > 0 {
-		expose.Links = make([]expoLink, len(span.Links))
-		for i := range span.Links {
-			initExpoLink(&expose.Links[i], &span.Links[i])
-		}
-	}
-
-	if span.Resource != nil {
-		expose.Resource = span.Resource.Attributes()
-	}
-
-	expose.Tracer.Name = span.InstrumentationLibrary.Name
-	expose.Tracer.Version = span.InstrumentationLibrary.Version
-}
-
-type expoEvent struct {
-	Name  string           `msgpack:"name"`
-	Attrs internal.KVSlice `msgpack:"attrs"`
-	Time  int64            `msgpack:"time"`
-}
-
-func initExpoEvent(expose *expoEvent, event *trace.Event) {
-	expose.Name = event.Name
-	expose.Attrs = event.Attributes
-	expose.Time = event.Time.UnixNano()
-}
-
-type expoLink struct {
-	TraceID apitrace.TraceID `msgpack:"traceId"`
-	SpanID  uint64           `msgpack:"spanId"`
-	Attrs   internal.KVSlice `msgpack:"attrs"`
-}
-
-func initExpoLink(expose *expoLink, link *apitrace.Link) {
-	expose.TraceID = link.SpanContext.TraceID
-	expose.SpanID = asUint64(link.SpanContext.SpanID)
-	expose.Attrs = link.Attributes
-}
-
-func asUint64(b [8]byte) uint64 {
-	return binary.LittleEndian.Uint64(b[:])
-}
-
-func expoStatusCode(code codes.Code) string {
-	switch code {
-	case codes.Unset:
-		return "unset"
-	case codes.Ok:
-		return "ok"
-	case codes.Error:
-		return "error"
-	default:
-		return "unset"
-	}
 }
