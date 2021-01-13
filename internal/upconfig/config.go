@@ -18,6 +18,11 @@ type Config struct {
 	// The default is to use UPTRACE_DSN environment var.
 	DSN string
 
+	// `service.name` resource attribute.
+	ServiceName string
+	// `service.version` resource attribute.
+	ServiceVersion string
+
 	// Resource contains attributes representing an entity that produces telemetry.
 	// These attributes are copied to all spans and events.
 	Resource *resource.Resource
@@ -52,7 +57,7 @@ type Config struct {
 	inited bool
 }
 
-func (cfg *Config) Init() {
+func Init(cfg *Config) {
 	if cfg.inited {
 		return
 	}

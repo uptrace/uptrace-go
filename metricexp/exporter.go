@@ -33,7 +33,7 @@ type Exporter struct {
 var _ export.Exporter = (*Exporter)(nil)
 
 func NewRawExporter(cfg *upconfig.Config) *Exporter {
-	cfg.Init()
+	upconfig.Init(cfg)
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {

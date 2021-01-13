@@ -69,7 +69,7 @@ type Exporter struct {
 var _ trace.SpanExporter = (*Exporter)(nil)
 
 func NewExporter(cfg *upconfig.Config) *Exporter {
-	cfg.Init()
+	upconfig.Init(cfg)
 
 	e := &Exporter{
 		cfg: cfg,

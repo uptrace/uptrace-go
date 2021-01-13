@@ -42,7 +42,7 @@ type Client struct {
 }
 
 func NewClient(cfg *Config) *Client {
-	cfg.Init()
+	upconfig.Init(cfg)
 
 	client := &Client{
 		cfg: cfg,
