@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/uptrace/uptrace-go/internal"
+	"github.com/uptrace/uptrace-go/internal/upconfig"
 	"github.com/uptrace/uptrace-go/spanexp"
-	"github.com/uptrace/uptrace-go/upconfig"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout"

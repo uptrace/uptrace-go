@@ -19,7 +19,7 @@ type Config struct {
 	DSN string
 
 	// Resource contains attributes representing an entity that produces telemetry.
-	// These attributes will be copied to every span and event.
+	// These attributes are copied to all spans and events.
 	Resource *resource.Resource
 
 	// Global TextMapPropagator used by OpenTelemetry.

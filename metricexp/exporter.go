@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"github.com/uptrace/uptrace-go/upconfig"
+	"github.com/uptrace/uptrace-go/internal/upconfig"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/metric"
