@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added `Config.ServiceName`, `Config.ServiceVersion`, and `Config.ResourceAttributes`.
 - Added span filter and an [example](/example/span-filter/).
 
 ## v0.5.0

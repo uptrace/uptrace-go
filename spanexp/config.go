@@ -23,13 +23,17 @@ type Config struct {
 	// The default is to use UPTRACE_DSN environment var.
 	DSN string
 
-	// `service.name` resource attribute.
+	// `service.name` resource attribute.This attribute is added to Config.Resource.
 	ServiceName string
-	// `service.version` resource attribute.
+	// `service.version` resource attribute. This attribute is added to Config.Resource.
 	ServiceVersion string
+	// Any other resource attributes. These attributes are added to Config.Resource.
+	ResourceAttributes []label.KeyValue
 
 	// Resource contains attributes representing an entity that produces telemetry.
 	// These attributes are copied to all spans and events.
+	//
+	// The default is `resource.New`.
 	Resource *resource.Resource
 
 	// Global TextMapPropagator used by OpenTelemetry.
@@ -88,7 +92,7 @@ func (cfg *Config) Init() {
 	}
 
 	{
-		var kvs []label.KeyValue
+		kvs := cfg.ResourceAttributes
 
 		if cfg.ServiceName != "" {
 			kvs = append(kvs, semconv.ServiceNameKey.String(cfg.ServiceName))
