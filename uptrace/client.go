@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -33,7 +34,7 @@ type Client struct {
 
 	tracer trace.Tracer
 
-	sp       *spanexp.Exporter
+	spe      *spanexp.Exporter
 	bsp      *sdktrace.BatchSpanProcessor
 	provider *sdktrace.TracerProvider
 }
@@ -51,7 +52,6 @@ func NewClient(cfg *Config, opts ...Option) *Client {
 	}
 
 	client.setupTracing()
-	otel.SetTextMapPropagator(cfg.TextMapPropagator)
 
 	if dsn, err := internal.ParseDSN(cfg.DSN); err == nil {
 		client.dsn = dsn
@@ -66,7 +66,7 @@ func NewClient(cfg *Config, opts ...Option) *Client {
 func (c *Client) Close() error {
 	runtime.Gosched()
 	c.provider.UnregisterSpanProcessor(c.bsp)
-	_ = c.sp.Shutdown(context.TODO())
+	_ = c.spe.Shutdown(context.TODO())
 	return nil
 }
 
@@ -147,9 +147,20 @@ func (c *Client) WithSpan(
 }
 
 func (c *Client) setupTracing() {
-	if c.cfg.Disabled {
+	const (
+		maxQueueSize = 10000
+		batchSize    = 5000
+		batchTimeout = 5 * time.Second
+	)
+
+	spe, err := spanexp.NewExporter(c.cfg)
+	if err != nil {
+		internal.Logger.Printf(context.TODO(), err.Error()+" (client is disabled)")
+		c.cfg.Disabled = true
 		return
 	}
+
+	otel.SetTextMapPropagator(c.cfg.TextMapPropagator)
 
 	c.provider = sdktrace.NewTracerProvider(
 		sdktrace.WithConfig(sdktrace.Config{
@@ -157,11 +168,12 @@ func (c *Client) setupTracing() {
 			DefaultSampler: c.cfg.Sampler,
 		}),
 	)
-	c.sp = spanexp.NewExporter(c.cfg)
-	c.bsp = sdktrace.NewBatchSpanProcessor(c.sp,
-		sdktrace.WithBatchTimeout(spanexp.BatchTimeout),
-		sdktrace.WithMaxQueueSize(spanexp.MaxQueueSize),
-		sdktrace.WithMaxExportBatchSize(spanexp.BatchSize),
+
+	c.spe = spe
+	c.bsp = sdktrace.NewBatchSpanProcessor(spe,
+		sdktrace.WithMaxQueueSize(maxQueueSize),
+		sdktrace.WithMaxExportBatchSize(batchSize),
+		sdktrace.WithBatchTimeout(batchTimeout),
 	)
 	c.provider.RegisterSpanProcessor(c.bsp)
 

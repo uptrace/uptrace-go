@@ -17,18 +17,19 @@ type Span struct {
 	ParentID uint64           `msgpack:"parentId"`
 	TraceID  apitrace.TraceID `msgpack:"traceId"`
 
-	Name      string        `msgpack:"name"`
-	Kind      string        `msgpack:"kind"`
-	StartTime int64         `msgpack:"startTime"`
-	EndTime   int64         `msgpack:"endTime"`
-	Attrs     KeyValueSlice `msgpack:"attrs"`
+	Name      string `msgpack:"name"`
+	Kind      string `msgpack:"kind"`
+	StartTime int64  `msgpack:"startTime"`
+	EndTime   int64  `msgpack:"endTime"`
+
+	Resource KeyValueSlice `msgpack:"resource,omitempty"`
+	Attrs    KeyValueSlice `msgpack:"attrs"`
 
 	StatusCode    string `msgpack:"statusCode"`
 	StatusMessage string `msgpack:"statusMessage"`
 
-	Events   []Event       `msgpack:"events"`
-	Links    []Link        `msgpack:"links"`
-	Resource KeyValueSlice `msgpack:"resource,omitempty"`
+	Events []Event `msgpack:"events"`
+	Links  []Link  `msgpack:"links"`
 
 	Tracer struct {
 		Name    string `msgpack:"name"`
@@ -47,6 +48,10 @@ func initUptraceSpan(out *Span, in *trace.SpanData) {
 	out.Kind = in.SpanKind.String()
 	out.StartTime = in.StartTime.UnixNano()
 	out.EndTime = in.EndTime.UnixNano()
+
+	if in.Resource != nil {
+		out.Resource = in.Resource.Attributes()
+	}
 	out.Attrs = in.Attributes
 
 	out.StatusCode = statusCode(in.StatusCode)
@@ -64,10 +69,6 @@ func initUptraceSpan(out *Span, in *trace.SpanData) {
 		for i := range in.Links {
 			initUptraceLink(&out.Links[i], &in.Links[i])
 		}
-	}
-
-	if in.Resource != nil {
-		out.Resource = in.Resource.Attributes()
 	}
 
 	out.Tracer.Name = in.InstrumentationLibrary.Name

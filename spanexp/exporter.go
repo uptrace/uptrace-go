@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
 
@@ -19,38 +18,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/export/trace"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	apitrace "go.opentelemetry.io/otel/trace"
 )
-
-const (
-	MaxQueueSize = 10000
-	BatchSize    = 5000
-	BatchTimeout = 5 * time.Second
-)
-
-// WithBatcher is like OpenTelemetry WithBatcher but it comes with recommended options.
-func WithBatcher(
-	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
-) sdktrace.TracerProviderOption {
-	return sdktrace.WithBatcher(NewExporter(cfg), baseOpts(opts)...)
-}
-
-// NewBatchSpanProcessor is like OpenTelemetry NewBatchSpanProcessor
-// but it comes with recommended options.
-func NewBatchSpanProcessor(
-	cfg *Config, opts ...sdktrace.BatchSpanProcessorOption,
-) *sdktrace.BatchSpanProcessor {
-	return sdktrace.NewBatchSpanProcessor(NewExporter(cfg), baseOpts(opts)...)
-}
-
-func baseOpts(opts []sdktrace.BatchSpanProcessorOption) []sdktrace.BatchSpanProcessorOption {
-	return append([]sdktrace.BatchSpanProcessorOption{
-		sdktrace.WithBatchTimeout(BatchTimeout),
-		sdktrace.WithMaxQueueSize(MaxQueueSize),
-		sdktrace.WithMaxExportBatchSize(BatchSize),
-	}, opts...)
-}
 
 type Exporter struct {
 	cfg *Config
@@ -68,7 +37,7 @@ type Exporter struct {
 
 var _ trace.SpanExporter = (*Exporter)(nil)
 
-func NewExporter(cfg *Config) *Exporter {
+func NewExporter(cfg *Config) (*Exporter, error) {
 	cfg.Init()
 
 	e := &Exporter{
@@ -80,18 +49,15 @@ func NewExporter(cfg *Config) *Exporter {
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
-		internal.Logger.Printf(context.TODO(), err.Error()+" (client is disabled)")
-		cfg.Disabled = true
-	} else {
-		e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
-			dsn.Scheme, dsn.Host, dsn.ProjectID)
-		e.token = dsn.Token
+		return nil, err
 	}
 
-	return e
-}
+	e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
+		dsn.Scheme, dsn.Host, dsn.ProjectID)
+	e.token = dsn.Token
 
-var _ trace.SpanExporter = (*Exporter)(nil)
+	return e, nil
+}
 
 func (e *Exporter) Shutdown(context.Context) error {
 	if !atomic.CompareAndSwapUint32(&e.closed, 0, 1) {
@@ -150,7 +116,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) err
 		defer e.rl.Done()
 		defer e.wg.Done()
 
-		if err := e.send(ctx, outSpans); err != nil {
+		if err := e.SendSpans(ctx, outSpans); err != nil {
 			internal.Logger.Printf(ctx, "send failed: %s", err)
 
 			if currSpan != nil {
@@ -174,7 +140,7 @@ func (e *Exporter) filter(span *Span) bool {
 
 //------------------------------------------------------------------------------
 
-func (e *Exporter) send(ctx context.Context, spans []Span) error {
+func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
 	if e.cfg.Trace {
 		var span apitrace.Span
 		ctx, span = e.tracer.Start(ctx, "send")

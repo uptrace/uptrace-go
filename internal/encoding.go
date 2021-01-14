@@ -25,12 +25,50 @@ func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 type KeyValueSlice []label.KeyValue
 
+var _ msgpack.CustomEncoder = (*KeyValueSlice)(nil)
+
 func (slice KeyValueSlice) EncodeMsgpack(enc *msgpack.Encoder) error {
+	if len(slice) == 0 {
+		return enc.EncodeNil()
+	}
+
 	_ = enc.EncodeMapLen(len(slice))
 	for _, el := range slice {
 		EncodeKey(enc, el.Key)
 		EncodeValue(enc, el.Value)
 	}
+	return nil
+}
+
+var _ msgpack.CustomDecoder = (*KeyValueSlice)(nil)
+
+func (slice *KeyValueSlice) DecodeMsgpack(dec *msgpack.Decoder) error {
+	n, err := dec.DecodeMapLen()
+	if err != nil {
+		return err
+	}
+
+	if n == -1 {
+		*slice = nil
+		return nil
+	}
+
+	*slice = make(KeyValueSlice, n)
+
+	for i := 0; i < n; i++ {
+		key, err := dec.DecodeString()
+		if err != nil {
+			return err
+		}
+
+		val, err := dec.DecodeInterface()
+		if err != nil {
+			return err
+		}
+
+		(*slice)[i] = label.Any(key, val)
+	}
+
 	return nil
 }
 
