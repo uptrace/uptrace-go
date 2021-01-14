@@ -63,19 +63,12 @@ func (e *Exporter) Shutdown(context.Context) error {
 	if !atomic.CompareAndSwapUint32(&e.closed, 0, 1) {
 		return nil
 	}
-	if e.cfg.Disabled {
-		return nil
-	}
 
 	e.wg.Wait()
 	return nil
 }
 
 func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) error {
-	if e.cfg.Disabled {
-		return nil
-	}
-
 	var currSpan apitrace.Span
 
 	if e.cfg.Trace {

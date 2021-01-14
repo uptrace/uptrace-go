@@ -43,6 +43,7 @@ func TestFilters(t *testing.T) {
 	err := upclient.Close()
 	require.Nil(t, err)
 
+	require.NotNil(t, got)
 	require.Equal(t, "main span", got.Name)
 
 	set := label.NewSet(got.Resource...)

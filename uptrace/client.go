@@ -34,16 +34,12 @@ type Client struct {
 
 	tracer trace.Tracer
 
-	spe      *spanexp.Exporter
-	bsp      *sdktrace.BatchSpanProcessor
-	provider *sdktrace.TracerProvider
+	spe *spanexp.Exporter
+	bsp *sdktrace.BatchSpanProcessor
 }
 
 func NewClient(cfg *Config, opts ...Option) *Client {
-	cfg.Init()
-	for _, opt := range opts {
-		opt(cfg)
-	}
+	cfg.Init(opts...)
 
 	client := &Client{
 		cfg: cfg,
@@ -65,7 +61,6 @@ func NewClient(cfg *Config, opts ...Option) *Client {
 // Closes closes the client releasing associated resources.
 func (c *Client) Close() error {
 	runtime.Gosched()
-	c.provider.UnregisterSpanProcessor(c.bsp)
 	_ = c.spe.Shutdown(context.TODO())
 	return nil
 }
@@ -122,12 +117,12 @@ func (c *Client) ReportPanic(ctx context.Context) {
 
 // TracerProvider returns a tracer provider.
 func (c *Client) TracerProvider() trace.TracerProvider {
-	return c.provider
+	return c.cfg.TracerProvider
 }
 
 // Tracer returns a named tracer.
 func (c *Client) Tracer(name string) trace.Tracer {
-	return c.provider.Tracer(name)
+	return c.TracerProvider().Tracer(name)
 }
 
 // WithSpan is a helper that wraps the function with a span and records the returned error.
@@ -153,36 +148,40 @@ func (c *Client) setupTracing() {
 		batchTimeout = 5 * time.Second
 	)
 
-	spe, err := spanexp.NewExporter(c.cfg)
-	if err != nil {
-		internal.Logger.Printf(context.TODO(), err.Error()+" (client is disabled)")
-		c.cfg.Disabled = true
-		return
-	}
-
 	otel.SetTextMapPropagator(c.cfg.TextMapPropagator)
 
-	c.provider = sdktrace.NewTracerProvider(
-		sdktrace.WithConfig(sdktrace.Config{
-			Resource:       c.cfg.Resource,
-			DefaultSampler: c.cfg.Sampler,
-		}),
-	)
+	if !c.cfg.Disabled && c.cfg.TracerProvider == nil {
+		provider := sdktrace.NewTracerProvider(
+			sdktrace.WithConfig(sdktrace.Config{
+				Resource:       c.cfg.Resource,
+				DefaultSampler: c.cfg.Sampler,
+			}),
+		)
 
-	c.spe = spe
-	c.bsp = sdktrace.NewBatchSpanProcessor(spe,
-		sdktrace.WithMaxQueueSize(maxQueueSize),
-		sdktrace.WithMaxExportBatchSize(batchSize),
-		sdktrace.WithBatchTimeout(batchTimeout),
-	)
-	c.provider.RegisterSpanProcessor(c.bsp)
-
-	if c.cfg.PrettyPrint {
-		exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
-		if err == nil {
-			c.provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
+		spe, err := spanexp.NewExporter(c.cfg)
+		if err != nil {
+			internal.Logger.Printf(context.TODO(), err.Error())
+		} else {
+			c.spe = spe
+			c.bsp = sdktrace.NewBatchSpanProcessor(spe,
+				sdktrace.WithMaxQueueSize(maxQueueSize),
+				sdktrace.WithMaxExportBatchSize(batchSize),
+				sdktrace.WithBatchTimeout(batchTimeout),
+			)
+			provider.RegisterSpanProcessor(c.bsp)
 		}
+
+		if c.cfg.PrettyPrint {
+			exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
+			if err != nil {
+				internal.Logger.Printf(context.TODO(), err.Error())
+			} else {
+				provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
+			}
+		}
+
+		c.cfg.TracerProvider = provider
 	}
 
-	otel.SetTracerProvider(c.provider)
+	otel.SetTracerProvider(c.cfg.TracerProvider)
 }

@@ -6,12 +6,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/uptrace/uptrace-go/internal"
+
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
+	"go.opentelemetry.io/otel/trace"
 )
+
+type Option func(*Config)
 
 // SpanFilter is a function that is used to filter and change Uptrace spans.
 type SpanFilter func(*Span) bool
@@ -36,12 +41,12 @@ type Config struct {
 	// The default is `resource.New`.
 	Resource *resource.Resource
 
+	// Filters are functions that are used to filter and change Uptrace spans.
+	Filters []SpanFilter
+
 	// Global TextMapPropagator used by OpenTelemetry.
 	// The default is propagation.TraceContext and propagation.Baggage.
 	TextMapPropagator propagation.TextMapPropagator
-
-	// Filters are functions that are used to filter and change Uptrace spans.
-	Filters []SpanFilter
 
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
@@ -56,6 +61,10 @@ type Config struct {
 	// PrettyPrint pretty prints spans to the stdout.
 	PrettyPrint bool
 
+	// When specified it overwrites the default Uptrace tracer provider.
+	// It can be used to configure Uptrace client to use OTLP exporter.
+	TracerProvider trace.TracerProvider
+
 	// Disabled disables the exporter.
 	// The default is to use UPTRACE_DISABLED environment var.
 	Disabled bool
@@ -69,7 +78,7 @@ type Config struct {
 	inited bool
 }
 
-func (cfg *Config) Init() {
+func (cfg *Config) Init(opts ...Option) {
 	if cfg.inited {
 		return
 	}
@@ -81,7 +90,15 @@ func (cfg *Config) Init() {
 	}
 
 	if cfg.DSN == "" {
-		cfg.DSN = os.Getenv("UPTRACE_DSN")
+		if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
+			if dsn == "" {
+				internal.Logger.Printf(context.TODO(),
+					"UPTRACE_DSN has empty value (use UPTRACE_DISABLED=true instead)")
+				cfg.Disabled = true
+				return
+			}
+			cfg.DSN = dsn
+		}
 	}
 
 	if cfg.Resource == nil {
@@ -132,5 +149,9 @@ func (cfg *Config) Init() {
 
 	if cfg.ClientTrace {
 		cfg.Trace = true
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
 	}
 }
