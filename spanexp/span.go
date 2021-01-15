@@ -39,7 +39,7 @@ type Span struct {
 	Sampler string `msgpack:"sampler"`
 }
 
-func initUptraceSpan(out *Span, in *trace.SpanData) {
+func initUptraceSpan(out *Span, in *trace.SpanSnapshot) {
 	out.ID = asUint64(in.SpanContext.SpanID)
 	out.ParentID = asUint64(in.ParentSpanID)
 	out.TraceID = in.SpanContext.TraceID

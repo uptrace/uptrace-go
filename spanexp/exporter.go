@@ -68,7 +68,7 @@ func (e *Exporter) Shutdown(context.Context) error {
 	return nil
 }
 
-func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanData) error {
+func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot) error {
 	var currSpan apitrace.Span
 
 	if e.cfg.Trace {

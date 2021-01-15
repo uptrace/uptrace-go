@@ -15,8 +15,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
-	"go.opentelemetry.io/otel/sdk/metric/controller/push"
-	"go.opentelemetry.io/otel/sdk/metric/processor/basic"
+	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
@@ -56,8 +56,8 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 // 	pipeline := stdout.InstallNewPipeline(stdout.Config{...})
 // 	defer pipeline.Stop()
 // 	... Done
-func InstallNewPipeline(config *upconfig.Config, options ...push.Option) *push.Controller {
-	options = append(options, push.WithPeriod(10*time.Second))
+func InstallNewPipeline(config *upconfig.Config, options ...controller.Option) *controller.Controller {
+	options = append(options, controller.WithPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
 	otel.SetMeterProvider(ctrl.MeterProvider())
 	return ctrl
@@ -66,19 +66,19 @@ func InstallNewPipeline(config *upconfig.Config, options ...push.Option) *push.C
 // NewExportPipeline sets up a complete export pipeline with the recommended setup,
 // chaining a NewRawExporter into the recommended selectors and integrators.
 func NewExportPipeline(
-	config *upconfig.Config, options ...push.Option,
-) *push.Controller {
+	config *upconfig.Config, options ...controller.Option,
+) *controller.Controller {
 	exporter := NewRawExporter(config)
 
 	// Not stateful.
-	pusher := push.New(
-		basic.New(simple.NewWithInexpensiveDistribution(), export.DeltaExportKindSelector()),
+	ctrl := controller.New(
+		processor.New(simple.NewWithInexpensiveDistribution(), export.DeltaExportKindSelector()),
 		exporter,
 		options...,
 	)
-	pusher.Start()
+	ctrl.Start()
 
-	return pusher
+	return ctrl
 }
 
 func (e *Exporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {

@@ -13,8 +13,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/ugorji/go v1.2.0 // indirect
 	github.com/uptrace/uptrace-go v0.4.2
-	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.15.0
-	go.opentelemetry.io/otel v0.15.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.16.0
+	go.opentelemetry.io/otel v0.16.0
 	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 // indirect
 	golang.org/x/sys v0.0.0-20201119102817-f84b799fce68 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
