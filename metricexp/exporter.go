@@ -58,14 +58,16 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 // 	... Done
 func InstallNewPipeline(
 	ctx context.Context, config *upconfig.Config, options ...controller.Option,
-) *controller.Controller {
+) (*controller.Controller, error) {
 	options = append(options, controller.WithCollectPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
-	ctrl.Start(ctx)
+	if err := ctrl.Start(ctx); err != nil {
+		return nil, err
+	}
 
 	otel.SetMeterProvider(ctrl.MeterProvider())
 
-	return ctrl
+	return ctrl, nil
 }
 
 // NewExportPipeline sets up a complete export pipeline with the recommended setup,
@@ -157,7 +159,7 @@ func (e *Exporter) exportMMSC(
 	return nil
 }
 
-var quantiles = []float64{0.5, 0.75, 0.9, 0.95, 0.99}
+// var quantiles = []float64{0.5, 0.75, 0.9, 0.95, 0.99}
 
 // func (e *Exporter) exportQuantile(record export.Record, agg aggregation.Quantile) error {
 // 	var expose quantile
