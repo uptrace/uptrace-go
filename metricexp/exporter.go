@@ -56,10 +56,15 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 // 	pipeline := stdout.InstallNewPipeline(stdout.Config{...})
 // 	defer pipeline.Stop()
 // 	... Done
-func InstallNewPipeline(config *upconfig.Config, options ...controller.Option) *controller.Controller {
-	options = append(options, controller.WithPeriod(10*time.Second))
+func InstallNewPipeline(
+	ctx context.Context, config *upconfig.Config, options ...controller.Option,
+) *controller.Controller {
+	options = append(options, controller.WithCollectPeriod(10*time.Second))
 	ctrl := NewExportPipeline(config, options...)
+	ctrl.Start(ctx)
+
 	otel.SetMeterProvider(ctrl.MeterProvider())
+
 	return ctrl
 }
 
@@ -69,14 +74,13 @@ func NewExportPipeline(
 	config *upconfig.Config, options ...controller.Option,
 ) *controller.Controller {
 	exporter := NewRawExporter(config)
+	options = append(options, controller.WithPusher(exporter))
 
 	// Not stateful.
 	ctrl := controller.New(
 		processor.New(simple.NewWithInexpensiveDistribution(), export.DeltaExportKindSelector()),
-		exporter,
 		options...,
 	)
-	ctrl.Start()
 
 	return ctrl
 }
@@ -101,8 +105,8 @@ func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet)
 func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
 	return checkpointSet.ForEach(export.DeltaExportKindSelector(), func(record export.Record) error {
 		switch agg := record.Aggregation().(type) {
-		case aggregation.Quantile:
-			return e.exportQuantile(record, agg)
+		// case aggregation.Quantile:
+		// 	return e.exportQuantile(record, agg)
 		case aggregation.MinMaxSumCount:
 			return e.exportMMSC(record, agg)
 		default:
@@ -155,38 +159,36 @@ func (e *Exporter) exportMMSC(
 
 var quantiles = []float64{0.5, 0.75, 0.9, 0.95, 0.99}
 
-func (e *Exporter) exportQuantile(
-	record export.Record, agg aggregation.Quantile,
-) error {
-	var expose quantile
+// func (e *Exporter) exportQuantile(record export.Record, agg aggregation.Quantile) error {
+// 	var expose quantile
 
-	if err := exportCommon(record, &expose.baseRecord); err != nil {
-		return err
-	}
+// 	if err := exportCommon(record, &expose.baseRecord); err != nil {
+// 		return err
+// 	}
 
-	desc := record.Descriptor()
-	numKind := desc.NumberKind()
+// 	desc := record.Descriptor()
+// 	numKind := desc.NumberKind()
 
-	if agg, ok := agg.(aggregation.Count); ok {
-		count, err := agg.Count()
-		if err != nil {
-			return err
-		}
-		expose.Count = count
-	}
+// 	if agg, ok := agg.(aggregation.Count); ok {
+// 		count, err := agg.Count()
+// 		if err != nil {
+// 			return err
+// 		}
+// 		expose.Count = count
+// 	}
 
-	for _, q := range quantiles {
-		n, err := agg.Quantile(q)
-		if err != nil {
-			return err
-		}
-		expose.Quantiles = append(expose.Quantiles, float32(n.CoerceToFloat64(numKind)))
-	}
+// 	for _, q := range quantiles {
+// 		n, err := agg.Quantile(q)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		expose.Quantiles = append(expose.Quantiles, float32(n.CoerceToFloat64(numKind)))
+// 	}
 
-	e.quantiles = append(e.quantiles, expose)
+// 	e.quantiles = append(e.quantiles, expose)
 
-	return nil
-}
+// 	return nil
+// }
 
 func exportCommon(record export.Record, expose *baseRecord) error {
 	desc := record.Descriptor()
@@ -265,7 +267,7 @@ type mmsc struct {
 	Min   float32 `msgpack:"min"`
 	Max   float32 `msgpack:"max"`
 	Sum   float64 `msgpack:"sum"`
-	Count int64   `msgpack:"count"`
+	Count uint64  `msgpack:"count"`
 }
 
 func (rec *mmsc) String() string {
@@ -276,7 +278,7 @@ func (rec *mmsc) String() string {
 type quantile struct {
 	baseRecord
 
-	Count     int64     `msgpack:"count"`
+	Count     uint64    `msgpack:"count"`
 	Quantiles []float32 `msgpack:"quantiles"`
 }
 
