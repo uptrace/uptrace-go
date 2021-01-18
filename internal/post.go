@@ -84,7 +84,7 @@ func postWithRetry(
 
 		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("Content-Type", "application/msgpack")
-		req.Header.Set("Content-Encoding", "s2")
+		req.Header.Set("Content-Encoding", "zstd")
 
 		resp, lastErr = client.Do(req)
 		if lastErr == nil {

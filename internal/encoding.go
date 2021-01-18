@@ -5,7 +5,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/klauspost/compress/s2"
+	"github.com/klauspost/compress/zstd"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel/label"
 )
@@ -117,7 +117,7 @@ func NewEncoder() *Encoder {
 	return &enc
 }
 
-func (enc *Encoder) Encode(v interface{}) (*bytes.Buffer, error) {
+func (enc *Encoder) Encode(v interface{}) ([]byte, error) {
 	enc.buf.Reset()
 	enc.msgp.Reset(&enc.buf)
 	enc.msgp.UseCompactInts(true)
@@ -125,22 +125,22 @@ func (enc *Encoder) Encode(v interface{}) (*bytes.Buffer, error) {
 	if err := enc.msgp.Encode(v); err != nil {
 		return nil, err
 	}
-	return &enc.buf, nil
+	return enc.buf.Bytes(), nil
 }
 
-func (enc *Encoder) EncodeS2(v interface{}) ([]byte, error) {
-	s2w := getS2Writer()
-	defer putS2Writer(s2w)
+func (enc *Encoder) EncodeZstd(v interface{}) ([]byte, error) {
+	zw := getZstdWriter()
+	defer putZstdWriter(zw)
 
 	enc.buf.Reset()
-	s2w.Reset(&enc.buf)
-	enc.msgp.Reset(s2w)
+	zw.Reset(&enc.buf)
+	enc.msgp.Reset(zw)
 	enc.msgp.UseCompactInts(true)
 
 	if err := enc.msgp.Encode(v); err != nil {
 		return nil, err
 	}
-	if err := s2w.Close(); err != nil {
+	if err := zw.Close(); err != nil {
 		return nil, err
 	}
 	return enc.buf.Bytes(), nil
@@ -161,16 +161,20 @@ func PutEncoder(enc *Encoder) {
 	encPool.Put(enc)
 }
 
-var s2Pool = sync.Pool{
+var zstdPool = sync.Pool{
 	New: func() interface{} {
-		return s2.NewWriter(nil, s2.WriterConcurrency(1))
+		zw, err := zstd.NewWriter(nil, zstd.WithEncoderConcurrency(1))
+		if err != nil {
+			panic(err)
+		}
+		return zw
 	},
 }
 
-func getS2Writer() *s2.Writer {
-	return s2Pool.Get().(*s2.Writer)
+func getZstdWriter() *zstd.Encoder {
+	return zstdPool.Get().(*zstd.Encoder)
 }
 
-func putS2Writer(s2w *s2.Writer) {
-	s2Pool.Put(s2w)
+func putZstdWriter(zw *zstd.Encoder) {
+	zstdPool.Put(zw)
 }

@@ -3,13 +3,12 @@ package uptrace_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/klauspost/compress/s2"
+	"github.com/klauspost/compress/zstd"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/uptrace-go/spanexp"
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -63,12 +62,14 @@ func TestExporter(t *testing.T) {
 
 	handler := func(w http.ResponseWriter, req *http.Request) {
 		require.Equal(t, "application/msgpack", req.Header.Get("Content-Type"))
-		require.Equal(t, "s2", req.Header.Get("Content-Encoding"))
+		require.Equal(t, "zstd", req.Header.Get("Content-Encoding"))
 
-		b, err := ioutil.ReadAll(s2.NewReader(req.Body))
+		zr, err := zstd.NewReader(req.Body)
 		require.NoError(t, err)
+		defer zr.Close()
 
-		err = msgpack.Unmarshal(b, &in)
+		dec := msgpack.NewDecoder(zr)
+		err = dec.Decode(&in)
 		require.NoError(t, err)
 
 		w.WriteHeader(http.StatusOK)

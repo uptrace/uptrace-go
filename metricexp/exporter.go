@@ -245,7 +245,7 @@ func (e *Exporter) send(out map[string]interface{}) error {
 	enc := internal.GetEncoder()
 	defer internal.PutEncoder(enc)
 
-	data, err := enc.EncodeS2(out)
+	data, err := enc.EncodeZstd(out)
 	if err != nil {
 		return err
 	}

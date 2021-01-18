@@ -147,7 +147,7 @@ func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
 		"spans": spans,
 	}
 
-	data, err := enc.EncodeS2(out)
+	data, err := enc.EncodeZstd(out)
 	if err != nil {
 		return err
 	}
