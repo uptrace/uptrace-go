@@ -60,8 +60,10 @@ func NewClient(cfg *Config, opts ...Option) *Client {
 
 // Closes closes the client releasing associated resources.
 func (c *Client) Close() error {
-	runtime.Gosched()
-	c.provider.UnregisterSpanProcessor(c.bsp)
+	if c.provider != nil {
+		runtime.Gosched()
+		c.provider.UnregisterSpanProcessor(c.bsp)
+	}
 	return nil
 }
 
@@ -142,46 +144,64 @@ func (c *Client) WithSpan(
 }
 
 func (c *Client) setupTracing() {
-	const (
-		maxQueueSize = 10000
-		batchSize    = 5000
-		batchTimeout = 5 * time.Second
-	)
+	if c.cfg.Disabled {
+		return
+	}
+
+	if c.cfg.TracerProvider == nil {
+		c.provider = c.getTracerProvider()
+		c.cfg.TracerProvider = c.provider
+	}
 
 	otel.SetTextMapPropagator(c.cfg.TextMapPropagator)
+	otel.SetTracerProvider(c.cfg.TracerProvider)
+}
 
-	if !c.cfg.Disabled && c.cfg.TracerProvider == nil {
-		provider := sdktrace.NewTracerProvider(
-			sdktrace.WithConfig(sdktrace.Config{
-				Resource:       c.cfg.Resource,
-				DefaultSampler: c.cfg.Sampler,
-			}),
+func (c *Client) getTracerProvider() *sdktrace.TracerProvider {
+	const batchTimeout = 5 * time.Second
+
+	provider := sdktrace.NewTracerProvider(
+		sdktrace.WithConfig(sdktrace.Config{
+			Resource:       c.cfg.Resource,
+			DefaultSampler: c.cfg.Sampler,
+		}),
+	)
+
+	spe, err := spanexp.NewExporter(c.cfg)
+	if err != nil {
+		internal.Logger.Printf(context.TODO(), err.Error())
+	} else {
+		queueSize := queueSize()
+		c.bsp = sdktrace.NewBatchSpanProcessor(spe,
+			sdktrace.WithMaxQueueSize(queueSize),
+			sdktrace.WithMaxExportBatchSize(queueSize),
+			sdktrace.WithBatchTimeout(batchTimeout),
 		)
+		provider.RegisterSpanProcessor(c.bsp)
+	}
 
-		spe, err := spanexp.NewExporter(c.cfg)
+	if c.cfg.PrettyPrint {
+		exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
 		if err != nil {
 			internal.Logger.Printf(context.TODO(), err.Error())
 		} else {
-			c.bsp = sdktrace.NewBatchSpanProcessor(spe,
-				sdktrace.WithMaxQueueSize(maxQueueSize),
-				sdktrace.WithMaxExportBatchSize(batchSize),
-				sdktrace.WithBatchTimeout(batchTimeout),
-			)
-			provider.RegisterSpanProcessor(c.bsp)
+			provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
 		}
-
-		if c.cfg.PrettyPrint {
-			exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
-			if err != nil {
-				internal.Logger.Printf(context.TODO(), err.Error())
-			} else {
-				provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
-			}
-		}
-
-		c.provider = provider
-		c.cfg.TracerProvider = provider
 	}
 
-	otel.SetTracerProvider(c.cfg.TracerProvider)
+	return provider
+}
+
+func queueSize() int {
+	const min = 1e3
+	const max = 10e3
+
+	n := runtime.NumCPU() * 2e3
+	if n < min {
+		return min
+	}
+	if n > max {
+		return max
+	}
+	return n
 }

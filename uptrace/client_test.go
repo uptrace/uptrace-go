@@ -2,6 +2,7 @@ package uptrace_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +19,17 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
 )
+
+func TestDisabled(t *testing.T) {
+	upclient := uptrace.NewClient(&uptrace.Config{
+		Disabled: true,
+	})
+
+	upclient.ReportError(context.Background(), errors.New("hello"))
+
+	err := upclient.Close()
+	require.NoError(t, err)
+}
 
 func TestFilters(t *testing.T) {
 	ctx := context.Background()
