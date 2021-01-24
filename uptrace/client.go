@@ -160,11 +160,15 @@ func (c *Client) setupTracing() {
 func (c *Client) getTracerProvider() *sdktrace.TracerProvider {
 	const batchTimeout = 5 * time.Second
 
+	traceConfig := sdktrace.Config{
+		Resource: c.cfg.Resource,
+	}
+	if c.cfg.Sampler != nil {
+		traceConfig.DefaultSampler = c.cfg.Sampler
+	}
+
 	provider := sdktrace.NewTracerProvider(
-		sdktrace.WithConfig(sdktrace.Config{
-			Resource:       c.cfg.Resource,
-			DefaultSampler: c.cfg.Sampler,
-		}),
+		sdktrace.WithConfig(traceConfig),
 	)
 
 	spe, err := spanexp.NewExporter(c.cfg)

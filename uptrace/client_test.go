@@ -16,6 +16,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -67,7 +68,8 @@ func TestExporter(t *testing.T) {
 	ctx := context.Background()
 
 	type In struct {
-		Spans []spanexp.Span `msgpack:"spans"`
+		Spans   []spanexp.Span `msgpack:"spans"`
+		Sampler string         `msgpack:"sampler"`
 	}
 
 	var in In
@@ -97,6 +99,8 @@ func TestExporter(t *testing.T) {
 		ResourceAttributes: []label.KeyValue{
 			label.String("resource1", "resource1-value"),
 		},
+
+		Sampler: sdktrace.AlwaysSample(),
 	})
 
 	tracer := otel.Tracer("github.com/your/repo")
@@ -105,6 +109,7 @@ func TestExporter(t *testing.T) {
 	err = upclient.Close()
 	require.Nil(t, err)
 
+	require.Equal(t, "AlwaysOnSampler", in.Sampler)
 	require.Equal(t, 1, len(in.Spans))
 
 	s0 := in.Spans[0]

@@ -35,8 +35,6 @@ type Span struct {
 		Name    string `msgpack:"name"`
 		Version string `msgpack:"version"`
 	} `msgpack:"tracer"`
-
-	Sampler string `msgpack:"sampler"`
 }
 
 func initUptraceSpan(out *Span, in *trace.SpanSnapshot) {

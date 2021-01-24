@@ -137,10 +137,6 @@ func (cfg *Config) Init(opts ...Option) {
 		cfg.TracerName = "github.com/uptrace/uptrace-go"
 	}
 
-	if cfg.Sampler == nil {
-		cfg.Sampler = sdktrace.AlwaysSample()
-	}
-
 	if cfg.HTTPClient == nil {
 		cfg.HTTPClient = &http.Client{
 			Timeout: 10 * time.Second,

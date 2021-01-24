@@ -82,13 +82,11 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 
 	outSpans := make([]Span, 0, len(spans))
 
-	sampler := e.cfg.Sampler.Description()
 	for _, span := range spans {
 		outSpans = append(outSpans, Span{})
 		out := &outSpans[len(outSpans)-1]
 
 		initUptraceSpan(out, span)
-		out.Sampler = sampler
 
 		if !e.filter(out) {
 			outSpans = outSpans[:len(outSpans)-1]
@@ -145,6 +143,10 @@ func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
 
 	out := map[string]interface{}{
 		"spans": spans,
+	}
+
+	if e.cfg.Sampler != nil {
+		out["sampler"] = e.cfg.Sampler.Description()
 	}
 
 	data, err := enc.EncodeZstd(out)
