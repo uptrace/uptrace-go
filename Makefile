@@ -11,6 +11,7 @@ all:
 tag:
 	git tag $(VERSION)
 	git tag extra/otellogrus/$(VERSION)
+	git tag extra/otelzap/$(VERSION)
 
 go_mod_tidy:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \

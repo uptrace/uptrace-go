@@ -13,17 +13,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("gocql-tracer")
-)
+var tracer = otel.Tracer("gocql-tracer")
 
 const keyspace = "gocql_example"
 
 func main() {
 	ctx := context.Background()
 
-	upclient = newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN enar
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -64,15 +64,6 @@ func newCassandraCluster(keyspace string) *gocql.ClusterConfig {
 	cluster.ProtoVersion = 3
 	cluster.Timeout = 2 * time.Second
 	return cluster
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN enar
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func insertBooks(ctx context.Context, session *gocql.Session) {

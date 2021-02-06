@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/example/grpc/api"
-	"github.com/uptrace/uptrace-go/example/grpc/config"
+	"github.com/uptrace/uptrace-go/uptrace"
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -17,7 +17,10 @@ import (
 func main() {
 	ctx := context.Background()
 
-	upclient := config.SetupUptrace()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 

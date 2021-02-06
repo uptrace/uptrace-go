@@ -24,7 +24,10 @@ var (
 func main() {
 	ctx := context.Background()
 
-	upclient = newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -38,15 +41,6 @@ func main() {
 	if err := router.Run(":9999"); err != nil {
 		upclient.ReportError(ctx, err)
 	}
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func profileTemplate() *template.Template {

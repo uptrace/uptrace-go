@@ -15,7 +15,10 @@ var tracer = otel.Tracer("go-redis-tracer")
 func main() {
 	ctx := context.Background()
 
-	upclient := newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN enar
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -36,15 +39,6 @@ func main() {
 	}
 
 	log.Println("trace", upclient.TraceURL(span))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN enar
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func redisCommands(ctx context.Context, rdb *redis.Client) error {

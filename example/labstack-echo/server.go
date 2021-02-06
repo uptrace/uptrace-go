@@ -20,7 +20,10 @@ var tracer = otel.Tracer("echo-tracer")
 func main() {
 	ctx := context.Background()
 
-	upclient := newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -39,15 +42,6 @@ func main() {
 	e.GET("/profiles/:username", userProfileEndpoint)
 
 	e.Logger.Fatal(e.Start(":9999"))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func userProfileEndpoint(c echo.Context) error {

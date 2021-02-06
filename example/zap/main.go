@@ -20,8 +20,7 @@ func main() {
 		PrettyPrint: true,
 	})
 
-	defer upclient.Close()
-	// defer upclient.ReportPanic(ctx)
+	defer upclient.ReportPanic(ctx)
 
 	core := otelzap.NewOtelCore(otelzap.WithLevel(zap.NewAtomicLevelAt(zap.ErrorLevel)))
 	log := zap.New(core, zap.AddCaller())
@@ -29,12 +28,16 @@ func main() {
 	tracer := otel.Tracer("example")
 
 	ctx, span := tracer.Start(ctx, "main")
-	defer span.End()
 
 	// You must use WithContext to propagate the active span.
 	log.Ctx(ctx).Error("hello from zap",
 		zap.Error(errors.New("hello world")),
 		zap.String("foo", "bar"))
+
+	span.End()
+
+	// Flush the buffer and close the client.
+	upclient.Close()
 
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
 }

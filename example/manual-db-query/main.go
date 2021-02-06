@@ -14,8 +14,11 @@ var tracer = otel.Tracer("github.com/your/repo")
 
 func main() {
 	ctx := context.Background()
-	upclient := newUptraceClient()
 
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -44,13 +47,4 @@ func main() {
 	)
 
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }

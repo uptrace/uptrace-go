@@ -1,4 +1,4 @@
-# Zap instrumentation example
+# Zap instrumentation example for Uptrace and OpenTelemetry
 
 [![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-zap/)
 

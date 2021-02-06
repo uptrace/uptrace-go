@@ -12,17 +12,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("memcache-tracer")
-)
+var tracer = otel.Tracer("memcache-tracer")
 
 func main() {
 	flag.Parse()
 
 	ctx := context.Background()
 
-	upclient = newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN enar
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -35,15 +35,6 @@ func main() {
 	ctx, s := tracer.Start(ctx, "test-operations")
 	doMemcacheOperations(ctx, mc)
 	s.End()
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN enar
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func doMemcacheOperations(ctx context.Context, mc *otelmemcache.Client) {

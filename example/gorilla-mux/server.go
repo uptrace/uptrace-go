@@ -19,7 +19,10 @@ var tracer = otel.Tracer("mux-tracer")
 func main() {
 	ctx := context.Background()
 
-	upclient := newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -30,15 +33,6 @@ func main() {
 	r.HandleFunc("/profiles/{username}", userProfileHandler)
 
 	log.Fatal(http.ListenAndServe(":9999", r))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func userProfileHandler(w http.ResponseWriter, req *http.Request) {

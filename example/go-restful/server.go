@@ -14,15 +14,15 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("restful-tracer")
-)
+var tracer = otel.Tracer("restful-tracer")
 
 func main() {
 	ctx := context.Background()
 
-	upclient = newUptraceClient()
+	upclient = uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -35,15 +35,6 @@ func main() {
 	ws.Route(ws.GET("/profiles/{username}").To(userProfileHandler))
 	restful.Add(ws)
 	log.Fatal(http.ListenAndServe(":9999", nil))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }
 
 func userProfileHandler(req *restful.Request, resp *restful.Response) {

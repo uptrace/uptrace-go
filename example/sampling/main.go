@@ -11,8 +11,16 @@ import (
 
 func main() {
 	ctx := context.Background()
-	upclient := newUptraceClient()
 
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+
+		Sampler: CustomSampler{Fallback: sdktrace.AlwaysSample()},
+
+		// Pretty print spans to stdout. For debugging purposes.
+		PrettyPrint: true,
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -38,20 +46,6 @@ func main() {
 		trace2.End()
 		fmt.Printf("trace2: %s\n", upclient.TraceURL(span))
 	}
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-
-		Sampler: CustomSampler{Fallback: sdktrace.AlwaysSample()},
-
-		// Pretty print spans to stdout. For debugging purposes.
-		PrettyPrint: true,
-	})
-
-	return upclient
 }
 
 // CustomSampler drops some traces based on their name and uses fallback sampler otherwise.

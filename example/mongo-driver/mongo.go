@@ -18,7 +18,10 @@ var tracer = otel.Tracer("mongodb-tracer")
 func main() {
 	ctx := context.Background()
 
-	upclient := newUptraceClient()
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -51,15 +54,6 @@ func main() {
 	}
 
 	log.Println("trace", upclient.TraceURL(span))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
-
-	return upclient
 }
 
 // Copyright (C) MongoDB, Inc. 2017-present.

@@ -14,8 +14,14 @@ import (
 
 func main() {
 	ctx := context.Background()
-	upclient := newUptraceClient()
 
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// copy your project DSN here or use UPTRACE_DSN env var
+		DSN: "",
+
+		ServiceName:    "test",
+		ServiceVersion: "v1.0.0",
+	}, uptrace.WithFilter(spanFilter))
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
@@ -44,18 +50,6 @@ func main() {
 
 	span.End()
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
-}
-
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-
-		ServiceName:    "test",
-		ServiceVersion: "v1.0.0",
-	}, uptrace.WithFilter(spanFilter))
-
-	return upclient
 }
 
 func spanFilter(span *spanexp.Span) bool {
