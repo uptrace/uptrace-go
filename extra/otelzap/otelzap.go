@@ -27,6 +27,13 @@ var (
 	codeLinenoKey   = label.Key("code.lineno")
 )
 
+func Wrap(logger *zap.Logger, opts ...Option) *zap.Logger {
+	return logger.WithOptions(zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		otelCore := NewOtelCore(opts...)
+		return zapcore.NewTee(c, otelCore)
+	}))
+}
+
 type OtelCore struct {
 	zapcore.LevelEnabler
 	errorStatusLevel zapcore.Level
