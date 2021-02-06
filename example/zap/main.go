@@ -9,6 +9,7 @@ import (
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -22,15 +23,22 @@ func main() {
 
 	defer upclient.ReportPanic(ctx)
 
-	core := otelzap.NewOtelCore(otelzap.WithLevel(zap.NewAtomicLevelAt(zap.ErrorLevel)))
-	log := zap.New(core, zap.AddCaller())
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+
+	logger = logger.WithOptions(zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		otelCore := otelzap.NewOtelCore(otelzap.WithLevel(zap.NewAtomicLevelAt(zap.ErrorLevel)))
+		return zapcore.NewTee(c, otelCore)
+	}))
 
 	tracer := otel.Tracer("example")
-
 	ctx, span := tracer.Start(ctx, "main")
 
-	// You must use WithContext to propagate the active span.
-	log.Ctx(ctx).Error("hello from zap",
+	// You must use Ctx to propagate the active span.
+	logger.Ctx(ctx).Error("hello from zap",
 		zap.Error(errors.New("hello world")),
 		zap.String("foo", "bar"))
 
