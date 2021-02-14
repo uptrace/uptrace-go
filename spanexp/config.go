@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/uptrace/uptrace-go/internal"
-
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -91,12 +89,6 @@ func (cfg *Config) Init(opts ...Option) {
 
 	if cfg.DSN == "" {
 		if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
-			if dsn == "" {
-				internal.Logger.Printf(context.TODO(),
-					"UPTRACE_DSN has empty value (use UPTRACE_DISABLED=true instead)")
-				cfg.Disabled = true
-				return
-			}
 			cfg.DSN = dsn
 		}
 	}

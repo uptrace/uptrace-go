@@ -173,7 +173,9 @@ func (c *Client) getTracerProvider() *sdktrace.TracerProvider {
 
 	spe, err := spanexp.NewExporter(c.cfg)
 	if err != nil {
-		internal.Logger.Printf(context.TODO(), err.Error())
+		internal.Logger.Printf(context.TODO(),
+			"Uptrace is disabled: %s",
+			strings.TrimPrefix(err.Error(), "uptrace: "))
 	} else {
 		queueSize := queueSize()
 		c.bsp = sdktrace.NewBatchSpanProcessor(spe,

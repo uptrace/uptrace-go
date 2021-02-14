@@ -15,7 +15,7 @@ type DSN struct {
 
 func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsnStr == "" {
-		return nil, fmt.Errorf("uptrace: either Config.DSN or UPTRACE_DSN env var is required")
+		return nil, fmt.Errorf("uptrace: either Config.DSN or UPTRACE_DSN required")
 	}
 
 	u, err := url.Parse(dsnStr)
