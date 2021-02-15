@@ -45,7 +45,8 @@ func TestFilters(t *testing.T) {
 	upclient := uptrace.NewClient(&uptrace.Config{
 		DSN: "https://key@api.uptrace.dev/1",
 
-		ServiceName: "test-filters",
+		ServiceName:    "test-filters",
+		ServiceVersion: "1.0.0",
 	}, uptrace.WithFilter(filter))
 
 	tracer := otel.Tracer("github.com/your/repo")
@@ -62,6 +63,10 @@ func TestFilters(t *testing.T) {
 	val, ok := set.Value(semconv.ServiceNameKey)
 	require.True(t, ok)
 	require.Equal(t, "test-filters", val.AsString())
+
+	val, ok = set.Value(semconv.ServiceVersionKey)
+	require.True(t, ok)
+	require.Equal(t, "1.0.0", val.AsString())
 }
 
 func TestExporter(t *testing.T) {

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"github.com/uptrace/uptrace-go/internal/upconfig"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/metric"
@@ -21,10 +20,10 @@ import (
 )
 
 type Exporter struct {
-	cfg *upconfig.Config
+	cfg *Config
 
+	client   internal.SimpleClient
 	endpoint string
-	token    string
 
 	mmsc      []mmsc
 	quantiles []quantile
@@ -32,22 +31,26 @@ type Exporter struct {
 
 var _ export.Exporter = (*Exporter)(nil)
 
-func NewRawExporter(cfg *upconfig.Config) *Exporter {
-	upconfig.Init(cfg)
+func NewExporter(cfg *Config) (*Exporter, error) {
+	cfg.init()
+
+	e := &Exporter{
+		cfg: cfg,
+	}
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
-		internal.Logger.Printf(context.TODO(), err.Error())
-		cfg.Disabled = true
+		return nil, err
 	}
 
-	return &Exporter{
-		cfg: cfg,
+	e.client.Client = cfg.HTTPClient
+	e.client.Token = dsn.Token
+	e.client.MaxRetries = cfg.MaxRetries
 
-		endpoint: fmt.Sprintf("%s://%s/api/v1/projects/%s/metrics",
-			dsn.Scheme, dsn.Host, dsn.ProjectID),
-		token: dsn.Token,
-	}
+	e.endpoint = fmt.Sprintf("%s://%s/api/v1/projects/%s/metrics",
+		dsn.Scheme, dsn.Host, dsn.ProjectID)
+
+	return e, nil
 }
 
 // InstallNewPipeline instantiates a NewExportPipeline and registers it globally.
@@ -57,10 +60,14 @@ func NewRawExporter(cfg *upconfig.Config) *Exporter {
 // 	defer pipeline.Stop()
 // 	... Done
 func InstallNewPipeline(
-	ctx context.Context, config *upconfig.Config, options ...controller.Option,
+	ctx context.Context, config *Config, options ...controller.Option,
 ) (*controller.Controller, error) {
 	options = append(options, controller.WithCollectPeriod(10*time.Second))
-	ctrl := NewExportPipeline(config, options...)
+	ctrl, err := NewExportPipeline(config, options...)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := ctrl.Start(ctx); err != nil {
 		return nil, err
 	}
@@ -73,9 +80,13 @@ func InstallNewPipeline(
 // NewExportPipeline sets up a complete export pipeline with the recommended setup,
 // chaining a NewRawExporter into the recommended selectors and integrators.
 func NewExportPipeline(
-	config *upconfig.Config, options ...controller.Option,
-) *controller.Controller {
-	exporter := NewRawExporter(config)
+	cfg *Config, options ...controller.Option,
+) (*controller.Controller, error) {
+	exporter, err := NewExporter(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	options = append(options, controller.WithPusher(exporter))
 
 	// Not stateful.
@@ -84,7 +95,7 @@ func NewExportPipeline(
 		options...,
 	)
 
-	return ctrl
+	return ctrl, nil
 }
 
 func (e *Exporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {
@@ -239,7 +250,7 @@ func (e *Exporter) flush() {
 	e.quantiles = nil
 }
 
-func (e *Exporter) send(out map[string]interface{}) error {
+func (e *Exporter) send(out interface{}) error {
 	ctx := context.Background()
 
 	enc := internal.GetEncoder()
@@ -250,7 +261,7 @@ func (e *Exporter) send(out map[string]interface{}) error {
 		return err
 	}
 
-	return internal.PostWithRetry(ctx, e.cfg.HTTPClient, e.endpoint, e.token, data)
+	return e.client.Post(ctx, e.endpoint, data)
 }
 
 type baseRecord struct {

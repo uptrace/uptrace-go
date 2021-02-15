@@ -102,23 +102,8 @@ func (cfg *Config) Init(opts ...Option) {
 		}
 	}
 
-	{
-		kvs := cfg.ResourceAttributes
-
-		if cfg.ServiceName != "" {
-			kvs = append(kvs, semconv.ServiceNameKey.String(cfg.ServiceName))
-		}
-		if cfg.ServiceVersion != "" {
-			kvs = append(kvs, semconv.ServiceNameKey.String(cfg.ServiceName))
-		}
-
-		if len(kvs) > 0 {
-			cfg.Resource = resource.Merge(
-				resource.NewWithAttributes(kvs...),
-				cfg.Resource,
-			)
-		}
-	}
+	cfg.Resource = buildResource(
+		cfg.Resource, cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
 
 	if cfg.TextMapPropagator == nil {
 		cfg.TextMapPropagator = propagation.NewCompositeTextMapPropagator(
@@ -150,4 +135,31 @@ func (cfg *Config) Init(opts ...Option) {
 	for _, opt := range opts {
 		opt(cfg)
 	}
+}
+
+func buildResource(
+	res *resource.Resource, resourceAttributes []label.KeyValue, serviceName, serviceVersion string,
+) *resource.Resource {
+	var kvs []label.KeyValue
+	kvs = append(kvs, resourceAttributes...)
+
+	if serviceName != "" {
+		kvs = append(kvs, semconv.ServiceNameKey.String(serviceName))
+	}
+	if serviceVersion != "" {
+		kvs = append(kvs, semconv.ServiceVersionKey.String(serviceVersion))
+	}
+
+	if res == nil {
+		return resource.NewWithAttributes(kvs...)
+	}
+
+	if len(kvs) > 0 {
+		return resource.Merge(
+			res,
+			resource.NewWithAttributes(kvs...),
+		)
+	}
+
+	return res
 }
