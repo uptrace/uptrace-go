@@ -17,6 +17,13 @@ type statusCodeError struct {
 	msg  string
 }
 
+func (e statusCodeError) Temporary() bool {
+	if e.code >= 500 {
+		return true
+	}
+	return false
+}
+
 func (e statusCodeError) Error() string {
 	if e.msg != "" {
 		return fmt.Sprintf("status=%d: %s", e.code, e.msg)
@@ -33,13 +40,16 @@ func decodeErrorMessage(r io.Reader) string {
 	return msg
 }
 
-func PostWithRetry(
-	ctx context.Context,
-	client *http.Client,
-	endpoint, token string,
-	data []byte,
+type SimpleClient struct {
+	Client     *http.Client
+	Token      string
+	MaxRetries int
+}
+
+func (c *SimpleClient) Post(
+	ctx context.Context, endpoint string, data []byte,
 ) error {
-	resp, err := postWithRetry(ctx, client, endpoint, token, data)
+	resp, err := c.postWithRetry(ctx, endpoint, data)
 	if err != nil {
 		return err
 	}
@@ -66,30 +76,34 @@ func PostWithRetry(
 	return nil
 }
 
-func postWithRetry(
-	ctx context.Context,
-	client *http.Client,
-	endpoint, token string,
-	data []byte,
+func (c *SimpleClient) postWithRetry(
+	ctx context.Context, endpoint string, data []byte,
 ) (resp *http.Response, lastErr error) {
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := 0; attempt <= c.MaxRetries; attempt++ {
 		if err := Backoff(ctx, attempt, time.Second, 3*time.Second); err != nil {
 			return nil, err
 		}
 
-		req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(data))
-		if err != nil {
-			return nil, err
+		resp, lastErr = c.post(ctx, endpoint, data)
+		if lastErr != nil || resp.StatusCode >= 500 {
+			continue
 		}
-
-		req.Header.Set("Authorization", "Bearer "+token)
-		req.Header.Set("Content-Type", "application/msgpack")
-		req.Header.Set("Content-Encoding", "zstd")
-
-		resp, lastErr = client.Do(req)
-		if lastErr == nil {
-			return resp, nil
-		}
+		return resp, nil
 	}
 	return nil, lastErr
+}
+
+func (c *SimpleClient) post(
+	ctx context.Context, endpoint string, data []byte,
+) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/msgpack")
+	req.Header.Set("Content-Encoding", "zstd")
+
+	return c.Client.Do(req)
 }

@@ -26,13 +26,12 @@ type Config struct {
 	// The default is to use UPTRACE_DSN environment var.
 	DSN string
 
-	// `service.name` resource attribute.This attribute is added to Config.Resource.
+	// `service.name` resource attribute. It is merged with Config.Resource.
 	ServiceName string
-	// `service.version` resource attribute. This attribute is added to Config.Resource.
+	// `service.version` resource attribute. It is merged with Config.Resource.
 	ServiceVersion string
-	// Any other resource attributes. These attributes are added to Config.Resource.
+	// Any other resource attributes. They are merged with Config.Resource.
 	ResourceAttributes []label.KeyValue
-
 	// Resource contains attributes representing an entity that produces telemetry.
 	// These attributes are copied to all spans and events.
 	//
@@ -51,6 +50,9 @@ type Config struct {
 
 	// HTTPClient that is used to send data to Uptrace.
 	HTTPClient *http.Client
+	// Max number of retries when sending data to Uptrace.
+	// The default is 3.
+	MaxRetries int
 
 	// Name of the tracer used by Uptrace client.
 	// The default is github.com/uptrace/uptrace-go.
@@ -133,6 +135,12 @@ func (cfg *Config) Init(opts ...Option) {
 		cfg.HTTPClient = &http.Client{
 			Timeout: 10 * time.Second,
 		}
+	}
+	switch cfg.MaxRetries {
+	case -1:
+		cfg.MaxRetries = 0
+	case 0:
+		cfg.MaxRetries = 3
 	}
 
 	if cfg.ClientTrace {

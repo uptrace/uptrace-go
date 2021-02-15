@@ -18,7 +18,7 @@ func main() {
 		DSN: "",
 
 		ServiceName:    "myservice",
-		ServiceVersion: "v1.0.0",
+		ServiceVersion: "1.0.0",
 	})
 
 	defer upclient.Close()
@@ -28,7 +28,6 @@ func main() {
 	upclient.ReportError(ctx, errors.New("Hello from uptrace-go"))
 
 	tracer := otel.Tracer("github.com/your/repo")
-
 	ctx, span := tracer.Start(ctx, "main span")
 
 	_, child1 := tracer.Start(ctx, "child1")

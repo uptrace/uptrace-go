@@ -27,8 +27,8 @@ type Exporter struct {
 	wg sync.WaitGroup
 	rl *internal.Gate
 
+	client   internal.SimpleClient
 	endpoint string
-	token    string
 
 	tracer apitrace.Tracer
 
@@ -52,9 +52,12 @@ func NewExporter(cfg *Config) (*Exporter, error) {
 		return nil, err
 	}
 
+	e.client.Client = cfg.HTTPClient
+	e.client.Token = dsn.Token
+	e.client.MaxRetries = cfg.MaxRetries
+
 	e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
 		dsn.Scheme, dsn.Host, dsn.ProjectID)
-	e.token = dsn.Token
 
 	return e, nil
 }
@@ -107,7 +110,14 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 		defer e.rl.Done()
 		defer e.wg.Done()
 
-		if err := e.SendSpans(ctx, outSpans); err != nil {
+		out := map[string]interface{}{
+			"spans": outSpans,
+		}
+		if e.cfg.Sampler != nil {
+			out["sampler"] = e.cfg.Sampler.Description()
+		}
+
+		if err := e.SendSpans(ctx, out); err != nil {
 			internal.Logger.Printf(ctx, "send failed: %s", err)
 
 			if currSpan != nil {
@@ -131,7 +141,7 @@ func (e *Exporter) filter(span *Span) bool {
 
 //------------------------------------------------------------------------------
 
-func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
+func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 	if e.cfg.Trace {
 		var span apitrace.Span
 		ctx, span = e.tracer.Start(ctx, "send")
@@ -140,14 +150,6 @@ func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
 
 	enc := internal.GetEncoder()
 	defer internal.PutEncoder(enc)
-
-	out := map[string]interface{}{
-		"spans": spans,
-	}
-
-	if e.cfg.Sampler != nil {
-		out["sampler"] = e.cfg.Sampler.Description()
-	}
 
 	data, err := enc.EncodeZstd(out)
 	if err != nil {
@@ -158,5 +160,5 @@ func (e *Exporter) SendSpans(ctx context.Context, spans []Span) error {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}
 
-	return internal.PostWithRetry(ctx, e.cfg.HTTPClient, e.endpoint, e.token, data)
+	return e.client.Post(ctx, e.endpoint, data)
 }
