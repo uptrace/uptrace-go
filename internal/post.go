@@ -18,10 +18,7 @@ type statusCodeError struct {
 }
 
 func (e statusCodeError) Temporary() bool {
-	if e.code >= 500 {
-		return true
-	}
-	return false
+	return e.code >= 500
 }
 
 func (e statusCodeError) Error() string {
