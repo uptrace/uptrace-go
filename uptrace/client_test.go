@@ -148,8 +148,8 @@ func TestExporter(t *testing.T) {
 	require.NotZero(t, l0.SpanID)
 	require.Equal(t, spanexp.KeyValueSlice{label.Float64("link1", 0.123)}, l0.Attrs)
 
-	require.Equal(t, "github.com/your/repo", s0.Tracer.Name)
-	require.Equal(t, "", s0.Tracer.Version)
+	require.Equal(t, "github.com/your/repo", s0.TracerName)
+	require.Equal(t, "", s0.TracerVersion)
 }
 
 func genSpan(ctx context.Context, tracer trace.Tracer) {

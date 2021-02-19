@@ -28,13 +28,11 @@ type Span struct {
 	StatusCode    string `msgpack:"statusCode"`
 	StatusMessage string `msgpack:"statusMessage"`
 
+	TracerName    string `msgpack:"tracerName"`
+	TracerVersion string `msgpack:"tracerVersion"`
+
 	Events []Event `msgpack:"events"`
 	Links  []Link  `msgpack:"links"`
-
-	Tracer struct {
-		Name    string `msgpack:"name"`
-		Version string `msgpack:"version"`
-	} `msgpack:"tracer"`
 }
 
 func initUptraceSpan(out *Span, in *export.SpanSnapshot) {
@@ -69,8 +67,8 @@ func initUptraceSpan(out *Span, in *export.SpanSnapshot) {
 		}
 	}
 
-	out.Tracer.Name = in.InstrumentationLibrary.Name
-	out.Tracer.Version = in.InstrumentationLibrary.Version
+	out.TracerName = in.InstrumentationLibrary.Name
+	out.TracerVersion = in.InstrumentationLibrary.Version
 }
 
 type Event struct {
