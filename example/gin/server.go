@@ -16,10 +16,7 @@ import (
 
 const profileTmpl = "profile"
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("gin-tracer")
-)
+var tracer = otel.Tracer("gin-tracer")
 
 func main() {
 	ctx := context.Background()

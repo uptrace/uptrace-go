@@ -8,7 +8,6 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/vmihailenco/msgpack/v5 v5.2.0
-	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.17.0
 	go.opentelemetry.io/otel v0.17.0
 	go.opentelemetry.io/otel/exporters/stdout v0.17.0

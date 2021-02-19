@@ -7,8 +7,10 @@ replace github.com/uptrace/uptrace-go => ../..
 replace github.com/uptrace/uptrace-go/extra/otellogrus => ../../extra/otellogrus
 
 require (
-	github.com/sirupsen/logrus v1.7.0
-	github.com/uptrace/uptrace-go v0.4.1
-	github.com/uptrace/uptrace-go/extra/otellogrus v0.1.0
-	go.opentelemetry.io/otel v0.16.0
+	github.com/magefile/mage v1.11.0 // indirect
+	github.com/sirupsen/logrus v1.8.0
+	github.com/uptrace/uptrace-go v0.7.7
+	github.com/uptrace/uptrace-go/extra/otellogrus v0.7.7
+	go.opentelemetry.io/otel v0.17.0
+	golang.org/x/sys v0.0.0-20210218155724-8ebf48af031b // indirect
 )

@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/gorilla/mux v1.8.0
-	github.com/uptrace/uptrace-go v0.3.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.16.0
-	go.opentelemetry.io/otel v0.16.0
+	github.com/uptrace/uptrace-go v0.7.7
+	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.17.0
+	go.opentelemetry.io/otel v0.17.0
 )

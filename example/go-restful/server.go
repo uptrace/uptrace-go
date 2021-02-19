@@ -19,7 +19,7 @@ var tracer = otel.Tracer("restful-tracer")
 func main() {
 	ctx := context.Background()
 
-	upclient = uptrace.NewClient(&uptrace.Config{
+	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 	})
