@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/global"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
@@ -72,7 +72,7 @@ func InstallNewPipeline(
 		return nil, err
 	}
 
-	otel.SetMeterProvider(ctrl.MeterProvider())
+	global.SetMeterProvider(ctrl.MeterProvider())
 
 	return ctrl, nil
 }

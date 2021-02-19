@@ -6,16 +6,16 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/sdk/export/trace"
-	apitrace "go.opentelemetry.io/otel/trace"
+	export "go.opentelemetry.io/otel/sdk/export/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type KeyValueSlice = internal.KeyValueSlice
 
 type Span struct {
-	ID       uint64           `msgpack:"id"`
-	ParentID uint64           `msgpack:"parentId"`
-	TraceID  apitrace.TraceID `msgpack:"traceId"`
+	ID       uint64        `msgpack:"id"`
+	ParentID uint64        `msgpack:"parentId"`
+	TraceID  trace.TraceID `msgpack:"traceId"`
 
 	Name      string `msgpack:"name"`
 	Kind      string `msgpack:"kind"`
@@ -37,7 +37,7 @@ type Span struct {
 	} `msgpack:"tracer"`
 }
 
-func initUptraceSpan(out *Span, in *trace.SpanSnapshot) {
+func initUptraceSpan(out *Span, in *export.SpanSnapshot) {
 	out.ID = asUint64(in.SpanContext.SpanID)
 	out.ParentID = asUint64(in.ParentSpanID)
 	out.TraceID = in.SpanContext.TraceID
@@ -86,12 +86,12 @@ func initUptraceEvent(out *Event, in *trace.Event) {
 }
 
 type Link struct {
-	TraceID apitrace.TraceID `msgpack:"traceId"`
-	SpanID  uint64           `msgpack:"spanId"`
-	Attrs   KeyValueSlice    `msgpack:"attrs"`
+	TraceID trace.TraceID `msgpack:"traceId"`
+	SpanID  uint64        `msgpack:"spanId"`
+	Attrs   KeyValueSlice `msgpack:"attrs"`
 }
 
-func initUptraceLink(out *Link, in *apitrace.Link) {
+func initUptraceLink(out *Link, in *trace.Link) {
 	out.TraceID = in.SpanContext.TraceID
 	out.SpanID = asUint64(in.SpanContext.SpanID)
 	out.Attrs = in.Attributes
