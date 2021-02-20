@@ -25,13 +25,13 @@ func main() {
 	defer upclient.Close()
 
 	ctx := context.Background()
-	startSpanExample(ctx)
+	spansExample(ctx)
 	activeSpanExample(ctx)
 	activateSpanManuallyExample(ctx)
 }
 
-// Start a span and set some attributes.
-func startSpanExample(ctx context.Context) {
+// This example shows how to start a span and set some attributes.
+func spansExample(ctx context.Context) {
 	ctx, span := tracer.Start(ctx, "main", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -54,6 +54,7 @@ func startSpanExample(ctx context.Context) {
 	}
 }
 
+// This example shows how to get/set active span from context.
 func activeSpanExample(ctx context.Context) {
 	ctx, main := tracer.Start(ctx, "main")
 	defer main.End()
