@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var tracer = otel.Tracer("gocql-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 const keyspace = "gocql_example"
 
@@ -36,7 +36,6 @@ func main() {
 	session, err := otelgocql.NewSessionWithTracing(ctx, cluster)
 	if err != nil {
 		log.Fatal(err)
-		upclient.ReportError(ctx, err)
 	}
 	defer session.Close()
 

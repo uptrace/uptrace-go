@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 )
 
-var tracer = otel.Tracer("github.com/your/repo")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()

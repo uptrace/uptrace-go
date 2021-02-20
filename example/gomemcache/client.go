@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -12,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var tracer = otel.Tracer("memcache-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	flag.Parse()
@@ -25,8 +24,6 @@ func main() {
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	mc := otelmemcache.NewClientWithTracing(
 		memcache.New("memcached-server:11211"),

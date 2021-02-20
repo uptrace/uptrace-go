@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -13,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var tracer = otel.Tracer("mongodb-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -25,22 +24,18 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
-
 	opt := options.Client()
 	opt.Monitor = otelmongo.NewMonitor("mongo-service")
 	opt.ApplyURI("mongodb://mongo-server:27017")
 
 	mdb, err := mongo.Connect(ctx, opt)
 	if err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 
 	if err := mdb.Ping(ctx, nil); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -48,8 +43,7 @@ func main() {
 	defer span.End()
 
 	if err := run(ctx, mdb.Database("example")); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 

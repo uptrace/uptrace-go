@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -25,11 +24,7 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	// Use upclient to report errors when there is no active span.
-	upclient.ReportError(ctx, errors.New("Hello from uptrace-go!"))
-
-	// Create a tracer.
-	tracer := otel.Tracer("github.com/your/repo")
+	tracer := otel.Tracer("app_or_package_name")
 
 	// Start active span.
 	ctx, span := tracer.Start(ctx, "main span")

@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var tracer = otel.Tracer("go-pg-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -33,8 +33,7 @@ func main() {
 	db.AddQueryHook(&pgotel.TracingHook{})
 
 	if err := createBookTable(ctx, db); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Println(err.Error())
+		log.Println(err)
 		return
 	}
 
@@ -42,8 +41,7 @@ func main() {
 	defer span.End()
 
 	if err := pgQueries(ctx, db); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Println(err.Error())
+		log.Print(err)
 		return
 	}
 

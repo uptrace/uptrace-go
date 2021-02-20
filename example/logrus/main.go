@@ -25,7 +25,7 @@ func main() {
 	// Add OpenTelemetry logging hook.
 	logrus.AddHook(otellogrus.NewLoggingHook())
 
-	tracer := otel.Tracer("example")
+	tracer := otel.Tracer("app_or_package_name")
 
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()

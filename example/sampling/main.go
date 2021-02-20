@@ -24,8 +24,7 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	// Create a tracer.
-	tracer := otel.Tracer("github.com/your/repo")
+	tracer := otel.Tracer("app_or_package_name")
 
 	{
 		ctx, trace1 := tracer.Start(ctx, "trace1")

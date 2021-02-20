@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -15,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var tracer = otel.Tracer("echo-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -26,8 +25,6 @@ func main() {
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from Uptrace!"))
 
 	e := echo.New()
 	e.Use(otelecho.Middleware("service-name"))

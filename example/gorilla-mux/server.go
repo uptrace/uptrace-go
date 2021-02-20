@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var tracer = otel.Tracer("mux-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -25,8 +24,6 @@ func main() {
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	r := mux.NewRouter()
 	r.Use(otelmux.Middleware("service-name"))

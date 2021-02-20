@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -24,24 +23,20 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	upclient.ReportError(ctx, errors.New("hello from grpc client!"))
-
 	conn, err := grpc.Dial("grpc-server:9999",
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
 	if err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 	defer func() { _ = conn.Close() }()
 
 	client := api.NewHelloServiceClient(conn)
 	if err := sayHello(ctx, client); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 }

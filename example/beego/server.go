@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/astaxie/beego"
@@ -12,10 +11,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("beego-tracer")
-)
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -26,8 +22,6 @@ func main() {
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	// To enable tracing on template rendering, disable autorender and
 	// call otelbeego.Render manually.

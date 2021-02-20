@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var tracer = otel.Tracer("github.com/my/repo")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -25,8 +25,6 @@ func main() {
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from Uptrace!"))
 
 	// Your app handler.
 	var handler http.Handler
@@ -45,8 +43,7 @@ func main() {
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
-		upclient.ReportError(ctx, err)
-		panic(err)
+		log.Fatal(err)
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var tracer = otel.Tracer("go-redis-cluster-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -40,8 +40,7 @@ func main() {
 	defer span.End()
 
 	if err := redisCommands(ctx, rdb); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Println(err.Error())
+		log.Fatal(err)
 		return
 	}
 

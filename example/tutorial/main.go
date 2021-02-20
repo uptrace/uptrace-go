@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/label"
 )
 
-var tracer = otel.Tracer("go-example-app")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	upclient := uptrace.NewClient(&uptrace.Config{

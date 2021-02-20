@@ -1,0 +1,83 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/uptrace/uptrace-go/uptrace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
+)
+
+var tracer = otel.Tracer("app_or_package_name")
+
+func main() {
+	upclient := uptrace.NewClient(&uptrace.Config{
+		// Set DSN or UPTRACE_DSN env var.
+		DSN: "",
+
+		ServiceName:    "myservice",
+		ServiceVersion: "v1.0.0",
+	})
+	defer upclient.Close()
+
+	ctx := context.Background()
+	startSpanExample(ctx)
+	activeSpanExample(ctx)
+	activateSpanManuallyExample(ctx)
+}
+
+// Start a span and set some attributes.
+func startSpanExample(ctx context.Context) {
+	ctx, span := tracer.Start(ctx, "main", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// Check if span is sampled and start recording.
+	if span.IsRecording() {
+		span.SetAttributes(
+			label.String("key1", "value1"),
+			label.Int("key2", 42),
+		)
+
+		span.AddEvent("log", trace.WithAttributes(
+			label.String("log.severity", "error"),
+			label.String("log.message", "User not found"),
+			label.String("enduser.id", "123"),
+		))
+
+		span.RecordError(errors.New("error1"))
+
+		span.SetStatus(codes.Error, "error description")
+	}
+}
+
+func activeSpanExample(ctx context.Context) {
+	ctx, main := tracer.Start(ctx, "main")
+	defer main.End()
+
+	childCtx, child := tracer.Start(ctx, "child")
+	defer child.End()
+
+	if trace.SpanFromContext(ctx) == main {
+		fmt.Println("main is active")
+	}
+
+	if trace.SpanFromContext(childCtx) == child {
+		fmt.Println("child is active")
+	}
+}
+
+func activateSpanManuallyExample(ctx context.Context) {
+	ctx, main := tracer.Start(ctx, "main")
+	defer main.End()
+
+	ctx2 := context.TODO()
+	ctx2 = trace.ContextWithSpan(ctx2, main)
+
+	if trace.SpanFromContext(ctx) == trace.SpanFromContext(ctx2) {
+		fmt.Println("span is active in multiple contexts")
+	}
+}

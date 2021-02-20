@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net"
 	"time"
@@ -33,12 +32,9 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	upclient.ReportError(ctx, errors.New("hello from grpc server!"))
-
 	ln, err := net.Listen("tcp", ":9999")
 	if err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -49,8 +45,7 @@ func main() {
 
 	api.RegisterHelloServiceServer(server, &helloServer{})
 	if err := server.Serve(ln); err != nil {
-		upclient.ReportError(ctx, err)
-		log.Print(err)
+		log.Fatal(err)
 		return
 	}
 }

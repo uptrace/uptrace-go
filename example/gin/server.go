@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ import (
 
 const profileTmpl = "profile"
 
-var tracer = otel.Tracer("gin-tracer")
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -28,15 +28,13 @@ func main() {
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
-
 	router := gin.Default()
 	router.SetHTMLTemplate(profileTemplate())
 	router.Use(otelgin.Middleware("service-name"))
 	router.GET("/profiles/:username", userProfileEndpoint)
 
 	if err := router.Run(":9999"); err != nil {
-		upclient.ReportError(ctx, err)
+		log.Print(err)
 	}
 }
 

@@ -30,7 +30,7 @@ func main() {
 
 	logger = otelzap.Wrap(logger, otelzap.WithLevel(zap.NewAtomicLevelAt(zap.ErrorLevel)))
 
-	tracer := otel.Tracer("example")
+	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
 
 	// You must use Ctx to propagate the active span.

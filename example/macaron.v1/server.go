@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -13,22 +12,17 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-var (
-	upclient *uptrace.Client
-	tracer   = otel.Tracer("macaron-tracer")
-)
+var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
 
-	upclient = uptrace.NewClient(&uptrace.Config{
+	upclient := uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
-
-	upclient.ReportError(ctx, errors.New("hello from uptrace-go!"))
 
 	m := macaron.Classic()
 	m.Get("/profiles/:username", userProfileEndpoint)

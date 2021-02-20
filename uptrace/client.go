@@ -122,11 +122,6 @@ func (c *Client) TracerProvider() trace.TracerProvider {
 	return c.cfg.TracerProvider
 }
 
-// Tracer returns a named tracer.
-func (c *Client) Tracer(name string) trace.Tracer {
-	return c.TracerProvider().Tracer(name)
-}
-
 // WithSpan is a helper that wraps the function with a span and records the returned error.
 func (c *Client) WithSpan(
 	ctx context.Context,

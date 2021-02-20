@@ -27,8 +27,8 @@ func main() {
 	// Use upclient to report errors when there are no spans.
 	upclient.ReportError(ctx, errors.New("Hello from uptrace-go"))
 
-	tracer := otel.Tracer("github.com/your/repo")
-	ctx, span := tracer.Start(ctx, "main span")
+	tracer := otel.Tracer("app_or_package_name")
+	ctx, span := tracer.Start(ctx, "main")
 
 	_, child1 := tracer.Start(ctx, "child1")
 	child1.SetAttributes(label.String("key1", "value1"))
