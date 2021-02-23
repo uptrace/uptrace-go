@@ -27,19 +27,21 @@ type Config struct {
 	DSN string
 
 	// `service.name` resource attribute. It is merged with Config.Resource.
+	// For example, `myservice`.
 	ServiceName string
 	// `service.version` resource attribute. It is merged with Config.Resource.
+	// For example, `1.0.0`.
 	ServiceVersion string
 	// Any other resource attributes. They are merged with Config.Resource.
+	//
+	// You can also use `OTEL_RESOURCE_ATTRIBUTES` env var. For example,
+	// `service.name=myservice,service.version=1.0.0`.
 	ResourceAttributes []label.KeyValue
 	// Resource contains attributes representing an entity that produces telemetry.
-	// These attributes are copied to all spans and events.
+	// Resource attributes are copied to all spans and events.
 	//
 	// The default is `resource.New`.
 	Resource *resource.Resource
-
-	// Filters are functions that are used to filter and change Uptrace spans.
-	Filters []SpanFilter
 
 	// Global TextMapPropagator used by OpenTelemetry.
 	// The default is propagation.TraceContext and propagation.Baggage.
@@ -47,6 +49,9 @@ type Config struct {
 
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
+
+	// Filters are functions that are used to filter and change Uptrace spans.
+	Filters []SpanFilter
 
 	// HTTPClient that is used to send data to Uptrace.
 	HTTPClient *http.Client

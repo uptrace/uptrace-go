@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/uptrace/uptrace-go/example/grpc/api"
@@ -13,17 +14,29 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+var upclient *uptrace.Client
+
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	upclient = uptrace.NewClient(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
+
+		ServiceName:    "myservice",
+		ServiceVersion: "1.0.0",
 	})
 	defer upclient.Close()
 	defer upclient.ReportPanic(ctx)
 
-	conn, err := grpc.Dial("grpc-server:9999",
+	target := os.Getenv("GRPC_TARGET")
+	if target == "" {
+		target = ":9999"
+	}
+
+	log.Println("connecting to", target)
+
+	conn, err := grpc.Dial(target,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
@@ -35,24 +48,25 @@ func main() {
 	defer func() { _ = conn.Close() }()
 
 	client := api.NewHelloServiceClient(conn)
-	if err := sayHello(ctx, client); err != nil {
+	if err := sayHello(client); err != nil {
 		log.Fatal(err)
 		return
 	}
 }
 
-func sayHello(ctx context.Context, client api.HelloServiceClient) error {
-	md := metadata.Pairs(
+func sayHello(client api.HelloServiceClient) error {
+	ctx := context.Background()
+	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(
 		"timestamp", time.Now().Format(time.StampNano),
 		"client-id", "web-api-client",
 		"user-id", "test-user",
-	)
+	))
 
-	ctx = metadata.NewOutgoingContext(ctx, md)
-	_, err := client.SayHello(ctx, &api.HelloRequest{Greeting: "World"})
+	resp, err := client.SayHello(ctx, &api.HelloRequest{Greeting: "World"})
 	if err != nil {
 		return err
 	}
+	log.Println("reply:", resp.Reply)
 
 	return nil
 }

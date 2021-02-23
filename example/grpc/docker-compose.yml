@@ -17,6 +17,7 @@ services:
   grpc-client:
     environment:
       - UPTRACE_DSN
+      - GRPC_TARGET=grpc-server:9999
     build:
       dockerfile: $PWD/client/Dockerfile
       context: ../..

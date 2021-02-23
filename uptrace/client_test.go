@@ -123,7 +123,7 @@ func TestExporter(t *testing.T) {
 	require.Zero(t, s0.ParentID)
 	require.NotZero(t, s0.TraceID)
 	require.Equal(t, "main span", s0.Name)
-	require.Equal(t, "internal", s0.Kind)
+	require.Equal(t, "server", s0.Kind)
 	require.NotZero(t, s0.StartTime)
 	require.NotZero(t, s0.EndTime)
 
@@ -167,7 +167,9 @@ func genSpan(ctx context.Context, tracer trace.Tracer) {
 		Attributes: []label.KeyValue{label.Float64("link1", 0.123)},
 	}
 
-	_, span := tracer.Start(ctx, "main span", trace.WithLinks(link1))
+	_, span := tracer.Start(ctx, "main span",
+		trace.WithSpanKind(trace.SpanKindServer),
+		trace.WithLinks(link1))
 
 	span.SetAttributes(label.String("attr1", "attr1-value"))
 	span.AddEvent("event1", trace.WithAttributes(label.Int("event1", 123)))
