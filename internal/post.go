@@ -85,9 +85,10 @@ func (c *SimpleClient) postWithRetry(
 		if lastErr != nil || resp.StatusCode >= 500 {
 			continue
 		}
+
 		return resp, nil
 	}
-	return nil, lastErr
+	return resp, lastErr
 }
 
 func (c *SimpleClient) post(
