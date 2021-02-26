@@ -57,12 +57,7 @@ func installOTLP(ctx context.Context) (func(), error) {
 	// 	otlphttp.WithCompression(otlphttp.GzipCompression),
 	// )
 
-	exporter, err := otlp.NewExporter(ctx,
-		otlp.NewSplitDriver(otlp.SplitConfig{
-			ForMetrics: driver,
-			ForTraces:  driver,
-		}),
-	)
+	exporter, err := otlp.NewExporter(ctx, driver)
 	if err != nil {
 		return nil, err
 	}
