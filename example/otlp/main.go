@@ -1,8 +1,11 @@
+// https://github.com/open-telemetry/opentelemetry-go/tree/main/exporters/otlp
+
 package main
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"go.opentelemetry.io/otel"
@@ -17,14 +20,37 @@ import (
 func main() {
 	ctx := context.Background()
 
-	shutdown, err := installOTLP(ctx)
+	creds := credentials.NewClientTLSFromCert(nil, "")
+	driver := otlpgrpc.NewDriver(
+		otlpgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
+		otlpgrpc.WithTLSCredentials(creds),
+		otlpgrpc.WithHeaders(map[string]string{
+			// Set Uptrace token here or use UPTRACE_TOKEN env var.
+			"uptrace-token": os.Getenv("UPTRACE_TOKEN"),
+		}),
+		otlpgrpc.WithCompressor("gzip"),
+	)
+
+	exporter, err := otlp.NewExporter(ctx, driver)
 	if err != nil {
 		panic(err)
 	}
-	defer shutdown()
+
+	bsp := sdktrace.NewBatchSpanProcessor(exporter,
+		sdktrace.WithMaxQueueSize(1000),
+		sdktrace.WithMaxExportBatchSize(1000))
+	// Call shutdown to flush the buffers when program exits.
+	defer bsp.Shutdown(ctx)
+
+	tracerProvider := sdktrace.NewTracerProvider()
+	tracerProvider.RegisterSpanProcessor(bsp)
+
+	// Install our tracer provider and we are done.
+	otel.SetTracerProvider(tracerProvider)
 
 	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
+	defer span.End()
 
 	_, child1 := tracer.Start(ctx, "child1")
 	child1.SetAttributes(label.String("key1", "value1"))
@@ -35,42 +61,5 @@ func main() {
 	child2.SetAttributes(label.Int("key2", 42), label.Float64("key3", 123.456))
 	child2.End()
 
-	span.End()
-}
-
-func installOTLP(ctx context.Context) (func(), error) {
-	creds := credentials.NewClientTLSFromCert(nil, "")
-	driver := otlpgrpc.NewDriver(
-		otlpgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
-		otlpgrpc.WithTLSCredentials(creds),
-		otlpgrpc.WithHeaders(map[string]string{
-			"uptrace-token": os.Getenv("UPTRACE_TOKEN"),
-		}),
-		otlpgrpc.WithCompressor("gzip"),
-	)
-
-	// driver := otlphttp.NewDriver(
-	// 	otlphttp.WithEndpoint("otlp.uptrace.dev:443"),
-	// 	otlphttp.WithHeaders(map[string]string{
-	// 		"uptrace-token": os.Getenv("UPTRACE_TOKEN"),
-	// 	}),
-	// 	otlphttp.WithCompression(otlphttp.GzipCompression),
-	// )
-
-	exporter, err := otlp.NewExporter(ctx, driver)
-	if err != nil {
-		return nil, err
-	}
-
-	bsp := sdktrace.NewBatchSpanProcessor(exporter,
-		sdktrace.WithMaxQueueSize(1000),
-		sdktrace.WithMaxExportBatchSize(1000))
-
-	tracerProvider := sdktrace.NewTracerProvider()
-	tracerProvider.RegisterSpanProcessor(bsp)
-	otel.SetTracerProvider(tracerProvider)
-
-	return func() {
-		bsp.Shutdown(context.TODO())
-	}, nil
+	fmt.Println("trace id:", span.SpanContext().TraceID)
 }
