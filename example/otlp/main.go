@@ -20,12 +20,13 @@ import (
 func main() {
 	ctx := context.Background()
 
+	// Create credentials using system certificates.
 	creds := credentials.NewClientTLSFromCert(nil, "")
 	driver := otlpgrpc.NewDriver(
 		otlpgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
 		otlpgrpc.WithTLSCredentials(creds),
 		otlpgrpc.WithHeaders(map[string]string{
-			// Set Uptrace token here or use UPTRACE_TOKEN env var.
+			// Set the Uptrace token here or use UPTRACE_TOKEN env var.
 			"uptrace-token": os.Getenv("UPTRACE_TOKEN"),
 		}),
 		otlpgrpc.WithCompressor("gzip"),
