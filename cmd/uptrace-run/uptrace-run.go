@@ -13,7 +13,7 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
@@ -66,7 +66,7 @@ func main() {
 	defer span.End()
 
 	span.SetAttributes(
-		label.String("process.command_line", *cmdFlag),
+		attribute.String("process.command_line", *cmdFlag),
 	)
 
 	stdout := NewTailWriter(make([]byte, outputLimit))
@@ -83,15 +83,15 @@ func main() {
 		return
 	}
 
-	span.SetAttributes(label.Int("process.pid", cmd.Process.Pid))
+	span.SetAttributes(attribute.Int("process.pid", cmd.Process.Pid))
 
 	err := cmd.Wait()
 
 	if stdout.Len() > 0 {
-		span.SetAttributes(label.String("process.stdout", stdout.Text()))
+		span.SetAttributes(attribute.String("process.stdout", stdout.Text()))
 	}
 	if stderr.Len() > 0 {
-		span.SetAttributes(label.String("process.stderr", stderr.Text()))
+		span.SetAttributes(attribute.String("process.stderr", stderr.Text()))
 	}
 
 	if err != nil {
@@ -99,7 +99,7 @@ func main() {
 		if err, ok := err.(*exec.ExitError); ok {
 			exitCode = err.ExitCode()
 			span.SetAttributes(
-				label.Int("process.exit_code", exitCode),
+				attribute.Int("process.exit_code", exitCode),
 			)
 			return
 		}

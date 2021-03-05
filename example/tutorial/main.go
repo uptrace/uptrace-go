@@ -9,7 +9,7 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var tracer = otel.Tracer("app_or_package_name")
@@ -39,8 +39,8 @@ func main() {
 	}
 
 	span.SetAttributes(
-		label.String("country.code", countryCode),
-		label.String("country.name", countryName),
+		attribute.String("country.code", countryCode),
+		attribute.String("country.name", countryName),
 	)
 
 	fmt.Println("trace URL", upclient.TraceURL(span))
@@ -64,8 +64,8 @@ func fetchCountryInfo(ctx context.Context) (string, error) {
 	}
 
 	span.SetAttributes(
-		label.String("ip", "self"),
-		label.Int("resp_len", len(b)),
+		attribute.String("ip", "self"),
+		attribute.Int("resp_len", len(b)),
 	)
 
 	return string(b), nil

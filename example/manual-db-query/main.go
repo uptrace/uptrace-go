@@ -6,7 +6,7 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 )
 
@@ -35,15 +35,15 @@ func main() {
 	// Optional attributes.
 	span.SetAttributes(
 		// This query returned 1 row.
-		label.Int("db.rows_affected", 1),
+		attribute.Int("db.rows_affected", 1),
 
 		semconv.DBConnectionStringKey.String("localhost:3306"),
 		semconv.DBUserKey.String("mysql_user"),
 		semconv.DBNameKey.String("mysql_db"),
 
-		label.String("code.function", "selectArticleByID"),
-		label.String("code.filepath", "/var/lib/site/article/article.go"),
-		label.Int("code.lineno", 33),
+		attribute.String("code.function", "selectArticleByID"),
+		attribute.String("code.filepath", "/var/lib/site/article/article.go"),
+		attribute.Int("code.lineno", 33),
 	)
 
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))

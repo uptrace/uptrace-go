@@ -7,8 +7,8 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -38,14 +38,14 @@ func spansExample(ctx context.Context) {
 	// Check if span is sampled and start recording.
 	if span.IsRecording() {
 		span.SetAttributes(
-			label.String("key1", "value1"),
-			label.Int("key2", 42),
+			attribute.String("key1", "value1"),
+			attribute.Int("key2", 42),
 		)
 
 		span.AddEvent("log", trace.WithAttributes(
-			label.String("log.severity", "error"),
-			label.String("log.message", "User not found"),
-			label.String("enduser.id", "123"),
+			attribute.String("log.severity", "error"),
+			attribute.String("log.message", "User not found"),
+			attribute.String("enduser.id", "123"),
 		))
 
 		span.RecordError(errors.New("error1"))

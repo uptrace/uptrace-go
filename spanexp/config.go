@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -36,7 +36,7 @@ type Config struct {
 	//
 	// You can also use `OTEL_RESOURCE_ATTRIBUTES` env var. For example,
 	// `service.name=myservice,service.version=1.0.0`.
-	ResourceAttributes []label.KeyValue
+	ResourceAttributes []attribute.KeyValue
 	// Resource contains attributes representing an entity that produces telemetry.
 	// Resource attributes are copied to all spans and events.
 	//
@@ -143,9 +143,9 @@ func (cfg *Config) Init(opts ...Option) {
 }
 
 func buildResource(
-	res *resource.Resource, resourceAttributes []label.KeyValue, serviceName, serviceVersion string,
+	res *resource.Resource, resourceAttributes []attribute.KeyValue, serviceName, serviceVersion string,
 ) *resource.Resource {
-	var kvs []label.KeyValue
+	var kvs []attribute.KeyValue
 	kvs = append(kvs, resourceAttributes...)
 
 	if serviceName != "" {

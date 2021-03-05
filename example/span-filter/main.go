@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/uptrace-go/spanexp"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -31,15 +31,15 @@ func main() {
 
 	{
 		_, span := tracer.Start(ctx, "child1")
-		span.SetAttributes(label.String("key1", "value1"))
-		span.AddEvent("event-name", trace.WithAttributes(label.String("foo", "bar")))
+		span.SetAttributes(attribute.String("key1", "value1"))
+		span.AddEvent("event-name", trace.WithAttributes(attribute.String("foo", "bar")))
 		span.End()
 	}
 
 	{
 		_, span := tracer.Start(ctx, "child2")
-		span.SetAttributes(label.String("key2", "value2"))
-		span.AddEvent("event-name", trace.WithAttributes(label.String("foo", "baz")))
+		span.SetAttributes(attribute.String("key2", "value2"))
+		span.AddEvent("event-name", trace.WithAttributes(attribute.String("foo", "baz")))
 		span.End()
 	}
 

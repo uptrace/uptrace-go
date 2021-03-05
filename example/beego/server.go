@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var tracer = otel.Tracer("app_or_package_name")
@@ -61,7 +61,7 @@ func selectUser(ctx context.Context, username string) (string, error) {
 	_, span := tracer.Start(ctx, "selectUser")
 	defer span.End()
 
-	span.SetAttributes(label.String("username", username))
+	span.SetAttributes(attribute.String("username", username))
 
 	if username == "admin" {
 		return "Joe", nil

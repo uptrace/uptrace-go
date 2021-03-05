@@ -15,7 +15,7 @@ import (
 	"github.com/uptrace/uptrace-go/uptrace"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
@@ -59,7 +59,7 @@ func TestFilters(t *testing.T) {
 	require.NotNil(t, got)
 	require.Equal(t, "main span", got.Name)
 
-	set := label.NewSet(got.Resource...)
+	set := attribute.NewSet(got.Resource...)
 	val, ok := set.Value(semconv.ServiceNameKey)
 	require.True(t, ok)
 	require.Equal(t, "test-filters", val.AsString())
@@ -101,8 +101,8 @@ func TestExporter(t *testing.T) {
 	upclient := uptrace.NewClient(&uptrace.Config{
 		DSN: fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host),
 
-		ResourceAttributes: []label.KeyValue{
-			label.String("resource1", "resource1-value"),
+		ResourceAttributes: []attribute.KeyValue{
+			attribute.String("resource1", "resource1-value"),
 		},
 
 		Sampler: sdktrace.AlwaysSample(),
@@ -127,12 +127,12 @@ func TestExporter(t *testing.T) {
 	require.NotZero(t, s0.StartTime)
 	require.NotZero(t, s0.EndTime)
 
-	set := label.NewSet(s0.Resource...)
+	set := attribute.NewSet(s0.Resource...)
 	val, ok := set.Value("resource1")
 	require.True(t, ok)
 	require.Equal(t, "resource1-value", val.AsString())
 
-	require.Equal(t, spanexp.KeyValueSlice{label.String("attr1", "attr1-value")}, s0.Attrs)
+	require.Equal(t, spanexp.KeyValueSlice{attribute.String("attr1", "attr1-value")}, s0.Attrs)
 
 	require.Equal(t, "unset", s0.StatusCode)
 	require.Equal(t, "", s0.StatusMessage)
@@ -140,13 +140,13 @@ func TestExporter(t *testing.T) {
 	require.Equal(t, 1, len(s0.Events))
 	e0 := s0.Events[0]
 	require.Equal(t, "event1", e0.Name)
-	require.Equal(t, spanexp.KeyValueSlice{label.Int("event1", 123)}, e0.Attrs)
+	require.Equal(t, spanexp.KeyValueSlice{attribute.Int("event1", 123)}, e0.Attrs)
 
 	require.Equal(t, 1, len(s0.Links))
 	l0 := s0.Links[0]
 	require.NotZero(t, l0.TraceID)
 	require.NotZero(t, l0.SpanID)
-	require.Equal(t, spanexp.KeyValueSlice{label.Float64("link1", 0.123)}, l0.Attrs)
+	require.Equal(t, spanexp.KeyValueSlice{attribute.Float64("link1", 0.123)}, l0.Attrs)
 
 	require.Equal(t, "github.com/your/repo", s0.TracerName)
 	require.Equal(t, "", s0.TracerVersion)
@@ -164,15 +164,15 @@ func genSpan(ctx context.Context, tracer trace.Tracer) {
 			TraceID: traceID,
 			SpanID:  spanID,
 		},
-		Attributes: []label.KeyValue{label.Float64("link1", 0.123)},
+		Attributes: []attribute.KeyValue{attribute.Float64("link1", 0.123)},
 	}
 
 	_, span := tracer.Start(ctx, "main span",
 		trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithLinks(link1))
 
-	span.SetAttributes(label.String("attr1", "attr1-value"))
-	span.AddEvent("event1", trace.WithAttributes(label.Int("event1", 123)))
+	span.SetAttributes(attribute.String("attr1", "attr1-value"))
+	span.AddEvent("event1", trace.WithAttributes(attribute.Int("event1", 123)))
 
 	span.End()
 }

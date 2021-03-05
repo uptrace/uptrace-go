@@ -11,8 +11,8 @@ import (
 	"github.com/uptrace/uptrace-go/spanexp"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/stdout"
-	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -101,8 +101,8 @@ func (c *Client) ReportPanic(ctx context.Context) {
 	span.AddEvent(
 		"log",
 		trace.WithAttributes(
-			label.String("log.severity", "panic"),
-			label.Any("log.message", val),
+			attribute.String("log.severity", "panic"),
+			attribute.Any("log.message", val),
 		),
 	)
 

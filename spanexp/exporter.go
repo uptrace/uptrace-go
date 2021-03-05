@@ -15,8 +15,8 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/sdk/export/trace"
 	apitrace "go.opentelemetry.io/otel/trace"
 )
@@ -79,7 +79,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 		defer currSpan.End()
 
 		currSpan.SetAttributes(
-			label.Int("num_span", len(spans)),
+			attribute.Int("num_span", len(spans)),
 		)
 	}
 

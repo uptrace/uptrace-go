@@ -9,9 +9,9 @@ import (
 	"os"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpgrpc"
-	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -54,12 +54,12 @@ func main() {
 	defer span.End()
 
 	_, child1 := tracer.Start(ctx, "child1")
-	child1.SetAttributes(label.String("key1", "value1"))
+	child1.SetAttributes(attribute.String("key1", "value1"))
 	child1.RecordError(errors.New("error1"))
 	child1.End()
 
 	_, child2 := tracer.Start(ctx, "child2")
-	child2.SetAttributes(label.Int("key2", 42), label.Float64("key3", 123.456))
+	child2.SetAttributes(attribute.Int("key2", 42), attribute.Float64("key3", 123.456))
 	child2.End()
 
 	fmt.Println("trace id:", span.SpanContext().TraceID)

@@ -9,9 +9,8 @@ replace github.com/uptrace/uptrace-go => ../..
 replace github.com/uptrace/uptrace-go/extra/otelzap => ../../extra/otelzap
 
 require (
-	github.com/uptrace/uptrace-go v0.7.7
-	github.com/uptrace/uptrace-go/extra/otelzap v0.7.7
-	go.opentelemetry.io/otel v0.17.0
-	go.uber.org/multierr v1.6.0 // indirect
+	github.com/uptrace/uptrace-go v0.8.3
+	github.com/uptrace/uptrace-go/extra/otelzap v0.8.3
+	go.opentelemetry.io/otel v0.18.0
 	go.uber.org/zap v1.16.0
 )

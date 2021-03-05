@@ -7,7 +7,7 @@ import (
 
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 )
 
@@ -40,9 +40,9 @@ func main() {
 		semconv.HTTPUserAgentKey.String("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"),
 		semconv.HTTPClientIPKey.String("127.0.0.1"),
 
-		label.String("code.function", "articleEndpoint"),
-		label.String("code.filepath", "/var/lib/site/article/article_api.go"),
-		label.Int("code.lineno", 55),
+		attribute.String("code.function", "articleEndpoint"),
+		attribute.String("code.filepath", "/var/lib/site/article/article_api.go"),
+		attribute.Int("code.lineno", 55),
 	)
 
 	fmt.Printf("trace: %s\n", upclient.TraceURL(span))

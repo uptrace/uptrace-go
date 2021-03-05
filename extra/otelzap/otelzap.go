@@ -7,24 +7,24 @@ import (
 	"strconv"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var (
-	logSeverityKey = label.Key("log.severity")
-	logMessageKey  = label.Key("log.message")
+	logSeverityKey = attribute.Key("log.severity")
+	logMessageKey  = attribute.Key("log.message")
 
-	exceptionTypeKey    = label.Key("exception.type")
-	exceptionMessageKey = label.Key("exception.message")
-	exceptionStacktrace = label.Key("exception.stacktrace")
+	exceptionTypeKey    = attribute.Key("exception.type")
+	exceptionMessageKey = attribute.Key("exception.message")
+	exceptionStacktrace = attribute.Key("exception.stacktrace")
 
-	codeFunctionKey = label.Key("code.function")
-	codeFilepathKey = label.Key("code.filepath")
-	codeLinenoKey   = label.Key("code.lineno")
+	codeFunctionKey = attribute.Key("code.function")
+	codeFilepathKey = attribute.Key("code.filepath")
+	codeLinenoKey   = attribute.Key("code.lineno")
 )
 
 func Wrap(logger *zap.Logger, opts ...Option) *zap.Logger {
@@ -73,7 +73,7 @@ func (c *OtelCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
 		return nil
 	}
 
-	attrs := make([]label.KeyValue, 0, len(fields)+2+3+1)
+	attrs := make([]attribute.KeyValue, 0, len(fields)+2+3+1)
 
 	attrs = append(attrs, logSeverityKey.String(levelString(ent.Level)))
 	attrs = append(attrs, logMessageKey.String(ent.Message))
@@ -115,57 +115,46 @@ func (c *OtelCore) Sync() error {
 	return nil
 }
 
-func appendField(attrs []label.KeyValue, f zapcore.Field) []label.KeyValue {
+func appendField(attrs []attribute.KeyValue, f zapcore.Field) []attribute.KeyValue {
 	switch f.Type {
 	case zapcore.BoolType:
-		attr := label.Bool(f.Key, f.Integer == 1)
+		attr := attribute.Bool(f.Key, f.Integer == 1)
 		return append(attrs, attr)
 
-	case zapcore.Int8Type, zapcore.Int16Type, zapcore.Int64Type:
-		attr := label.Int64(f.Key, f.Integer)
-		return append(attrs, attr)
-	case zapcore.Int32Type:
-		attr := label.Int32(f.Key, int32(f.Integer))
-		return append(attrs, attr)
-
-	case zapcore.Uint32Type:
-		attr := label.Uint32(f.Key, uint32(f.Integer))
-		return append(attrs, attr)
-	case zapcore.Uint8Type, zapcore.Uint16Type, zapcore.Uint64Type, zapcore.UintptrType:
-		attr := label.Uint64(f.Key, uint64(f.Integer))
+	case zapcore.Int8Type, zapcore.Int16Type, zapcore.Int32Type, zapcore.Int64Type,
+		zapcore.Uint32Type, zapcore.Uint8Type, zapcore.Uint16Type, zapcore.Uint64Type,
+		zapcore.UintptrType:
+		attr := attribute.Int64(f.Key, f.Integer)
 		return append(attrs, attr)
 
-	case zapcore.Float32Type:
-		attr := label.Float32(f.Key, math.Float32frombits(uint32(f.Integer)))
-		return append(attrs, attr)
-	case zapcore.Float64Type:
-		attr := label.Float64(f.Key, math.Float64frombits(uint64(f.Integer)))
+	case zapcore.Float32Type, zapcore.Float64Type:
+		attr := attribute.Float64(f.Key, math.Float64frombits(uint64(f.Integer)))
 		return append(attrs, attr)
 
 	case zapcore.Complex64Type:
 		s := strconv.FormatComplex(complex128(f.Interface.(complex64)), 'E', -1, 64)
-		attr := label.String(f.Key, s)
+		attr := attribute.String(f.Key, s)
 		return append(attrs, attr)
 	case zapcore.Complex128Type:
 		s := strconv.FormatComplex(f.Interface.(complex128), 'E', -1, 128)
-		attr := label.String(f.Key, s)
+		attr := attribute.String(f.Key, s)
 		return append(attrs, attr)
 
 	case zapcore.StringType:
-		attr := label.String(f.Key, f.String)
+		attr := attribute.String(f.Key, f.String)
 		return append(attrs, attr)
 	case zapcore.BinaryType, zapcore.ByteStringType:
-		attr := label.String(f.Key, string(f.Interface.([]byte)))
+		attr := attribute.String(f.Key, string(f.Interface.([]byte)))
 		return append(attrs, attr)
 	case zapcore.StringerType:
-		attr := label.String(f.Key, f.Interface.(fmt.Stringer).String())
+		attr := attribute.String(f.Key, f.Interface.(fmt.Stringer).String())
 		return append(attrs, attr)
 
 	case zapcore.DurationType, zapcore.TimeType:
-		attr := label.Int64(f.Key, f.Integer)
+		attr := attribute.Int64(f.Key, f.Integer)
 		return append(attrs, attr)
 	case zapcore.TimeFullType:
-		attr := label.Int64(f.Key, f.Interface.(time.Time).UnixNano())
+		attr := attribute.Int64(f.Key, f.Interface.(time.Time).UnixNano())
 		return append(attrs, attr)
 	case zapcore.ErrorType:
 		err := f.Interface.(error)
@@ -174,7 +163,7 @@ func appendField(attrs []label.KeyValue, f zapcore.Field) []label.KeyValue {
 		attrs = append(attrs, exceptionMessageKey.String(err.Error()))
 		return attrs
 	case zapcore.ReflectType:
-		attr := label.Any(f.Key, f.Interface)
+		attr := attribute.Any(f.Key, f.Interface)
 		return append(attrs, attr)
 	case zapcore.SkipType:
 		return attrs
@@ -183,7 +172,7 @@ func appendField(attrs []label.KeyValue, f zapcore.Field) []label.KeyValue {
 		return attrs
 
 	default:
-		attr := label.String(f.Key+"_error", fmt.Sprintf("unknown field type: %v", f))
+		attr := attribute.String(f.Key+"_error", fmt.Sprintf("unknown field type: %v", f))
 		return append(attrs, attr)
 	}
 }

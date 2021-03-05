@@ -7,10 +7,10 @@ import (
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/vmihailenco/msgpack/v5"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-type KVMap map[label.Key]label.Value
+type KVMap map[attribute.Key]attribute.Value
 
 func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 	_ = enc.EncodeMapLen(len(m))
@@ -23,7 +23,7 @@ func (m KVMap) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 //------------------------------------------------------------------------------
 
-type KeyValueSlice []label.KeyValue
+type KeyValueSlice []attribute.KeyValue
 
 var _ msgpack.CustomEncoder = (*KeyValueSlice)(nil)
 
@@ -66,7 +66,7 @@ func (slice *KeyValueSlice) DecodeMsgpack(dec *msgpack.Decoder) error {
 			return err
 		}
 
-		(*slice)[i] = label.Any(key, val)
+		(*slice)[i] = attribute.Any(key, val)
 	}
 
 	return nil
@@ -74,29 +74,21 @@ func (slice *KeyValueSlice) DecodeMsgpack(dec *msgpack.Decoder) error {
 
 //------------------------------------------------------------------------------
 
-func EncodeKey(enc *msgpack.Encoder, k label.Key) {
+func EncodeKey(enc *msgpack.Encoder, k attribute.Key) {
 	_ = enc.EncodeString(string(k))
 }
 
-func EncodeValue(enc *msgpack.Encoder, v label.Value) {
+func EncodeValue(enc *msgpack.Encoder, v attribute.Value) {
 	switch v.Type() {
-	case label.BOOL:
+	case attribute.BOOL:
 		_ = enc.EncodeBool(v.AsBool())
-	case label.INT32:
-		_ = enc.EncodeInt32(v.AsInt32())
-	case label.INT64:
+	case attribute.INT64:
 		_ = enc.EncodeInt64(v.AsInt64())
-	case label.UINT32:
-		_ = enc.EncodeUint32(v.AsUint32())
-	case label.UINT64:
-		_ = enc.EncodeUint64(v.AsUint64())
-	case label.FLOAT32:
-		_ = enc.EncodeFloat32(v.AsFloat32())
-	case label.FLOAT64:
+	case attribute.FLOAT64:
 		_ = enc.EncodeFloat64(v.AsFloat64())
-	case label.STRING:
+	case attribute.STRING:
 		_ = enc.EncodeString(v.AsString())
-	case label.ARRAY:
+	case attribute.ARRAY:
 		_ = enc.Encode(v.AsArray())
 	default:
 		Logger.Printf(context.TODO(), "unknown otel type: %s", v.Type())

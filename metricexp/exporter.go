@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
@@ -214,11 +214,11 @@ func exportCommon(record export.Record, expose *baseRecord) error {
 
 	if iter := record.Labels().Iter(); iter.Len() > 0 {
 		attrs := record.Resource().Attributes()
-		labels := make([]label.KeyValue, 0, len(attrs)+iter.Len())
+		labels := make([]attribute.KeyValue, 0, len(attrs)+iter.Len())
 		labels = append(labels, attrs...)
 
 		for iter.Next() {
-			labels = append(labels, iter.Label())
+			labels = append(labels, iter.Attribute())
 		}
 
 		expose.Labels = labels
@@ -269,7 +269,7 @@ type baseRecord struct {
 	Description string                 `msgpack:"description"`
 	Unit        string                 `msgpack:"unit"`
 	NumberKind  int8                   `msgpack:"numberKind"`
-	Labels      internal.KeyValueSlice `msgpack:"labels"`
+	Labels      internal.KeyValueSlice `msgpack:"labelss"`
 
 	Time int64 `msgpack:"time"`
 }

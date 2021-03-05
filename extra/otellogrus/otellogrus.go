@@ -6,21 +6,21 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 )
 
 var (
-	logSeverityKey = label.Key("log.severity")
-	logMessageKey  = label.Key("log.message")
+	logSeverityKey = attribute.Key("log.severity")
+	logMessageKey  = attribute.Key("log.message")
 
-	codeFunctionKey = label.Key("code.function")
-	codeFilepathKey = label.Key("code.filepath")
-	codeLinenoKey   = label.Key("code.lineno")
+	codeFunctionKey = attribute.Key("code.function")
+	codeFilepathKey = attribute.Key("code.filepath")
+	codeLinenoKey   = attribute.Key("code.lineno")
 
-	exceptionTypeKey    = label.Key("exception.type")
-	exceptionMessageKey = label.Key("exception.message")
+	exceptionTypeKey    = attribute.Key("exception.type")
+	exceptionMessageKey = attribute.Key("exception.message")
 )
 
 // Option applies a configuration to the given config.
@@ -95,7 +95,7 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 		return nil
 	}
 
-	attrs := make([]label.KeyValue, 0, len(entry.Data)+2+3)
+	attrs := make([]attribute.KeyValue, 0, len(entry.Data)+2+3)
 
 	attrs = append(attrs, logSeverityKey.String(levelString(entry.Level)))
 	attrs = append(attrs, logMessageKey.String(entry.Message))
@@ -120,7 +120,7 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 			}
 		}
 
-		attrs = append(attrs, label.Any(k, v))
+		attrs = append(attrs, attribute.Any(k, v))
 	}
 
 	span.AddEvent("log", trace.WithAttributes(attrs...))

@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/oteltest"
 )
 
@@ -25,9 +25,9 @@ func TestLogrusHook(t *testing.T) {
 				logrus.WithContext(ctx).Info("hello")
 			},
 			require: func(event oteltest.Event) {
-				require.Equal(t, map[label.Key]label.Value{
-					logSeverityKey: label.StringValue("INFO"),
-					logMessageKey:  label.StringValue("hello"),
+				require.Equal(t, map[attribute.Key]attribute.Value{
+					logSeverityKey: attribute.StringValue("INFO"),
+					logMessageKey:  attribute.StringValue("hello"),
 				}, event.Attributes)
 			},
 		},
@@ -36,10 +36,10 @@ func TestLogrusHook(t *testing.T) {
 				logrus.WithContext(ctx).WithField("foo", "bar").Warn("hello")
 			},
 			require: func(event oteltest.Event) {
-				require.Equal(t, map[label.Key]label.Value{
-					logSeverityKey:   label.StringValue("WARN"),
-					logMessageKey:    label.StringValue("hello"),
-					label.Key("foo"): label.StringValue("bar"),
+				require.Equal(t, map[attribute.Key]attribute.Value{
+					logSeverityKey:       attribute.StringValue("WARN"),
+					logMessageKey:        attribute.StringValue("hello"),
+					attribute.Key("foo"): attribute.StringValue("bar"),
 				}, event.Attributes)
 			},
 		},
@@ -49,11 +49,11 @@ func TestLogrusHook(t *testing.T) {
 				logrus.WithContext(ctx).WithError(err).Error("hello")
 			},
 			require: func(event oteltest.Event) {
-				require.Equal(t, map[label.Key]label.Value{
-					logSeverityKey:      label.StringValue("ERROR"),
-					logMessageKey:       label.StringValue("hello"),
-					exceptionTypeKey:    label.StringValue("*errors.errorString"),
-					exceptionMessageKey: label.StringValue("some error"),
+				require.Equal(t, map[attribute.Key]attribute.Value{
+					logSeverityKey:      attribute.StringValue("ERROR"),
+					logMessageKey:       attribute.StringValue("hello"),
+					exceptionTypeKey:    attribute.StringValue("*errors.errorString"),
+					exceptionMessageKey: attribute.StringValue("some error"),
 				}, event.Attributes)
 			},
 		},
