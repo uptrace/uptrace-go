@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type Logging interface {
+type ILogger interface {
 	Printf(ctx context.Context, format string, v ...interface{})
 }
 
@@ -19,6 +19,6 @@ func (l *logger) Printf(ctx context.Context, format string, v ...interface{}) {
 	_ = l.log.Output(2, fmt.Sprintf(format, v...))
 }
 
-var Logger Logging = &logger{
+var Logger ILogger = &logger{
 	log: log.New(os.Stderr, "uptrace: ", log.LstdFlags|log.Lshortfile),
 }

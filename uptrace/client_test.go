@@ -21,6 +21,48 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type Logger struct {
+	msgs []string
+}
+
+func (l *Logger) Printf(ctx context.Context, format string, args ...interface{}) {
+	l.msgs = append(l.msgs, fmt.Sprintf(format, args...))
+}
+
+func (l *Logger) Message() string {
+	return l.msgs[len(l.msgs)-1]
+}
+
+func TestInvalidDSN(t *testing.T) {
+	var logger Logger
+	uptrace.SetLogger(&logger)
+
+	_ = uptrace.NewClient(&uptrace.Config{
+		DSN: "dsn",
+	})
+
+	require.Equal(t,
+		`Uptrace is disabled: DSN does not have project token (DSN="dsn")`,
+		logger.Message())
+}
+
+func TestUnknownToken(t *testing.T) {
+	var logger Logger
+	uptrace.SetLogger(&logger)
+
+	upclient := uptrace.NewClient(&uptrace.Config{
+		DSN: "https://UNKNOWN@api.uptrace.dev/2",
+	})
+
+	upclient.ReportError(context.Background(), errors.New("hello"))
+	err := upclient.Close()
+	require.NoError(t, err)
+
+	require.Equal(t,
+		`send failed: status=403: project not found or access denied (check DSN)`,
+		logger.Message())
+}
+
 func TestDisabled(t *testing.T) {
 	upclient := uptrace.NewClient(&uptrace.Config{
 		Disabled: true,
