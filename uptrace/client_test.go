@@ -34,19 +34,26 @@ func (l *Logger) Message() string {
 }
 
 func TestInvalidDSN(t *testing.T) {
+	t.Skip("overwrites global tracer provider")
+
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	_ = uptrace.NewClient(&uptrace.Config{
+	upclient := uptrace.NewClient(&uptrace.Config{
 		DSN: "dsn",
 	})
 
 	require.Equal(t,
 		`Uptrace is disabled: DSN does not have project token (DSN="dsn")`,
 		logger.Message())
+
+	err := upclient.Close()
+	require.NoError(t, err)
 }
 
 func TestUnknownToken(t *testing.T) {
+	t.Skip("overwrites global tracer provider")
+
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
@@ -55,6 +62,7 @@ func TestUnknownToken(t *testing.T) {
 	})
 
 	upclient.ReportError(context.Background(), errors.New("hello"))
+
 	err := upclient.Close()
 	require.NoError(t, err)
 
