@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.0
+
+- Update OpenTelemetry to
+  [v0.18.0](https://github.com/open-telemetry/opentelemetry-go/blob/main/CHANGELOG.md#0180---2020-03-03)
+
 ## v0.6.0
 
 ### Added
