@@ -144,7 +144,7 @@ func ReportPanic(ctx context.Context) {
 	activeClient().ReportPanic(ctx)
 }
 
-func Shutdown(ctx context.Context) {
+func Shutdown(ctx context.Context) error {
 	provider := otel.GetTracerProvider().(*sdktrace.TracerProvider)
-	provider.Shutdown(ctx)
+	return provider.Shutdown(ctx)
 }
