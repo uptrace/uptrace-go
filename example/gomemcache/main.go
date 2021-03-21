@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -25,12 +26,15 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	mc := otelmemcache.NewClientWithTracing(
-		memcache.New("memcached-server:11211"),
+		memcache.New(":11211"),
 	)
 
-	ctx, s := tracer.Start(ctx, "test-operations")
+	ctx, span := tracer.Start(ctx, "test-operations")
+	defer span.End()
+
 	doMemcacheOperations(ctx, mc)
-	s.End()
+
+	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
 func doMemcacheOperations(ctx context.Context, mc *otelmemcache.Client) {

@@ -1,10 +1,8 @@
-all: build up
-
 build:
 	docker-compose build
-up:
-	docker-compose up --detach go-redis-client
+up: build
+	docker-compose up --detach redis-server
 down:
 	docker-compose down
 logs:
-	docker-compose logs go-redis-client
+	docker-compose logs redis-server

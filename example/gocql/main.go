@@ -45,21 +45,23 @@ func main() {
 }
 
 func traceGocqlQueries(ctx context.Context, session *gocql.Session) {
-	ctx, span := tracer.Start(ctx, "test-operations")
+	ctx, span := tracer.Start(ctx, "gocql-queries")
 	defer span.End()
 
 	insertBooks(ctx, session)
 	bookID := selectBook(ctx, session)
 	updateBook(ctx, session, bookID)
 	deleteBook(ctx, session, bookID)
+
+	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
 func newCassandraCluster(keyspace string) *gocql.ClusterConfig {
-	cluster := gocql.NewCluster("cassandra-server")
+	cluster := gocql.NewCluster("localhost")
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.LocalQuorum
 	cluster.ProtoVersion = 3
-	cluster.Timeout = 2 * time.Second
+	cluster.Timeout = 10 * time.Second
 	return cluster
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/go-redis/redis/extra/redisotel"
@@ -21,8 +22,14 @@ func main() {
 	})
 	defer uptrace.Shutdown(ctx)
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "redis-server:6379",
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{":9123", ":9124", ":9125"},
+
+		NewClient: func(opt *redis.Options) *redis.Client {
+			node := redis.NewClient(opt)
+			node.AddHook(&redisotel.TracingHook{})
+			return node
+		},
 	})
 	defer rdb.Close()
 
@@ -32,14 +39,14 @@ func main() {
 	defer span.End()
 
 	if err := redisCommands(ctx, rdb); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return
 	}
 
-	log.Println("trace", uptrace.TraceURL(span))
+	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
-func redisCommands(ctx context.Context, rdb *redis.Client) error {
+func redisCommands(ctx context.Context, rdb *redis.ClusterClient) error {
 	if err := rdb.Set(ctx, "foo", "bar", 0).Err(); err != nil {
 		return err
 	}
@@ -48,12 +55,11 @@ func redisCommands(ctx context.Context, rdb *redis.Client) error {
 		return err
 	}
 
-	_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+	if _, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.Set(ctx, "foo", "bar2", 0)
 		pipe.Get(ctx, "foo")
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 

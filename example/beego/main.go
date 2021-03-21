@@ -29,7 +29,7 @@ func main() {
 	beego.Router("/profiles/:username", &ProfileController{})
 
 	mware := otelbeego.NewOTelBeegoMiddleWare("service-name")
-	beego.RunWithMiddleWares(":9999", mware)
+	beego.RunWithMiddleWares("localhost:9999", mware)
 }
 
 type ProfileController struct {

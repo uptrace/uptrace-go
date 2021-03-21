@@ -3,7 +3,7 @@ all: build up
 build:
 	docker-compose build
 up:
-	docker-compose up --detach gocql-client
+	docker-compose up --detach cassandra-server
 down:
 	docker-compose down
 logs:

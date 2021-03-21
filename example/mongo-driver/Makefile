@@ -1,10 +1,11 @@
-all: build up
+all:
+	go run main.go
 
 build:
 	docker-compose build
-up:
-	docker-compose up go-server
+up: build
+	docker-compose up --detach mongo-server
 down:
 	docker-compose down
 logs:
-	docker-compose logs go-server
+	docker-compose logs mongo-server

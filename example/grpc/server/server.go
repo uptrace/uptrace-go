@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -21,7 +22,7 @@ type helloServer struct {
 }
 
 func (s *helloServer) SayHello(ctx context.Context, in *api.HelloRequest) (*api.HelloResponse, error) {
-	log.Println("trace", uptrace.TraceURL(trace.SpanFromContext(ctx)))
+	fmt.Println("trace", uptrace.TraceURL(trace.SpanFromContext(ctx)))
 
 	time.Sleep(50 * time.Millisecond)
 	return &api.HelloResponse{Reply: "Hello " + in.Greeting}, nil

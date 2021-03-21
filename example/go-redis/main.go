@@ -22,14 +22,8 @@ func main() {
 	})
 	defer uptrace.Shutdown(ctx)
 
-	rdb := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: []string{"redis-node-0:6379", "redis-node-1:6379", "redis-node-2:6379"},
-
-		NewClient: func(opt *redis.Options) *redis.Client {
-			node := redis.NewClient(opt)
-			node.AddHook(&redisotel.TracingHook{})
-			return node
-		},
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
 	})
 	defer rdb.Close()
 
@@ -40,13 +34,12 @@ func main() {
 
 	if err := redisCommands(ctx, rdb); err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
-func redisCommands(ctx context.Context, rdb *redis.ClusterClient) error {
+func redisCommands(ctx context.Context, rdb *redis.Client) error {
 	if err := rdb.Set(ctx, "foo", "bar", 0).Err(); err != nil {
 		return err
 	}
@@ -55,11 +48,12 @@ func redisCommands(ctx context.Context, rdb *redis.ClusterClient) error {
 		return err
 	}
 
-	if _, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.Set(ctx, "foo", "bar2", 0)
 		pipe.Get(ctx, "foo")
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 

@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -24,24 +24,29 @@ func main() {
 	})
 	defer uptrace.Shutdown(ctx)
 
-	r := mux.NewRouter()
-	r.Use(otelmux.Middleware("service-name"))
-	r.HandleFunc("/profiles/{username}", userProfileHandler)
+	filter := otelrestful.OTelFilter("service-name")
+	restful.DefaultContainer.Filter(filter)
 
-	log.Fatal(http.ListenAndServe(":9999", r))
+	ws := &restful.WebService{}
+	ws.Route(ws.GET("/profiles/{username}").To(userProfileHandler))
+	restful.Add(ws)
+
+	fmt.Println("running on http://localhost:9999")
+	log.Fatal(http.ListenAndServe(":9999", nil))
 }
 
-func userProfileHandler(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
+func userProfileHandler(req *restful.Request, resp *restful.Response) {
+	ctx := req.Request.Context()
 
-	username := mux.Vars(req)["username"]
+	username := req.PathParameter("username")
 	name, err := selectUser(ctx, username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		resp.WriteError(404, err)
 		return
 	}
 
-	fmt.Fprintf(w, `<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
+	html := fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
+	resp.Write([]byte(html))
 }
 
 func selectUser(ctx context.Context, username string) (string, error) {

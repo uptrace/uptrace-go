@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -25,7 +26,7 @@ func main() {
 
 	opt := options.Client()
 	opt.Monitor = otelmongo.NewMonitor("mongo-service")
-	opt.ApplyURI("mongodb://mongo-server:27017")
+	opt.ApplyURI("mongodb://localhost:27017")
 
 	mdb, err := mongo.Connect(ctx, opt)
 	if err != nil {
@@ -46,7 +47,7 @@ func main() {
 		return
 	}
 
-	log.Println("trace", uptrace.TraceURL(span))
+	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
 // Copyright (C) MongoDB, Inc. 2017-present.

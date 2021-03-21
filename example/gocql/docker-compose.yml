@@ -1,22 +1,7 @@
 version: '3.7'
+
 services:
-  gocql-client:
-    environment:
-      - UPTRACE_DSN
-    build:
-      dockerfile: $PWD/Dockerfile
-      context: ../..
-    command:
-      - '/bin/sh'
-      - '-c'
-      - '/go/bin/client'
-    networks:
-      - example
-    depends_on:
-      - cassandra-server
   cassandra-server:
     image: cassandra:3
-    networks:
-      - example
-networks:
-  example:
+    ports:
+      - 9042:9042

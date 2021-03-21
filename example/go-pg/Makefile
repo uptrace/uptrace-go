@@ -1,10 +1,8 @@
-all: build up
-
 build:
 	docker-compose build
-up:
-	docker-compose up --detach go-pg-client
+up: build
+	docker-compose up --detach postgresql-server
 down:
 	docker-compose down
 logs:
-	docker-compose logs go-pg-client
+	docker-compose logs postgresql-server

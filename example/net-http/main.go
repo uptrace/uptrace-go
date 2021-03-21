@@ -41,6 +41,7 @@ func main() {
 		Handler: handler,
 	}
 
+	fmt.Println("listening on http://localhost:9999")
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

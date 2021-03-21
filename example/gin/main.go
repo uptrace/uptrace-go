@@ -32,7 +32,7 @@ func main() {
 	router.Use(otelgin.Middleware("service-name"))
 	router.GET("/profiles/:username", userProfileEndpoint)
 
-	if err := router.Run(":9999"); err != nil {
+	if err := router.Run("localhost:9999"); err != nil {
 		log.Print(err)
 	}
 }

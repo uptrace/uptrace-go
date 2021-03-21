@@ -1,10 +1,8 @@
-all: build up
-
 build:
 	docker-compose build
-up:
-	docker-compose up --detach gomemcache-client
+up: build
+	docker-compose up --detach memcached-server
 down:
 	docker-compose down
 logs:
-	docker-compose logs gomemcache-client
+	docker-compose logs memcached-server

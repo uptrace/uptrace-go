@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/go-pg/pg/extra/pgotel"
@@ -23,7 +24,7 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	db := pg.Connect(&pg.Options{
-		Addr:     "postgresql-server:5432",
+		Addr:     ":5432",
 		User:     "postgres",
 		Database: "example",
 	})
@@ -44,7 +45,7 @@ func main() {
 		return
 	}
 
-	log.Println("trace", uptrace.TraceURL(span))
+	fmt.Println("trace", uptrace.TraceURL(span))
 }
 
 type Book struct {

@@ -1,26 +1,10 @@
 version: '3.7'
 services:
-  go-pg-client:
-    environment:
-      - UPTRACE_DSN
-    build:
-      dockerfile: $PWD/Dockerfile
-      context: ../..
-    command:
-      - '/bin/sh'
-      - '-c'
-      - '/go/bin/client'
-    networks:
-      - example
-    depends_on:
-      - postgresql-server
   postgresql-server:
     image: postgres:13
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: example
       POSTGRES_HOST_AUTH_METHOD: trust
-    networks:
-      - example
-networks:
-  example:
+    ports:
+      - 5432:5432
