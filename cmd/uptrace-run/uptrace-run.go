@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 const outputLimit = 1024

@@ -7,10 +7,11 @@ import (
 	"net/http"
 
 	restful "github.com/emicklei/go-restful/v3"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")

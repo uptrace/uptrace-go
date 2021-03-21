@@ -7,8 +7,9 @@ import (
 
 	"github.com/go-redis/redis/extra/redisotel"
 	"github.com/go-redis/redis/v8"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")

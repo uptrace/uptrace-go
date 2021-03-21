@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+
 	"github.com/uptrace/uptrace-go/extra/otellogrus"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/otel"
 )
 
 func main() {

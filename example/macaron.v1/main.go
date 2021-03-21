@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/macaron.v1"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")

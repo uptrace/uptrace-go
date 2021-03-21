@@ -8,8 +8,9 @@ import (
 	"github.com/go-pg/pg/extra/pgotel"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")

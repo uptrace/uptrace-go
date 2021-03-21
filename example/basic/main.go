@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 func main() {

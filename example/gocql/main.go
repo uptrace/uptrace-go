@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gocql/gocql/otelgocql"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")

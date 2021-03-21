@@ -12,6 +12,10 @@ tag:
 	git tag extra/otellogrus/$(VERSION)
 	git tag extra/otelzap/$(VERSION)
 
+fmt:
+	gofmt -w -s ./
+	goimports -w  -local github.com/uptrace/uptrace-go ./
+
 go_mod_tidy:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "go mod tidy in $${dir}"; \

@@ -11,14 +11,15 @@ import (
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/stretchr/testify/require"
-	"github.com/uptrace/uptrace-go/spanexp"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/uptrace/uptrace-go/spanexp"
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 func TestInvalidDSN(t *testing.T) {

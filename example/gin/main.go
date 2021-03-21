@@ -8,10 +8,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 const profileTmpl = "profile"

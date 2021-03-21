@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/uptrace/uptrace-go/internal"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
@@ -17,6 +16,8 @@ import (
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
+
+	"github.com/uptrace/uptrace-go/internal"
 )
 
 type Exporter struct {
