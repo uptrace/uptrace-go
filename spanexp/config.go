@@ -31,8 +31,6 @@ type Config struct {
 
 	// ClientTrace enables httptrace instrumentation on the HTTP client used by Uptrace.
 	ClientTrace bool
-
-	inited bool
 }
 
 func (cfg *Config) init() {

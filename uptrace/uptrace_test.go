@@ -49,7 +49,8 @@ func TestUnknownToken(t *testing.T) {
 	})
 
 	uptrace.ReportError(ctx, errors.New("hello"))
-	uptrace.Shutdown(ctx)
+	err := uptrace.Shutdown(ctx)
+	require.NoError(t, err)
 
 	require.Equal(t,
 		`send failed: status=403: project not found or access denied (check DSN)`,
@@ -75,7 +76,9 @@ func TestBeforeSpanSend(t *testing.T) {
 	tracer := otel.Tracer("github.com/your/repo")
 	_, span := tracer.Start(ctx, "main span")
 	span.End()
-	uptrace.Shutdown(ctx)
+
+	err := uptrace.Shutdown(ctx)
+	require.NoError(t, err)
 
 	require.NotNil(t, got)
 	require.Equal(t, "main span", got.Name)
@@ -131,7 +134,8 @@ func TestExporter(t *testing.T) {
 
 	tracer := otel.Tracer("github.com/your/repo")
 	genSpan(ctx, tracer)
-	uptrace.Shutdown(ctx)
+	err = uptrace.Shutdown(ctx)
+	require.NoError(t, err)
 
 	require.Equal(t, "AlwaysOnSampler", in.Sampler)
 	require.Equal(t, 1, len(in.Spans))
