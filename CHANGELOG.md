@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.19.0 (Unreleased)
+
+- Changed API and configuration to better indicate that opentelemetry-go can only be configured
+  once. Before:
+
+  ```go
+  upclient := uptrace.NewClient(&uptrace.Config{...})
+  defer upclient.Close()
+
+  fmt.Println(upclient.TraceURL(trace.SpanFromContext(ctx)))
+  ```
+
+  Now:
+
+  ```go
+  uptrace.ConfigureOpentelemetry(&uptrace.Config{...})
+  defer uptrace.Shutdown(ctx)
+
+  fmt.Println(uptrace.TraceURL(trace.SpanFromContext(ctx)))
+  ```
+
+- Changed uptrace-go to follow the versioning of opentelemetry-go. For example, uptrace-go v0.19.x
+  is compatible with opentelemetry-go v0.19.x.
+
 ## v0.9.0
 
 - Update OpenTelemetry to
