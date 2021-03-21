@@ -18,12 +18,11 @@ func main() {
 
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN enar
 		DSN: "",
 	})
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	mc := otelmemcache.NewClientWithTracing(
 		memcache.New("memcached-server:11211"),

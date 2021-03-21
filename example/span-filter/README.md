@@ -1,29 +1,7 @@
-# Using filters to filter and change spans
+# Using hooks to filter sensitive data
 
-This example demonstrates how to use a filter function with uptrace-go:
-
-```go
-func newUptraceClient() *uptrace.Client {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-
-		ServiceName:    "test",
-		ServiceVersion: "v1.0.0",
-	}, uptrace.WithFilter(spanFilter))
-
-	return upclient
-}
-
-func spanFilter(span *spanexp.Span) bool {
-	span.Name += " [filter]"
-
-	return true // true keeps the span
-}
-```
-
-To run this example:
+This example demonstrates how to filter sensitive data.
 
 ```bash
-UPTRACE_DSN="https://<key>@uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" go run main.go
 ```

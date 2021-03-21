@@ -14,7 +14,6 @@ import (
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 const outputLimit = 1024
@@ -57,10 +56,8 @@ func main() {
 		defer cancel()
 	}
 
-	upclient := setupUptrace(ctx)
-
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{})
+	defer uptrace.Shutdown(ctx)
 
 	ctx, span := tracer.Start(ctx, *cmdFlag)
 	defer span.End()
@@ -112,18 +109,6 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `usage: uptrace-run [flags] -cmd="/path/to/executable"`+"\n")
 	flag.PrintDefaults()
-}
-
-func setupUptrace(ctx context.Context) *uptrace.Client {
-	resource, err := resource.New(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	upclient := uptrace.NewClient(&uptrace.Config{
-		Resource: resource,
-	})
-	return upclient
 }
 
 //------------------------------------------------------------------------------

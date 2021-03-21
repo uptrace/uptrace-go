@@ -15,16 +15,17 @@ import (
 var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
-	upclient := uptrace.NewClient(&uptrace.Config{
+	ctx := context.Background()
+
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// Set DSN or UPTRACE_DSN env var.
 		DSN: "",
 
 		ServiceName:    "myservice",
 		ServiceVersion: "v1.0.0",
 	})
-	defer upclient.Close()
+	defer uptrace.Shutdown(ctx)
 
-	ctx := context.Background()
 	spansExample(ctx)
 	activeSpanExample(ctx)
 	activateSpanManuallyExample(ctx)

@@ -15,13 +15,13 @@ import (
 var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
-	upclient := uptrace.NewClient(&uptrace.Config{
+	ctx := context.Background()
+
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 	})
-	defer upclient.Close()
-
-	ctx := context.Background()
+	defer uptrace.Shutdown(ctx)
 
 	ctx, span := tracer.Start(ctx, "fetchCountry")
 	defer span.End()
@@ -43,7 +43,7 @@ func main() {
 		attribute.String("country.name", countryName),
 	)
 
-	fmt.Println("trace URL", upclient.TraceURL(span))
+	fmt.Println("trace URL", uptrace.TraceURL(span))
 }
 
 func fetchCountryInfo(ctx context.Context) (string, error) {

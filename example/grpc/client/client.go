@@ -14,20 +14,17 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var upclient *uptrace.Client
-
 func main() {
 	ctx := context.Background()
 
-	upclient = uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 
 		ServiceName:    "myservice",
 		ServiceVersion: "1.0.0",
 	})
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	target := os.Getenv("GRPC_TARGET")
 	if target == "" {

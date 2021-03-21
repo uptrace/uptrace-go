@@ -5,7 +5,7 @@
 To run this example:
 
 ```bash
-UPTRACE_DSN="https://<key>@uptrace.dev/<project_id>" make
+UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" make
 ```
 
 HTTP server is running at http://localhost:9999:

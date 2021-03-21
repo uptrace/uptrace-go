@@ -14,13 +14,11 @@ import (
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 	})
-
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	// Add OpenTelemetry logging hook.
 	logrus.AddHook(otellogrus.NewLoggingHook())
@@ -36,5 +34,5 @@ func main() {
 		WithField("foo", "bar").
 		Error("something failed")
 
-	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
+	fmt.Printf("trace: %s\n", uptrace.TraceURL(span))
 }

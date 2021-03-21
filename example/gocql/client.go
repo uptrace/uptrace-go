@@ -20,15 +20,13 @@ const keyspace = "gocql_example"
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN enar
 		DSN: "",
 	})
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
-	err := initDB()
-	if err != nil {
+	if err := initDB(); err != nil {
 		log.Fatal(err)
 	}
 

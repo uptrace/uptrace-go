@@ -21,90 +21,61 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type Logger struct {
-	msgs []string
-}
-
-func (l *Logger) Printf(ctx context.Context, format string, args ...interface{}) {
-	l.msgs = append(l.msgs, fmt.Sprintf(format, args...))
-}
-
-func (l *Logger) Message() string {
-	return l.msgs[len(l.msgs)-1]
-}
-
 func TestInvalidDSN(t *testing.T) {
 	t.Skip("overwrites global tracer provider")
 
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		DSN: "dsn",
 	})
 
 	require.Equal(t,
-		`Uptrace is disabled: DSN does not have project token (DSN="dsn")`,
+		`Uptrace is disabled: DSN does not have token (DSN="dsn")`,
 		logger.Message())
-
-	err := upclient.Close()
-	require.NoError(t, err)
 }
 
 func TestUnknownToken(t *testing.T) {
 	t.Skip("overwrites global tracer provider")
 
+	ctx := context.Background()
+
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		DSN: "https://UNKNOWN@api.uptrace.dev/2",
 	})
 
-	upclient.ReportError(context.Background(), errors.New("hello"))
-
-	err := upclient.Close()
-	require.NoError(t, err)
+	uptrace.ReportError(ctx, errors.New("hello"))
+	uptrace.Shutdown(ctx)
 
 	require.Equal(t,
 		`send failed: status=403: project not found or access denied (check DSN)`,
 		logger.Message())
 }
 
-func TestDisabled(t *testing.T) {
-	upclient := uptrace.NewClient(&uptrace.Config{
-		Disabled: true,
-	})
-
-	upclient.ReportError(context.Background(), errors.New("hello"))
-
-	err := upclient.Close()
-	require.NoError(t, err)
-}
-
-func TestFilters(t *testing.T) {
+func TestBeforeSpanSend(t *testing.T) {
 	ctx := context.Background()
 
 	var got *spanexp.Span
 
-	filter := func(span *spanexp.Span) bool {
-		got = span
-		return false
-	}
-
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		DSN: "https://key@api.uptrace.dev/1",
 
 		ServiceName:    "test-filters",
 		ServiceVersion: "1.0.0",
-	}, uptrace.WithFilter(filter))
+
+		BeforeSpanSend: func(span *spanexp.Span) {
+			got = span
+		},
+	})
 
 	tracer := otel.Tracer("github.com/your/repo")
 	_, span := tracer.Start(ctx, "main span")
 	span.End()
-
-	err := upclient.Close()
-	require.Nil(t, err)
+	uptrace.Shutdown(ctx)
 
 	require.NotNil(t, got)
 	require.Equal(t, "main span", got.Name)
@@ -148,7 +119,7 @@ func TestExporter(t *testing.T) {
 	u, err := url.Parse(server.URL)
 	require.NoError(t, err)
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		DSN: fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host),
 
 		ResourceAttributes: []attribute.KeyValue{
@@ -160,9 +131,7 @@ func TestExporter(t *testing.T) {
 
 	tracer := otel.Tracer("github.com/your/repo")
 	genSpan(ctx, tracer)
-
-	err = upclient.Close()
-	require.Nil(t, err)
+	uptrace.Shutdown(ctx)
 
 	require.Equal(t, "AlwaysOnSampler", in.Sampler)
 	require.Equal(t, 1, len(in.Spans))
@@ -225,4 +194,21 @@ func genSpan(ctx context.Context, tracer trace.Tracer) {
 	span.AddEvent("event1", trace.WithAttributes(attribute.Int("event1", 123)))
 
 	span.End()
+}
+
+//------------------------------------------------------------------------------
+
+type Logger struct {
+	msgs []string
+}
+
+func (l *Logger) Printf(ctx context.Context, format string, args ...interface{}) {
+	l.msgs = append(l.msgs, fmt.Sprintf(format, args...))
+}
+
+func (l *Logger) Message() string {
+	if len(l.msgs) == 0 {
+		return ""
+	}
+	return l.msgs[len(l.msgs)-1]
 }

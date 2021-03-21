@@ -38,13 +38,13 @@ type Exporter struct {
 var _ trace.SpanExporter = (*Exporter)(nil)
 
 func NewExporter(cfg *Config) (*Exporter, error) {
-	cfg.Init()
+	cfg.init()
 
 	e := &Exporter{
 		cfg: cfg,
 		rl:  internal.NewGate(runtime.NumCPU()),
 
-		tracer: otel.Tracer("github.com/uptrace/uptrace-go"),
+		tracer: otel.Tracer("uptrace-go"),
 	}
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
@@ -90,10 +90,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 		out := &outSpans[len(outSpans)-1]
 
 		initUptraceSpan(out, span)
-
-		if !e.filter(out) {
-			outSpans = outSpans[:len(outSpans)-1]
-		}
+		e.cfg.BeforeSpanSend(out)
 	}
 
 	if len(outSpans) == 0 {
@@ -128,15 +125,6 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 	}()
 
 	return nil
-}
-
-func (e *Exporter) filter(span *Span) bool {
-	for _, filter := range e.cfg.Filters {
-		if !filter(span) {
-			return false
-		}
-	}
-	return true
 }
 
 //------------------------------------------------------------------------------

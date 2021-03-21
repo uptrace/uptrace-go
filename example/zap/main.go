@@ -14,13 +14,12 @@ import (
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN:         "",
 		PrettyPrint: true,
 	})
-
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -40,8 +39,5 @@ func main() {
 
 	span.End()
 
-	// Flush the buffer and close the client.
-	upclient.Close()
-
-	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
+	fmt.Printf("trace: %s\n", uptrace.TraceURL(span))
 }

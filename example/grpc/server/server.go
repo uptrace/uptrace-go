@@ -16,14 +16,12 @@ import (
 
 const addr = ":9999"
 
-var upclient *uptrace.Client
-
 type helloServer struct {
 	api.HelloServiceServer
 }
 
 func (s *helloServer) SayHello(ctx context.Context, in *api.HelloRequest) (*api.HelloResponse, error) {
-	log.Println("trace", upclient.TraceURL(trace.SpanFromContext(ctx)))
+	log.Println("trace", uptrace.TraceURL(trace.SpanFromContext(ctx)))
 
 	time.Sleep(50 * time.Millisecond)
 	return &api.HelloResponse{Reply: "Hello " + in.Greeting}, nil
@@ -32,15 +30,14 @@ func (s *helloServer) SayHello(ctx context.Context, in *api.HelloRequest) (*api.
 func main() {
 	ctx := context.Background()
 
-	upclient = uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 
 		ServiceName:    "myservice",
 		ServiceVersion: "1.0.0",
 	})
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	log.Println("serving on", addr)
 

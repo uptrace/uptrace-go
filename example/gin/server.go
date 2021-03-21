@@ -21,12 +21,11 @@ var tracer = otel.Tracer("app_or_package_name")
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 	})
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
+	defer uptrace.Shutdown(ctx)
 
 	router := gin.Default()
 	router.SetHTMLTemplate(profileTemplate())

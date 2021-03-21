@@ -13,19 +13,14 @@ import (
 func main() {
 	ctx := context.Background()
 
-	upclient := uptrace.NewClient(&uptrace.Config{
+	uptrace.ConfigureOpentelemetry(&uptrace.Config{
 		// copy your project DSN here or use UPTRACE_DSN env var
 		DSN: "",
 
 		ServiceName:    "myservice",
 		ServiceVersion: "1.0.0",
 	})
-
-	defer upclient.Close()
-	defer upclient.ReportPanic(ctx)
-
-	// Use upclient to report errors when there are no spans.
-	upclient.ReportError(ctx, errors.New("Hello from uptrace-go"))
+	defer uptrace.Shutdown(ctx)
 
 	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
@@ -40,5 +35,5 @@ func main() {
 	child2.End()
 
 	span.End()
-	fmt.Printf("trace: %s\n", upclient.TraceURL(span))
+	fmt.Printf("trace: %s\n", uptrace.TraceURL(span))
 }
