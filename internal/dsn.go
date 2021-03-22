@@ -29,24 +29,24 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 		dsn.ProjectID = u.Path[1:]
 	}
 	if dsn.ProjectID == "" {
-		return nil, fmt.Errorf("DSN does not have project id (DSN=%q)", dsnStr)
+		return nil, fmt.Errorf("DSN=%q does not have a project id", dsnStr)
 	}
 
 	if u.User != nil {
 		dsn.Token = u.User.Username()
 	}
 	if dsn.Token == "" {
-		return nil, fmt.Errorf("DSN does not have token (DSN=%q)", dsnStr)
+		return nil, fmt.Errorf("DSN=%q does not have a token", dsnStr)
 	}
 
 	dsn.Scheme = u.Scheme
 	if dsn.Scheme == "" {
-		return nil, fmt.Errorf("DSN does not have scheme (DSN=%q)", dsnStr)
+		return nil, fmt.Errorf("DSN=%q does not have a scheme", dsnStr)
 	}
 
 	dsn.Host = u.Host
 	if dsn.Host == "" {
-		return nil, fmt.Errorf("DSN does not have host (DSN=%q)", dsnStr)
+		return nil, fmt.Errorf("DSN=%q does not have a host", dsnStr)
 	}
 
 	return &dsn, nil

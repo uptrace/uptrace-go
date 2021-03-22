@@ -33,7 +33,7 @@ func TestInvalidDSN(t *testing.T) {
 	})
 
 	require.Equal(t,
-		`Uptrace is disabled: DSN does not have token (DSN="dsn")`,
+		`Uptrace is disabled: DSN="dsn" does not have a token`,
 		logger.Message())
 }
 
@@ -54,7 +54,7 @@ func TestUnknownToken(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t,
-		`send failed: status=403: project not found or access denied (check DSN)`,
+		`send failed: status=403: project with such id and token not found (DSN="https://UNKNOWN@api.uptrace.dev/2")`,
 		logger.Message())
 }
 
