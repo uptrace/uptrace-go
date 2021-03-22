@@ -144,6 +144,9 @@ func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 		return err
 	}
 
+	// Create a new context since then context from Otel is canceled on shutdown.
+	ctx = context.Background()
+
 	if e.cfg.Trace && e.cfg.ClientTrace {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}

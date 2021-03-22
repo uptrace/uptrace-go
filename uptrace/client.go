@@ -31,7 +31,7 @@ func newClient(dsn *internal.DSN) *client {
 func (c *client) TraceURL(span trace.Span) string {
 	host := strings.TrimPrefix(c.dsn.Host, "api.")
 	return fmt.Sprintf("%s://%s/search/%s?q=%s",
-		c.dsn.Scheme, host, c.dsn.ProjectID, span.SpanContext().TraceID)
+		c.dsn.Scheme, host, c.dsn.ProjectID, span.SpanContext().TraceID())
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
