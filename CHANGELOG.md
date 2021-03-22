@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.19.0 (Unreleased)
+## v0.19.0
 
 - Changed API and configuration to better indicate that opentelemetry-go can only be configured
   once. Before:
