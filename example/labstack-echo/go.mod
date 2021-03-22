@@ -7,8 +7,8 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/labstack/echo/v4 v4.2.1
 	github.com/mattn/go-colorable v0.1.8 // indirect
-	github.com/uptrace/uptrace-go v0.9.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.18.0
+	github.com/uptrace/uptrace-go v0.19.1
+	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.19.0
 	go.opentelemetry.io/otel v0.19.0
 	go.opentelemetry.io/otel/trace v0.19.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect

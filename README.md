@@ -21,7 +21,7 @@ Install uptrace-go:
 go get github.com/uptrace/uptrace-go
 ```
 
-Run the [basic example](example/basic) below using the DSN from the project settings page.
+Run the [basic example](example/basic) below using the DSN from the Uptrace project settings page.
 
 ```go
 package main

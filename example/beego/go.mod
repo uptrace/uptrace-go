@@ -10,8 +10,9 @@ require (
 	github.com/prometheus/client_golang v1.10.0 // indirect
 	github.com/prometheus/common v0.19.0 // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
-	github.com/uptrace/uptrace-go v0.9.0
+	github.com/uptrace/uptrace-go v0.19.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego v0.18.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.19.0 // indirect
 	go.opentelemetry.io/otel v0.19.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
