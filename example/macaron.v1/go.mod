@@ -7,11 +7,11 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/go-macaron/inject v0.0.0-20200308113650-138e5925c53b // indirect
 	github.com/unknwon/com v1.0.1 // indirect
-	github.com/uptrace/uptrace-go v0.8.3
+	github.com/uptrace/uptrace-go v0.9.0
 	go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron v0.18.0
-	go.opentelemetry.io/otel v0.18.0
-	go.opentelemetry.io/otel/trace v0.18.0
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
+	go.opentelemetry.io/otel v0.19.0
+	go.opentelemetry.io/otel/trace v0.19.0
+	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/macaron.v1 v1.4.0
 )

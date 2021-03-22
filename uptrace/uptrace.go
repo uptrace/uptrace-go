@@ -47,14 +47,14 @@ func setupTracing(cfg *Config) {
 
 	provider := cfg.TracerProvider
 	if provider == nil {
-		traceConfig := sdktrace.Config{
-			Resource:       cfg.resource(),
-			DefaultSampler: cfg.Sampler,
+		opts := []sdktrace.TracerProviderOption{
+			sdktrace.WithResource(cfg.resource()),
+		}
+		if cfg.Sampler != nil {
+			opts = append(opts, sdktrace.WithSampler(cfg.Sampler))
 		}
 
-		provider = sdktrace.NewTracerProvider(
-			sdktrace.WithConfig(traceConfig),
-		)
+		provider = sdktrace.NewTracerProvider(opts...)
 		otel.SetTracerProvider(provider)
 	}
 

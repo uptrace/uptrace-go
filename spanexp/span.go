@@ -36,9 +36,9 @@ type Span struct {
 }
 
 func initUptraceSpan(out *Span, in *export.SpanSnapshot) {
-	out.ID = asUint64(in.SpanContext.SpanID)
+	out.ID = asUint64(in.SpanContext.SpanID())
 	out.ParentID = asUint64(in.ParentSpanID)
-	out.TraceID = in.SpanContext.TraceID
+	out.TraceID = in.SpanContext.TraceID()
 
 	out.Name = in.Name
 	out.Kind = in.SpanKind.String()
@@ -90,8 +90,8 @@ type Link struct {
 }
 
 func initUptraceLink(out *Link, in *trace.Link) {
-	out.TraceID = in.SpanContext.TraceID
-	out.SpanID = asUint64(in.SpanContext.SpanID)
+	out.TraceID = in.SpanContext.TraceID()
+	out.SpanID = asUint64(in.SpanContext.SpanID())
 	out.Attrs = in.Attributes
 }
 

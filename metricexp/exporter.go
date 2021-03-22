@@ -88,7 +88,7 @@ func NewExportPipeline(
 		return nil, err
 	}
 
-	options = append(options, controller.WithPusher(exporter))
+	options = append(options, controller.WithExporter(exporter))
 
 	// Not stateful.
 	ctrl := controller.New(
