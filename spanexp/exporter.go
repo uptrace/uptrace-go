@@ -6,6 +6,7 @@ package spanexp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptrace"
 	"runtime"
 	"sync"
@@ -115,7 +116,11 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 		}
 
 		if err := e.SendSpans(ctx, out); err != nil {
-			internal.Logger.Printf(ctx, "send failed: %s", err)
+			if err, ok := err.(*internal.StatusCodeError); ok && err.Code() == http.StatusForbidden {
+				internal.Logger.Printf(ctx, "send failed: %s (DSN=%q)", err, e.cfg.DSN)
+			} else {
+				internal.Logger.Printf(ctx, "send failed: %s", err)
+			}
 
 			if currSpan != nil {
 				currSpan.SetStatus(codes.Error, err.Error())

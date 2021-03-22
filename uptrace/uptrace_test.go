@@ -64,7 +64,7 @@ func TestBeforeSpanSend(t *testing.T) {
 	var got *spanexp.Span
 
 	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "https://key@api.uptrace.dev/1",
+		DSN: "https://token@api.uptrace.dev/1",
 
 		ServiceName:    "test-filters",
 		ServiceVersion: "1.0.0",
@@ -184,10 +184,10 @@ func genSpan(ctx context.Context, tracer trace.Tracer) {
 	spanID[1] = 0xff
 
 	link1 := trace.Link{
-		SpanContext: trace.SpanContext{
+		SpanContext: trace.NewSpanContext(trace.SpanContextConfig{
 			TraceID: traceID,
 			SpanID:  spanID,
-		},
+		}),
 		Attributes: []attribute.KeyValue{attribute.Float64("link1", 0.123)},
 	}
 

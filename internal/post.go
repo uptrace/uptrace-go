@@ -12,16 +12,27 @@ import (
 	"time"
 )
 
-type statusCodeError struct {
+type StatusCodeError struct {
 	code int
 	msg  string
 }
 
-func (e statusCodeError) Temporary() bool {
+func NewStatusCodeError(code int, msg string) *StatusCodeError {
+	return &StatusCodeError{
+		code: code,
+		msg:  msg,
+	}
+}
+
+func (e *StatusCodeError) Code() int {
+	return e.code
+}
+
+func (e *StatusCodeError) Temporary() bool {
 	return e.code >= 500
 }
 
-func (e statusCodeError) Error() string {
+func (e *StatusCodeError) Error() string {
 	if e.msg != "" {
 		return fmt.Sprintf("status=%d: %s", e.code, e.msg)
 	}
@@ -58,16 +69,11 @@ func (c *SimpleClient) Post(
 
 	if resp.StatusCode >= 400 && resp.StatusCode < 500 {
 		msg := decodeErrorMessage(resp.Body)
-		return statusCodeError{
-			code: resp.StatusCode,
-			msg:  msg,
-		}
+		return NewStatusCodeError(resp.StatusCode, msg)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return statusCodeError{
-			code: resp.StatusCode,
-		}
+		return NewStatusCodeError(resp.StatusCode, "")
 	}
 
 	return nil
