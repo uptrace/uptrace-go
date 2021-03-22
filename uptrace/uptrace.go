@@ -145,6 +145,12 @@ func ReportPanic(ctx context.Context) {
 }
 
 func Shutdown(ctx context.Context) error {
-	provider := otel.GetTracerProvider().(*sdktrace.TracerProvider)
-	return provider.Shutdown(ctx)
+	if v, ok := otel.GetTracerProvider().(shutdown); ok {
+		return v.Shutdown(ctx)
+	}
+	return nil
+}
+
+type shutdown interface {
+	Shutdown(context.Context) error
 }
