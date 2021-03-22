@@ -137,7 +137,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 	if e.cfg.Trace {
 		var span apitrace.Span
-		ctx, span = e.tracer.Start(ctx, "send")
+		ctx, span = e.tracer.Start(ctx, "SendSpans")
 		defer span.End()
 	}
 
@@ -150,7 +150,7 @@ func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 	}
 
 	// Create a new context since then context from Otel is canceled on shutdown.
-	ctx = context.Background()
+	ctx = internal.UndoContext(ctx)
 
 	if e.cfg.Trace && e.cfg.ClientTrace {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
