@@ -22,6 +22,11 @@ func SetLogger(logger internal.ILogger) {
 	internal.Logger = logger
 }
 
+// ConfigureOpentelemetry configures OpenTelemetry to export data to Uptrace.
+// By default it:
+//   - Creates tracer provider.
+//   - Registers Uptrace span exporter.
+//   - Sets tracecontext + baggage context propagator.
 func ConfigureOpentelemetry(cfg *Config) {
 	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
 		return
@@ -33,10 +38,11 @@ func ConfigureOpentelemetry(cfg *Config) {
 		}
 	}
 
-	setupTracing(cfg)
+	configureTracing(cfg)
+	configurePropagator(cfg)
 }
 
-func setupTracing(cfg *Config) {
+func configureTracing(cfg *Config) {
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
 		internal.Logger.Printf(context.TODO(), "Uptrace is disabled: %s", err)
@@ -84,7 +90,9 @@ func setupTracing(cfg *Config) {
 			provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
 		}
 	}
+}
 
+func configurePropagator(cfg *Config) {
 	textMapPropagator := cfg.TextMapPropagator
 	if textMapPropagator == nil {
 		textMapPropagator = propagation.NewCompositeTextMapPropagator(
