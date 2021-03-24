@@ -1,3 +1,5 @@
 <html>
-  <h1>Hello {{ .username }} {{ .name }}</h1>
+<h3>Hello {{ .username }}</h3>
+<p><a href="{{ .traceURL }}" target="_blank">{{ .traceURL }}</a></p>
+
 </html>
