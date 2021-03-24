@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -31,82 +29,49 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	router := gin.Default()
-	router.SetHTMLTemplate(loadTemplates())
+	router.SetHTMLTemplate(parseTemplates())
 	router.Use(otelgin.Middleware("service-name"))
-	router.GET("/", indexEndpoint)
-	router.GET("/hello/:username", userProfileEndpoint)
+	router.GET("/", indexHandler)
+	router.GET("/hello/:username", helloHandler)
 
 	if err := router.Run("localhost:9999"); err != nil {
 		log.Print(err)
 	}
 }
 
-func loadTemplates() *template.Template {
+func parseTemplates() *template.Template {
 	indexTemplate := `
 		<html>
 		<p>Here are some routes for you:</p>
-
 		<ul>
-			<li><a href="/hello/admin">Hello admin</a></li>
-			<li><a href="/hello/unknown">Hello unknown user</a></li>
+			<li><a href="/hello/world">Hello world</a></li>
+			<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
 		</ul>
-	
-		<p><a href="{{ .url }}" target="_blank">{{ .url }}</a></p>
+		<p><a href="{{ .traceURL }}" target="_blank">{{ .traceURL }}</a></p>
 		</html>
 	`
 	t := template.Must(template.New(indexTmpl).Parse(indexTemplate))
 
 	profileTemplate := `
 		<html>
-		<h1>Hello {{ .username }} {{ .name }}</h1>
-
-		<p><a href="{{ .url }}" target="_blank">{{ .url }}</a></p>
+		<h3>Hello {{ .username }}</h3>
+		<p><a href="{{ .traceURL }}" target="_blank">{{ .traceURL }}</a></p>
 		</html>
 	`
 	return template.Must(t.New(profileTmpl).Parse(profileTemplate))
 }
 
-func indexEndpoint(c *gin.Context) {
+func indexHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-
-	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
 	otelgin.HTML(c, http.StatusOK, indexTmpl, gin.H{
-		"url": traceURL,
+		"traceURL": uptrace.TraceURL(trace.SpanFromContext(ctx)),
 	})
 }
 
-func userProfileEndpoint(c *gin.Context) {
+func helloHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-
-	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
-
-	username := c.Param("username")
-	name, err := selectUser(ctx, username)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"error": err.Error(),
-			"code":  http.StatusNotFound,
-			"url":   traceURL,
-		})
-		return
-	}
-
 	otelgin.HTML(c, http.StatusOK, profileTmpl, gin.H{
-		"username": username,
-		"name":     name,
-		"url":      traceURL,
+		"username": c.Param("username"),
+		"traceURL": uptrace.TraceURL(trace.SpanFromContext(ctx)),
 	})
-}
-
-func selectUser(ctx context.Context, username string) (string, error) {
-	_, span := tracer.Start(ctx, "selectUser")
-	defer span.End()
-
-	span.SetAttributes(attribute.String("username", username))
-
-	if username == "unknown" {
-		return "", fmt.Errorf("username=%s not found", username)
-	}
-
-	return "Joe", nil
 }
