@@ -24,9 +24,9 @@ func SetLogger(logger internal.ILogger) {
 
 // ConfigureOpentelemetry configures OpenTelemetry to export data to Uptrace.
 // By default it:
-//   - Creates tracer provider.
-//   - Registers Uptrace span exporter.
-//   - Sets tracecontext + baggage context propagator.
+//   - creates tracer provider;
+//   - registers Uptrace span exporter;
+//   - sets tracecontext + baggage composite context propagator.
 func ConfigureOpentelemetry(cfg *Config) {
 	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
 		return
