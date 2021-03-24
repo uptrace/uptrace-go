@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
@@ -27,34 +27,40 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(otelmux.Middleware("service-name"))
-	r.HandleFunc("/profiles/{username}", userProfileHandler)
+	r.HandleFunc("/", indexHandler)
+	r.HandleFunc("/hello/{username}", helloHandler)
 
 	fmt.Println("running on http://localhost:9999")
 	log.Fatal(http.ListenAndServe(":9999", r))
 }
 
-func userProfileHandler(w http.ResponseWriter, req *http.Request) {
+func indexHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	username := mux.Vars(req)["username"]
-	name, err := selectUser(ctx, username)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	fmt.Fprintf(w, `<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	tmpl := `
+	<html>
+	<p>Here are some routes for you:</p>
+	<ul>
+		<li><a href="/hello/world">Hello world</a></li>
+		<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
+	</ul>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	fmt.Fprintf(w, tmpl, traceURL, traceURL)
 }
 
-func selectUser(ctx context.Context, username string) (string, error) {
-	_, span := tracer.Start(ctx, "selectUser")
-	defer span.End()
+func helloHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 
-	span.SetAttributes(attribute.String("username", username))
-
-	if username == "admin" {
-		return "Joe", nil
-	}
-
-	return "", fmt.Errorf("username=%s not found", username)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	username := mux.Vars(req)["username"]
+	tmpl := `
+	<html>
+	<h3>Hello %s</h3>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	fmt.Fprintf(w, tmpl, username, traceURL, traceURL)
 }
