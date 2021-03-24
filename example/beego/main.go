@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/astaxie/beego"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
@@ -27,45 +26,40 @@ func main() {
 	// call otelbeego.Render manually.
 	beego.BConfig.WebConfig.AutoRender = false
 
-	beego.Router("/profiles/:username", &ProfileController{})
+	beego.Router("/", &IndexController{})
+	beego.Router("/hello/:username", &HelloController{})
 
 	mware := otelbeego.NewOTelBeegoMiddleWare("service-name")
 	beego.RunWithMiddleWares("localhost:9999", mware)
 }
 
-type ProfileController struct {
+type IndexController struct {
 	beego.Controller
 }
 
-func (c *ProfileController) Get() {
+func (c *IndexController) Get() {
 	ctx := c.Ctx.Request.Context()
 
-	username := c.Ctx.Input.Param(":username")
-	name, err := selectUser(ctx, username)
-	if err != nil {
-		c.Abort("404")
-		return
-	}
+	c.Data["traceURL"] = uptrace.TraceURL(trace.SpanFromContext(ctx))
+	c.TplName = "index.tpl"
 
-	c.Data["username"] = username
-	c.Data["name"] = name
-	c.TplName = "hello.tpl"
-
-	// Don't forget to call render manually.
 	if err := otelbeego.Render(&c.Controller); err != nil {
 		c.Abort("500")
 	}
 }
 
-func selectUser(ctx context.Context, username string) (string, error) {
-	_, span := tracer.Start(ctx, "selectUser")
-	defer span.End()
+type HelloController struct {
+	beego.Controller
+}
 
-	span.SetAttributes(attribute.String("username", username))
+func (c *HelloController) Get() {
+	ctx := c.Ctx.Request.Context()
 
-	if username == "admin" {
-		return "Joe", nil
+	c.Data["username"] = c.Ctx.Input.Param(":username")
+	c.Data["traceURL"] = uptrace.TraceURL(trace.SpanFromContext(ctx))
+	c.TplName = "hello.tpl"
+
+	if err := otelbeego.Render(&c.Controller); err != nil {
+		c.Abort("500")
 	}
-
-	return "", fmt.Errorf("username=%s not found", username)
 }
