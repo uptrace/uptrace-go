@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -36,33 +35,41 @@ func main() {
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
-	e.GET("/profiles/:username", userProfileEndpoint)
+	e.GET("/", indexHandler)
+	e.GET("/hello/:username", helloHandler)
 
 	e.Logger.Fatal(e.Start(":9999"))
 }
 
-func userProfileEndpoint(c echo.Context) error {
+func indexHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	username := c.Param("username")
-	name, err := selectUser(ctx, username)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-
-	html := fmt.Sprintf(`<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	tmpl := `
+	<html>
+	<p>Here are some routes for you:</p>
+	<ul>
+		<li><a href="/hello/world">Hello world</a></li>
+		<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
+	</ul>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	html := fmt.Sprintf(tmpl, traceURL, traceURL)
 	return c.HTML(http.StatusOK, html)
 }
 
-func selectUser(ctx context.Context, username string) (string, error) {
-	_, span := tracer.Start(ctx, "selectUser")
-	defer span.End()
+func helloHandler(c echo.Context) error {
+	ctx := c.Request().Context()
 
-	span.SetAttributes(attribute.String("username", username))
-
-	if username == "admin" {
-		return "Joe", nil
-	}
-
-	return "", fmt.Errorf("username=%s not found", username)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	username := c.Param("username")
+	tmpl := `
+	<html>
+	<h3>Hello %s</h3>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	html := fmt.Sprintf(tmpl, username, traceURL, traceURL)
+	return c.HTML(http.StatusOK, html)
 }
