@@ -5,7 +5,7 @@
 To run this example:
 
 ```bash
-UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
 ```
 
 **Note** that this example requires patching the zap package:

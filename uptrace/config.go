@@ -15,7 +15,7 @@ import (
 
 type Config struct {
 	// DSN is a data source name that is used to connect to uptrace.dev.
-	// Example: https://<key>@api.uptrace.dev/<project_id>
+	// Example: https://<token>@api.uptrace.dev/<project_id>
 	// The default is to use UPTRACE_DSN environment var.
 	DSN string
 

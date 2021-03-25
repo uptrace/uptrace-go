@@ -7,7 +7,7 @@
 To run this example:
 
 ```shell
-UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" make
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" make
 ```
 
 ## Running locally
@@ -15,19 +15,19 @@ UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" make
 Start the server:
 
 ```shell
-UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" go run server/server.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server/server.go
 ```
 
 Start the client:
 
 ```shell
-UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" go run client/client.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run client/client.go
 ```
 
 The server output should look like this:
 
 ```shell
-UPTRACE_DSN="https://<key>@api.uptrace.dev/<project_id>" go run server/server.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server/server.go
 serving on :9999
 trace https://uptrace.dev/search/<project_id>?q=<trace_id>
 ```
