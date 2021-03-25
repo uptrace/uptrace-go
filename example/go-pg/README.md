@@ -1,6 +1,28 @@
-# go-pg instrumentation example
+# go-pg OpenTelemetry instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-go-pg/)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/go-pg/pg/extra/pgotel)](https://pkg.go.dev/github.com/go-pg/pg/extra/pgotel)
+
+## Quickstart
+
+To install [pgotel](https://github.com/go-pg/pg/tree/v10/extra/pgotel) instrumentation:
+
+```bash
+go get github.com/go-pg/pg/extra/pgotel
+```
+
+Then add OpenTelemetry hook:
+
+```go
+db := pg.Connect(&pg.Options{
+    Addr:     "postgresql-server:5432",
+    User:     "postgres",
+    Database: "example",
+})
+
+db.AddQueryHook(pgotel.OpenTelemetryHook{})
+```
+
+## Example
 
 To run this example you need a PostgreSQL server. You can start one with Docker:
 

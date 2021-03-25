@@ -1,6 +1,25 @@
-# mongo-driver instrumentation example
+# mongo-driver OpenTelemetry instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-mongo-driver/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo)
+
+## Quickstart
+
+Install
+[otelmongo](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo)
+instrumentation:
+
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo
+```
+
+Then add OpenTelemetry monitor:
+
+```go
+opt := options.Client()
+opt.Monitor = otelmongo.NewMonitor("service-name")
+```
+
+## Example
 
 To run this example you need a MongoDB server. You can start one with Docker:
 
