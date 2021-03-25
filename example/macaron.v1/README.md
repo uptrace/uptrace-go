@@ -1,6 +1,25 @@
 # Macaron instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-macaron/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron)
+
+## Quickstart
+
+To install
+[otelmacaron](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/gopkg.in/macaron.v1/otelmacaron)
+instrumentation:
+
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/gopkg.in/macaron.v1/otelmacaron
+```
+
+Then install OpenTelemetry middleware:
+
+```go
+m := macaron.Classic()
+m.Use(otelmacaron.Middleware("service-name"))
+```
+
+## Example
 
 To run this example:
 

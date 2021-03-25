@@ -1,6 +1,29 @@
-# Beego instrumentation example
+# Beego OpenTelemetry instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-beego/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego)
+
+## Quickstart
+
+Install
+[otelbeego](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/astaxie/beego/otelbeego)
+instrumentation:
+
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego
+```
+
+Then install OpenTelemetry middleware:
+
+```go
+// To enable tracing on template rendering, disable autorender and
+// call otelbeego.Render manually.
+beego.BConfig.WebConfig.AutoRender = false
+
+mware := otelbeego.NewOTelBeegoMiddleWare("service-name")
+beego.RunWithMiddleWares(":7777", mware)
+```
+
+## Example
 
 To run this example:
 
@@ -8,8 +31,4 @@ To run this example:
 UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
 ```
 
-HTTP server is running at http://localhost:9999:
-
-```bash
-curl -v http://localhost:9999/profiles/admin
-```
+Then open http://localhost:9999

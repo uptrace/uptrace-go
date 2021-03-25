@@ -1,6 +1,28 @@
-# Gin instrumentation example
+# Gin OpenTelemetry instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-gin-gonic/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin)
+
+## Quickstart
+
+To install
+[otelgin](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/gin-gonic/gin/otelgin)
+instrumentation:
+
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin
+```
+
+Then install the OpenTelemetry middleware:
+
+```go
+router := gin.Default()
+router.Use(otelgin.Middleware("service-name"))
+```
+
+To propagate active span through the app, use `context.Context` from the `http.Request` (not
+`gin.Context`). To measure HTML template rendering, use `otelgin.HTML` helper.
+
+## Example
 
 To run this example:
 
@@ -8,8 +30,4 @@ To run this example:
 UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
 ```
 
-HTTP server is running at http://localhost:9999:
-
-```bash
-curl -v http://localhost:9999/profiles/admin
-```
+Then open http://localhost:9999

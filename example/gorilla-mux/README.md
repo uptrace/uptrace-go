@@ -1,6 +1,24 @@
 # Mux instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-gorilla-mux/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux)
+
+## Quickstart
+
+To install
+[otelmux](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/gorilla/mux/otelmux):
+
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux
+```
+
+Then install OpenTelemetry middleware:
+
+```go
+r := mux.NewRouter()
+r.Use(otelmux.Middleware("service-name"))
+```
+
+## Example
 
 To run this example:
 
@@ -8,8 +26,4 @@ To run this example:
 UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" make
 ```
 
-HTTP server is running at http://localhost:9999:
-
-```bash
-curl -v http://localhost:9999/profiles/admin
-```
+Then open http://localhost:9999
