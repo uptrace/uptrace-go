@@ -1,9 +1,8 @@
-# net/http OpenTelemetry example
+# net/http OpenTelemetry instrumentation example
 
 [![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-net-http/)
 
-## Installation
+## Quickstart
 
 To install
 [otelhttp](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/net/http/otelhttp)
@@ -11,6 +10,20 @@ instrumentation:
 
 ```bash
 go get go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+```
+
+Wrap your handlers with `otelhttp.NewHandler`:
+
+```go
+func main() {
+    var handler http.Handler
+    handler = http.HandlerFunc(helloHandler)
+    handler = otelhttp.NewHandler(handler, "hello-handler")
+
+    http.Handle("/hello", handler)
+}
+
+func helloHandler(w http.ResponseWriter, req *http.Request) { ... }
 ```
 
 ## Example
