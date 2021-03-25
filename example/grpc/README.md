@@ -1,41 +1,55 @@
 # gRPC instrumentation example
 
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-grpc/)
+[![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc)
 
-## Running with Docker
+## Quickstart
 
-To run this example:
+To install
+[otelgrpc](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/google.golang.org/grpc/otelgrpc)
+instrumentation:
 
-```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" make
+```bash
+go get go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc
 ```
 
-## Running locally
+To instrument gRPC client:
 
-Start the server:
-
-```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server/server.go
+```go
+conn, err := grpc.Dial(target,
+	grpc.WithInsecure(),
+	grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+	grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+)
 ```
 
-Start the client:
+To instrument gRPC server:
+
+```go
+server := grpc.NewServer(
+	grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+	grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+)
+
+```
+
+## Example
+
+Start the gRPC server:
 
 ```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run client/client.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server.go
+```
+
+Then start the client:
+
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run client.go
 ```
 
 The server output should look like this:
 
 ```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server/server.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server.go
 serving on :9999
 trace https://uptrace.dev/search/<project_id>?q=<trace_id>
-```
-
-## Other
-
-To compile proto:
-
-```shell
-protoc -I api --go_out=plugins=grpc,paths=source_relative:./api api/hello-service.proto
 ```
