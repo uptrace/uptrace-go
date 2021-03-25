@@ -1,10 +1,10 @@
-# Mux instrumentation example
+# Gorilla Mux OpenTelemetry instrumentation example
 
 [![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux)
 
 ## Quickstart
 
-To install
+Install
 [otelmux](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/gorilla/mux/otelmux):
 
 ```bash

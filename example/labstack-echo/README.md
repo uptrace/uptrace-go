@@ -1,10 +1,10 @@
-# Echo instrumentation example
+# Echo OpenTelemetry instrumentation example
 
 [![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho)
 
 ## Quickstart
 
-To install
+Install
 [otelecho](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/labstack/echo/otelecho)
 instrumentation:
 

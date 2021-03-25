@@ -1,10 +1,10 @@
-# gRPC instrumentation example
+# gRPC OpenTelemetry instrumentation example
 
 [![PkgGoDev](https://pkg.go.dev/badge/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc)](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc)
 
 ## Quickstart
 
-To install
+Install
 [otelgrpc](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/google.golang.org/grpc/otelgrpc)
 instrumentation:
 

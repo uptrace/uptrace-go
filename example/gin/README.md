@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-To install
+Install
 [otelgin](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/gin-gonic/gin/otelgin)
 instrumentation:
 

@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-To install
+Install
 [otelhttp](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/net/http/otelhttp)
 instrumentation:
 
@@ -12,7 +12,7 @@ instrumentation:
 go get go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 ```
 
-Wrap your handlers with `otelhttp.NewHandler`:
+Then Wrap your handlers with `otelhttp.NewHandler`:
 
 ```go
 func main() {

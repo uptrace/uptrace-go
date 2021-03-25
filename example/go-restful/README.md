@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-To install
+Install
 [otelrestful](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/emicklei/go-restful/otelrestful):
 
 ```bash
