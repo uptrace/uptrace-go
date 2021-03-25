@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"strings"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
@@ -26,20 +25,20 @@ func main() {
 	})
 	defer uptrace.Shutdown(ctx)
 
-	// Your app handler.
 	var handler http.Handler
-	handler = http.HandlerFunc(userProfileEndpoint)
 
-	// Wrap it with OpenTelemetry plugin.
-	handler = otelhttp.WithRouteTag("/profiles/:username", handler)
-	handler = otelhttp.NewHandler(handler, "server-name")
+	handler = http.HandlerFunc(indexHandler)
+	handler = otelhttp.WithRouteTag("/", handler)
+	handler = otelhttp.NewHandler(handler, "index-handler")
+	http.HandleFunc("/", handler.ServeHTTP)
 
-	// Register handler.
-	http.Handle("/profiles/", handler)
+	handler = http.HandlerFunc(helloHandler)
+	handler = otelhttp.WithRouteTag("/hello/:username", handler)
+	handler = otelhttp.NewHandler(handler, "hello-handler")
+	http.HandleFunc("/hello/", handler.ServeHTTP)
 
 	srv := &http.Server{
-		Addr:    ":9999",
-		Handler: handler,
+		Addr: ":9999",
 	}
 
 	fmt.Println("listening on http://localhost:9999")
@@ -48,30 +47,34 @@ func main() {
 	}
 }
 
-func userProfileEndpoint(w http.ResponseWriter, req *http.Request) {
+func indexHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	username := strings.Replace(req.URL.Path, "/profiles/", "", 1)
-
-	name, err := selectUser(ctx, username)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	fmt.Fprintf(w, `<html><h1>Hello %s %s </h1></html>`+"\n", username, name)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	tmpl := `
+	<html>
+	<p>Here are some routes for you:</p>
+	<ul>
+		<li><a href="/hello/world">Hello world</a></li>
+		<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
+	</ul>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	fmt.Fprintf(w, tmpl, traceURL, traceURL)
 }
 
-func selectUser(ctx context.Context, username string) (string, error) {
-	_, span := tracer.Start(ctx, "selectUser")
-	defer span.End()
+func helloHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 
-	span.SetAttributes(attribute.String("username", username))
+	username := strings.Replace(req.URL.Path, "/hello/", "", 1)
 
-	if username == "admin" {
-		return "Joe", nil
-	}
-
-	return "", fmt.Errorf("username=%s not found", username)
+	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
+	tmpl := `
+	<html>
+	<h3>Hello %s</h3>
+	<p><a href="%s" target="_blank">%s</a></p>
+	</html>
+	`
+	fmt.Fprintf(w, tmpl, username, traceURL, traceURL)
 }
