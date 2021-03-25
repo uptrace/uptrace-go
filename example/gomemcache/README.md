@@ -19,7 +19,7 @@ mc := otelmemcache.NewClientWithTracing(
 )
 ```
 
-And use `mc.WithContext` to pass around active span.
+And use `mc.WithContext` to propagate the active span.
 
 ## Example
 

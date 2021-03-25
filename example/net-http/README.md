@@ -12,7 +12,7 @@ instrumentation:
 go get go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 ```
 
-Then Wrap your handlers with `otelhttp.NewHandler`:
+Then wrap your handlers with `otelhttp.NewHandler`:
 
 ```go
 func main() {
