@@ -62,5 +62,5 @@ func main() {
 	child2.SetAttributes(attribute.Int("key2", 42), attribute.Float64("key3", 123.456))
 	child2.End()
 
-	fmt.Println("trace id:", span.SpanContext().TraceID)
+	fmt.Println("trace id:", span.SpanContext().TraceID())
 }
