@@ -254,10 +254,7 @@ func (e *Exporter) flush() {
 func (e *Exporter) send(out interface{}) error {
 	ctx := context.Background()
 
-	enc := internal.GetEncoder()
-	defer internal.PutEncoder(enc)
-
-	data, err := enc.EncodeZstd(out)
+	data, err := internal.EncodeMsgpack(out)
 	if err != nil {
 		return err
 	}

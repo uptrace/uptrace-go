@@ -3,7 +3,6 @@ package internal
 import (
 	"bytes"
 	"context"
-	"sync"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/vmihailenco/msgpack/v5"
@@ -98,75 +97,37 @@ func EncodeValue(enc *msgpack.Encoder, v attribute.Value) {
 
 //------------------------------------------------------------------------------
 
-type Encoder struct {
-	buf  bytes.Buffer
-	msgp *msgpack.Encoder
-}
+func EncodeMsgpack(v interface{}) ([]byte, error) {
+	enc := msgpack.GetEncoder()
+	defer msgpack.PutEncoder(enc)
 
-func NewEncoder() *Encoder {
-	var enc Encoder
-	enc.msgp = msgpack.NewEncoder(nil)
-	return &enc
-}
+	var buf bytes.Buffer
+	enc.Reset(&buf)
 
-func (enc *Encoder) Encode(v interface{}) ([]byte, error) {
-	enc.buf.Reset()
-	enc.msgp.Reset(&enc.buf)
-	enc.msgp.UseCompactInts(true)
-
-	if err := enc.msgp.Encode(v); err != nil {
+	if err := enc.Encode(v); err != nil {
 		return nil, err
 	}
-	return enc.buf.Bytes(), nil
-}
 
-func (enc *Encoder) EncodeZstd(v interface{}) ([]byte, error) {
-	zw := getZstdWriter()
-	defer putZstdWriter(zw)
-
-	enc.buf.Reset()
-	zw.Reset(&enc.buf)
-	enc.msgp.Reset(zw)
-	enc.msgp.UseCompactInts(true)
-
-	if err := enc.msgp.Encode(v); err != nil {
+	zenc, err := zstdEncoder()
+	if err != nil {
 		return nil, err
 	}
-	if err := zw.Close(); err != nil {
+
+	return zenc.EncodeAll(buf.Bytes(), nil), nil
+}
+
+var (
+	zencOnce Once
+	zenc     *zstd.Encoder
+)
+
+func zstdEncoder() (*zstd.Encoder, error) {
+	if err := zencOnce.Do(func() error {
+		var err error
+		zenc, err = zstd.NewWriter(nil)
+		return err
+	}); err != nil {
 		return nil, err
 	}
-	return enc.buf.Bytes(), nil
-}
-
-var encPool = sync.Pool{
-	New: func() interface{} {
-		return NewEncoder()
-	},
-}
-
-func GetEncoder() *Encoder {
-	return encPool.Get().(*Encoder)
-}
-
-func PutEncoder(enc *Encoder) {
-	enc.buf.Reset()
-	encPool.Put(enc)
-}
-
-var zstdPool = sync.Pool{
-	New: func() interface{} {
-		zw, err := zstd.NewWriter(nil, zstd.WithEncoderConcurrency(1))
-		if err != nil {
-			panic(err)
-		}
-		return zw
-	},
-}
-
-func getZstdWriter() *zstd.Encoder {
-	return zstdPool.Get().(*zstd.Encoder)
-}
-
-func putZstdWriter(zw *zstd.Encoder) {
-	zstdPool.Put(zw)
+	return zenc, nil
 }

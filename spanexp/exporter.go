@@ -141,10 +141,7 @@ func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 		defer span.End()
 	}
 
-	enc := internal.GetEncoder()
-	defer internal.PutEncoder(enc)
-
-	data, err := enc.EncodeZstd(out)
+	data, err := internal.EncodeMsgpack(out)
 	if err != nil {
 		return err
 	}
