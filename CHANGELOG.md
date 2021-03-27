@@ -2,6 +2,8 @@
 
 ## v0.19.0
 
+- Updated OpenTelemetry to
+  [v0.19.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v0.19.0).
 - Changed API and configuration to better indicate that opentelemetry-go can only be configured
   once. Before:
 
@@ -26,7 +28,7 @@
 
 ## v0.9.0
 
-- Update OpenTelemetry to
+- Updated OpenTelemetry to
   [v0.18.0](https://github.com/open-telemetry/opentelemetry-go/blob/main/CHANGELOG.md#0180---2020-03-03)
 
 ## v0.6.0
