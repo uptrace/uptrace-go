@@ -26,8 +26,8 @@ func main() {
 		otlpgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
 		otlpgrpc.WithTLSCredentials(creds),
 		otlpgrpc.WithHeaders(map[string]string{
-			// Set the Uptrace token here or use UPTRACE_TOKEN env var.
-			"uptrace-token": os.Getenv("UPTRACE_TOKEN"),
+			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
+			"uptrace-dsn": os.Getenv("UPTRACE_DSN"),
 		}),
 		otlpgrpc.WithCompressor("gzip"),
 	)
