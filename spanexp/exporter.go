@@ -116,7 +116,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []*trace.SpanSnapshot)
 		}
 
 		if err := e.SendSpans(ctx, out); err != nil {
-			if err, ok := err.(*internal.StatusCodeError); ok && err.Code() == http.StatusForbidden {
+			if v, ok := err.(*internal.StatusCodeError); ok && v.Code() == http.StatusForbidden {
 				internal.Logger.Printf(ctx, "send failed: %s (DSN=%q)", err, e.cfg.DSN)
 			} else {
 				internal.Logger.Printf(ctx, "send failed: %s", err)
