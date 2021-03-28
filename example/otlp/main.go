@@ -1,5 +1,3 @@
-// https://github.com/open-telemetry/opentelemetry-go/tree/main/exporters/otlp
-
 package main
 
 import (

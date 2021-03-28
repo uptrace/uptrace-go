@@ -124,7 +124,9 @@ var (
 func zstdEncoder() (*zstd.Encoder, error) {
 	if err := zencOnce.Do(func() error {
 		var err error
-		zenc, err = zstd.NewWriter(nil)
+		zenc, err = zstd.NewWriter(nil,
+			zstd.WithEncoderLevel(zstd.SpeedFastest),
+			zstd.WithEncoderCRC(false))
 		return err
 	}); err != nil {
 		return nil, err
