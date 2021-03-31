@@ -51,11 +51,18 @@ func (c *client) ReportPanic(ctx context.Context) {
 	if val == nil {
 		return
 	}
+	c.reportPanic(ctx, val)
+	// Force flush since we are about to exit on panic.
+	_ = ForceFlush(ctx)
+	// Re-throw the panic.
+	panic(val)
+}
 
+func (c *client) reportPanic(ctx context.Context, val interface{}) {
 	span := trace.SpanFromContext(ctx)
-	isRecording := span.IsRecording()
-	if !isRecording {
+	if !span.IsRecording() {
 		_, span = c.tracer.Start(ctx, dummySpanName)
+		defer span.End()
 	}
 
 	span.AddEvent(
@@ -65,12 +72,4 @@ func (c *client) ReportPanic(ctx context.Context) {
 			attribute.Any("log.message", val),
 		),
 	)
-
-	if !isRecording {
-		// Can't use `defer span.End()` because it recovers from panic too.
-		span.End()
-	}
-
-	// Re-throw the panic.
-	panic(val)
 }

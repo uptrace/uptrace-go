@@ -162,3 +162,14 @@ func Shutdown(ctx context.Context) error {
 type shutdown interface {
 	Shutdown(context.Context) error
 }
+
+func ForceFlush(ctx context.Context) error {
+	if v, ok := otel.GetTracerProvider().(forceFlush); ok {
+		return v.ForceFlush(ctx)
+	}
+	return nil
+}
+
+type forceFlush interface {
+	ForceFlush(context.Context) error
+}
