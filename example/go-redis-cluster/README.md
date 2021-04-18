@@ -6,7 +6,7 @@
 
 Install [redisotel](https://github.com/go-redis/redis/tree/master/extra/redisotel) instrumentation:
 
-```bash
+```shell
 go get github.com/go-redis/redis/extra/redisotel
 ```
 
@@ -21,14 +21,14 @@ rdb.AddHook(redisext.OpenTelemetryHook{})
 
 ## Example
 
-To run this example you need a Redis Cluster. You can start one with Docker:
+To run this example you need a Redis cluster. You can start one with Docker:
 
-```bash
+```shell
 make up
 ```
 
 To run this example:
 
-```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" make
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
 ```

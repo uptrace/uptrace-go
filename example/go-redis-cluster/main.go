@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/go-redis/redis/extra/redisotel"
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/otel"
 
@@ -28,13 +28,13 @@ func main() {
 
 		NewClient: func(opt *redis.Options) *redis.Client {
 			node := redis.NewClient(opt)
-			node.AddHook(&redisotel.TracingHook{})
+			node.AddHook(redisotel.NewTracingHook())
 			return node
 		},
 	})
 	defer rdb.Close()
 
-	rdb.AddHook(&redisotel.TracingHook{})
+	rdb.AddHook(redisotel.NewTracingHook())
 
 	ctx, span := tracer.Start(ctx, "redis-main-span")
 	defer span.End()

@@ -1,3 +1,5 @@
+all:
+	go run main.go
 build:
 	docker-compose build
 up: build

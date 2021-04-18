@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/go-pg/pg/extra/pgotel"
+	"github.com/go-pg/pg/extra/pgotel/v10"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
 	"go.opentelemetry.io/otel"
@@ -31,7 +31,7 @@ func main() {
 	})
 	defer db.Close()
 
-	db.AddQueryHook(&pgotel.TracingHook{})
+	db.AddQueryHook(pgotel.NewTracingHook())
 
 	if err := createBookTable(ctx, db); err != nil {
 		log.Println(err)
