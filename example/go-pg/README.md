@@ -7,7 +7,7 @@
 To install [pgotel](https://github.com/go-pg/pg/tree/v10/extra/pgotel) instrumentation:
 
 ```bash
-go get github.com/go-pg/pg/extra/pgotel
+go get github.com/go-pg/pg/extra/pgotel/v10
 ```
 
 Then add OpenTelemetry hook:
@@ -19,7 +19,7 @@ db := pg.Connect(&pg.Options{
     Database: "example",
 })
 
-db.AddQueryHook(pgotel.OpenTelemetryHook{})
+db.AddQueryHook(pgotel.NewTracingHook())
 ```
 
 ## Example

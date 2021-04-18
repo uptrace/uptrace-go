@@ -7,7 +7,7 @@
 Install [redisotel](https://github.com/go-redis/redis/tree/master/extra/redisotel) instrumentation:
 
 ```shell
-go get github.com/go-redis/redis/extra/redisotel
+go get github.com/go-redis/redis/extra/redisotel/v8
 ```
 
 Then add OpenTelemetry hook:
@@ -16,7 +16,7 @@ Then add OpenTelemetry hook:
 rdb := redis.NewClient(&redis.Options{
     Addr: "redis-server:6379",
 })
-rdb.AddHook(redisext.OpenTelemetryHook{})
+rdb.AddHook(redisotel.NewTracingHook())
 ```
 
 ## Example
