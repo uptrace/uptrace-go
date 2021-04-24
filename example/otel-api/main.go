@@ -34,10 +34,10 @@ func main() {
 
 // This example shows how to start a span and set some attributes.
 func spansExample(ctx context.Context) {
-	ctx, span := tracer.Start(ctx, "main", trace.WithSpanKind(trace.SpanKindServer))
+	ctx, span := tracer.Start(ctx, "operation-name", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// Check if span is sampled and start recording.
+	// To avoid expensive computations, check that span is recording before setting any attributes.
 	if span.IsRecording() {
 		span.SetAttributes(
 			attribute.String("key1", "value1"),
@@ -49,10 +49,12 @@ func spansExample(ctx context.Context) {
 			attribute.String("log.message", "User not found"),
 			attribute.String("enduser.id", "123"),
 		))
+	}
 
-		span.RecordError(errors.New("error1"))
-
-		span.SetStatus(codes.Error, "error description")
+	// Record the error and update the span status.
+	if err := errors.New("error1"); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 }
 

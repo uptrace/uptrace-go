@@ -16,11 +16,10 @@ Then wrap your handlers with `otelhttp.NewHandler`:
 
 ```go
 func main() {
-    var handler http.Handler
-    handler = http.HandlerFunc(helloHandler)
-    handler = otelhttp.NewHandler(handler, "hello-handler")
-
-    http.Handle("/hello", handler)
+    http.Handle("/hello", otelhttp.NewHandler(
+        http.HandlerFunc(helloHandler),
+        "hello-handler",
+    ))
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) { ... }
