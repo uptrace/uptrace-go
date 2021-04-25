@@ -37,13 +37,13 @@ server := grpc.NewServer(
 Start the gRPC server:
 
 ```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run server/server.go
 ```
 
 Then start the client:
 
 ```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run client.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run client/client.go
 ```
 
 The server output should look like this:

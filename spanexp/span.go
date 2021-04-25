@@ -6,7 +6,7 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 
 	"go.opentelemetry.io/otel/codes"
-	export "go.opentelemetry.io/otel/sdk/export/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -35,9 +35,9 @@ type Span struct {
 	Links  []Link  `msgpack:"links"`
 }
 
-func initUptraceSpan(out *Span, in *export.SpanSnapshot) {
+func initUptraceSpan(out *Span, in *sdktrace.SpanSnapshot) {
 	out.ID = asUint64(in.SpanContext.SpanID())
-	out.ParentID = asUint64(in.ParentSpanID)
+	out.ParentID = asUint64(in.Parent.SpanID())
 	out.TraceID = in.SpanContext.TraceID()
 
 	out.Name = in.Name
