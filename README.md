@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/)
 
 <a href="https://docs.uptrace.dev/go/">
-  <img src="https://docs.uptrace.dev/devicons/go-original.svg" height="200px" />
+  <img src="https://docs.uptrace.dev/devicon/go-original.svg" height="200px" />
 </a>
 
 ## Introduction
