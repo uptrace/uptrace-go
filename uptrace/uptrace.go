@@ -11,7 +11,7 @@ import (
 	"github.com/uptrace/uptrace-go/spanexp"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -83,7 +83,7 @@ func configureTracing(cfg *Config) {
 	provider.RegisterSpanProcessor(bsp)
 
 	if cfg.PrettyPrint {
-		exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
+		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			internal.Logger.Printf(context.TODO(), err.Error())
 		} else {

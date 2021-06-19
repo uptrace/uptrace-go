@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 type Config struct {
@@ -85,14 +85,16 @@ func buildResource(
 	}
 
 	if res == nil {
-		return resource.NewWithAttributes(kvs...)
+		return resource.NewWithAttributes(semconv.SchemaURL, kvs...)
 	}
 
 	if len(kvs) > 0 {
-		return resource.Merge(
+		if res, err := resource.Merge(
 			res,
-			resource.NewWithAttributes(kvs...),
-		)
+			resource.NewWithAttributes(semconv.SchemaURL, kvs...),
+		); err == nil {
+			return res
+		}
 	}
 
 	return res

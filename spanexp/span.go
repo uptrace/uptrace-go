@@ -35,40 +35,43 @@ type Span struct {
 	Links  []Link  `msgpack:"links"`
 }
 
-func initUptraceSpan(out *Span, in *sdktrace.SpanSnapshot) {
-	out.ID = asUint64(in.SpanContext.SpanID())
-	out.ParentID = asUint64(in.Parent.SpanID())
-	out.TraceID = in.SpanContext.TraceID()
+func initUptraceSpan(out *Span, in sdktrace.ReadOnlySpan) {
+	spanCtx := in.SpanContext()
+	out.ID = asUint64(spanCtx.SpanID())
+	out.ParentID = asUint64(in.Parent().SpanID())
+	out.TraceID = spanCtx.TraceID()
 
-	out.Name = in.Name
-	out.Kind = in.SpanKind.String()
-	out.StartTime = in.StartTime.UnixNano()
-	out.EndTime = in.EndTime.UnixNano()
+	out.Name = in.Name()
+	out.Kind = in.SpanKind().String()
+	out.StartTime = in.StartTime().UnixNano()
+	out.EndTime = in.EndTime().UnixNano()
 
-	if in.Resource != nil {
-		out.Resource = in.Resource.Attributes()
+	if resource := in.Resource(); resource != nil {
+		out.Resource = resource.Attributes()
 	}
-	out.Attrs = in.Attributes
+	out.Attrs = in.Attributes()
 
-	out.StatusCode = statusCode(in.StatusCode)
-	out.StatusMessage = in.StatusMessage
+	status := in.Status()
+	out.StatusCode = statusCode(status.Code)
+	out.StatusMessage = status.Description
 
-	if len(in.MessageEvents) > 0 {
-		out.Events = make([]Event, len(in.MessageEvents))
-		for i := range in.MessageEvents {
-			initUptraceEvent(&out.Events[i], &in.MessageEvents[i])
+	if events := in.Events(); len(events) > 0 {
+		out.Events = make([]Event, len(events))
+		for i := range events {
+			initUptraceEvent(&out.Events[i], &events[i])
 		}
 	}
 
-	if len(in.Links) > 0 {
-		out.Links = make([]Link, len(in.Links))
-		for i := range in.Links {
-			initUptraceLink(&out.Links[i], &in.Links[i])
+	if links := in.Links(); len(links) > 0 {
+		out.Links = make([]Link, len(links))
+		for i := range links {
+			initUptraceLink(&out.Links[i], &links[i])
 		}
 	}
 
-	out.TracerName = in.InstrumentationLibrary.Name
-	out.TracerVersion = in.InstrumentationLibrary.Version
+	lib := in.InstrumentationLibrary()
+	out.TracerName = lib.Name
+	out.TracerVersion = lib.Version
 }
 
 type Event struct {
@@ -77,7 +80,7 @@ type Event struct {
 	Time  int64         `msgpack:"time"`
 }
 
-func initUptraceEvent(out *Event, in *trace.Event) {
+func initUptraceEvent(out *Event, in *sdktrace.Event) {
 	out.Name = in.Name
 	out.Attrs = in.Attributes
 	out.Time = in.Time.UnixNano()

@@ -26,7 +26,7 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	opt := options.Client()
-	opt.Monitor = otelmongo.NewMonitor("mongo-service")
+	opt.Monitor = otelmongo.NewMonitor()
 	opt.ApplyURI("mongodb://localhost:27017")
 
 	mdb, err := mongo.Connect(ctx, opt)

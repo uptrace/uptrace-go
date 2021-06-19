@@ -8,8 +8,8 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -20,17 +20,16 @@ func main() {
 
 	// Create credentials using system certificates.
 	creds := credentials.NewClientTLSFromCert(nil, "")
-	driver := otlpgrpc.NewDriver(
-		otlpgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
-		otlpgrpc.WithTLSCredentials(creds),
-		otlpgrpc.WithHeaders(map[string]string{
+	exporter, err := otlptracegrpc.New(
+		ctx,
+		otlptracegrpc.WithEndpoint("otlp.uptrace.dev:4317"),
+		otlptracegrpc.WithTLSCredentials(creds),
+		otlptracegrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": os.Getenv("UPTRACE_DSN"),
 		}),
-		otlpgrpc.WithCompressor("gzip"),
+		otlptracegrpc.WithCompressor("gzip"),
 	)
-
-	exporter, err := otlp.NewExporter(ctx, driver)
 	if err != nil {
 		panic(err)
 	}
