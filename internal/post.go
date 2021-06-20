@@ -28,6 +28,7 @@ func (e *StatusCodeError) Code() int {
 	return e.code
 }
 
+// Temporary reports whether the error is temporary and safe to retry.
 func (e *StatusCodeError) Temporary() bool {
 	return e.code >= 500
 }
