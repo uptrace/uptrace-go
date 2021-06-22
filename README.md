@@ -66,4 +66,4 @@ func main() {
 }
 ```
 
-Please see [uptrace-go documentation](https://docs.uptrace.dev/go/) for more details.
+For more details, please see [documentation](https://docs.uptrace.dev/go/) and [examples](example).
