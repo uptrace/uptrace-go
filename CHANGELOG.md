@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.21.1
+
+- Added back missing resource attributes: `host.name` and `telemetry.sdk.*`.
+
 ## v0.21.0
 
 - Updated OpenTelemetry to
