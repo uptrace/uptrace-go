@@ -152,6 +152,16 @@ func TestExporter(t *testing.T) {
 	require.NotZero(t, s0.EndTime)
 
 	set := attribute.NewSet(s0.Resource...)
+
+	for _, attrKey := range []string{
+		"host.name",
+		"telemetry.sdk.language",
+		"telemetry.sdk.version",
+	} {
+		_, ok := set.Value(attribute.Key(attrKey))
+		require.True(t, ok)
+	}
+
 	val, ok := set.Value("resource1")
 	require.True(t, ok)
 	require.Equal(t, "resource1-value", val.AsString())

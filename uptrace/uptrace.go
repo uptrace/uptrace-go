@@ -53,8 +53,10 @@ func configureTracing(cfg *Config) {
 
 	provider := cfg.TracerProvider
 	if provider == nil {
-		opts := []sdktrace.TracerProviderOption{
-			sdktrace.WithResource(cfg.resource()),
+		var opts []sdktrace.TracerProviderOption
+
+		if res := cfg.resource(); res != nil {
+			opts = append(opts, sdktrace.WithResource(cfg.resource()))
 		}
 		if cfg.Sampler != nil {
 			opts = append(opts, sdktrace.WithSampler(cfg.Sampler))

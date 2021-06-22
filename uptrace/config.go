@@ -3,7 +3,6 @@ package uptrace
 import (
 	"context"
 
-	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/spanexp"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -55,18 +54,8 @@ type Config struct {
 }
 
 func (cfg *Config) resource() *resource.Resource {
-	res := cfg.Resource
-
-	if res == nil {
-		var err error
-		res, err = resource.New(context.TODO())
-		if err != nil {
-			internal.Logger.Printf(context.TODO(), "resource.New failed: %s", err)
-		}
-	}
-
 	return buildResource(
-		res, cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
+		cfg.Resource, cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
 }
 
 func buildResource(
@@ -74,6 +63,8 @@ func buildResource(
 	resourceAttributes []attribute.KeyValue,
 	serviceName, serviceVersion string,
 ) *resource.Resource {
+	ctx := context.TODO()
+
 	var kvs []attribute.KeyValue
 	kvs = append(kvs, resourceAttributes...)
 
@@ -85,7 +76,13 @@ func buildResource(
 	}
 
 	if res == nil {
-		return resource.NewWithAttributes(semconv.SchemaURL, kvs...)
+		res, _ = resource.New(ctx,
+			resource.WithSchemaURL(semconv.SchemaURL),
+			resource.WithBuiltinDetectors(),
+			resource.WithAttributes(kvs...))
+		if res == nil {
+			res = resource.Default()
+		}
 	}
 
 	if len(kvs) > 0 {
