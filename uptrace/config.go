@@ -42,18 +42,21 @@ type Config struct {
 	// Sampler is the default sampler used when creating new spans.
 	Sampler sdktrace.Sampler
 
+	// MetricsDisabled can be used to skip metrics configuration.
+	MetricsDisabled bool
+
 	// A hook that is called before sending a span.
 	BeforeSpanSend func(*spanexp.Span)
 
 	// PrettyPrint pretty prints spans to the stdout.
 	PrettyPrint bool
 
-	// When specified it overwrites the default Uptrace tracer provider.
+	// TracerProvider overwrites the default Uptrace tracer provider.
 	// It can be used to configure Uptrace client to use OTLP exporter.
 	TracerProvider *sdktrace.TracerProvider
 }
 
-func (cfg *Config) resource() *resource.Resource {
+func (cfg *Config) newResource() *resource.Resource {
 	return buildResource(
 		cfg.Resource, cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
 }

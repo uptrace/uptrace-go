@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"context"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/vmihailenco/msgpack/v5"
@@ -90,7 +89,7 @@ func EncodeValue(enc *msgpack.Encoder, v attribute.Value) {
 	case attribute.ARRAY:
 		_ = enc.Encode(v.AsArray())
 	default:
-		Logger.Printf(context.TODO(), "unknown otel type: %s", v.Type())
+		Logger.Printf("unknown otel type: %s", v.Type())
 		_ = enc.EncodeString("unknown otel type: " + v.Type().String())
 	}
 }

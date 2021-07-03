@@ -10,24 +10,27 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 
 	"github.com/uptrace/uptrace-go/internal"
+)
+
+const (
+	mmscAgg      = "mmsc"
+	sumAgg       = "sum"
+	lastValueAgg = "last-value"
 )
 
 type Exporter struct {
 	cfg *Config
 
+	kindSelector export.ExportKindSelector
+
 	client   internal.SimpleClient
 	endpoint string
 
-	mmsc      []mmsc
-	quantiles []quantile
+	records []metricRecord
 }
 
 var _ export.Exporter = (*Exporter)(nil)
@@ -36,7 +39,8 @@ func NewExporter(cfg *Config) (*Exporter, error) {
 	cfg.init()
 
 	e := &Exporter{
-		cfg: cfg,
+		cfg:          cfg,
+		kindSelector: kindSelector(),
 	}
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
@@ -46,209 +50,12 @@ func NewExporter(cfg *Config) (*Exporter, error) {
 
 	e.client.Client = cfg.HTTPClient
 	e.client.Token = dsn.Token
-	e.client.MaxRetries = cfg.MaxRetries
+	e.client.MaxRetries = 3
 
-	e.endpoint = fmt.Sprintf("%s://%s/api/v1/projects/%s/metrics",
+	e.endpoint = fmt.Sprintf("%s://%s/api/v1/meters/%s/metrics",
 		dsn.Scheme, dsn.Host, dsn.ProjectID)
 
 	return e, nil
-}
-
-// InstallNewPipeline instantiates a NewExportPipeline and registers it globally.
-// Typically called as:
-//
-// 	pipeline := stdout.InstallNewPipeline(stdout.Config{...})
-// 	defer pipeline.Stop()
-// 	... Done
-func InstallNewPipeline(
-	ctx context.Context, config *Config, options ...controller.Option,
-) (*controller.Controller, error) {
-	options = append(options, controller.WithCollectPeriod(10*time.Second))
-	ctrl, err := NewExportPipeline(config, options...)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := ctrl.Start(ctx); err != nil {
-		return nil, err
-	}
-
-	global.SetMeterProvider(ctrl.MeterProvider())
-
-	return ctrl, nil
-}
-
-// NewExportPipeline sets up a complete export pipeline with the recommended setup,
-// chaining a NewRawExporter into the recommended selectors and integrators.
-func NewExportPipeline(
-	cfg *Config, options ...controller.Option,
-) (*controller.Controller, error) {
-	exporter, err := NewExporter(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	options = append(options, controller.WithExporter(exporter))
-
-	// Not stateful.
-	ctrl := controller.New(
-		processor.New(simple.NewWithInexpensiveDistribution(), export.DeltaExportKindSelector()),
-		options...,
-	)
-
-	return ctrl, nil
-}
-
-func (e *Exporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {
-	return export.DeltaExportKind
-}
-
-func (e *Exporter) Export(_ context.Context, checkpointSet export.CheckpointSet) error {
-	if e.cfg.Disabled {
-		return nil
-	}
-
-	if err := e.export(checkpointSet); err != nil {
-		return err
-	}
-	e.flush()
-
-	return nil
-}
-
-func (e *Exporter) export(checkpointSet export.CheckpointSet) error {
-	return checkpointSet.ForEach(export.DeltaExportKindSelector(), func(record export.Record) error {
-		switch agg := record.Aggregation().(type) {
-		// case aggregation.Quantile:
-		// 	return e.exportQuantile(record, agg)
-		case aggregation.MinMaxSumCount:
-			return e.exportMMSC(record, agg)
-		default:
-			// log.Printf("unsupported aggregator type: %T", agg)
-			return nil
-		}
-	})
-}
-
-func (e *Exporter) exportMMSC(
-	record export.Record, agg aggregation.MinMaxSumCount,
-) error {
-	var expose mmsc
-
-	if err := exportCommon(record, &expose.baseRecord); err != nil {
-		return err
-	}
-
-	desc := record.Descriptor()
-	numKind := desc.NumberKind()
-
-	min, err := agg.Min()
-	if err != nil {
-		return err
-	}
-	expose.Min = float32(min.CoerceToFloat64(numKind))
-
-	max, err := agg.Max()
-	if err != nil {
-		return err
-	}
-	expose.Max = float32(max.CoerceToFloat64(numKind))
-
-	sum, err := agg.Sum()
-	if err != nil {
-		return err
-	}
-	expose.Sum = sum.CoerceToFloat64(numKind)
-
-	count, err := agg.Count()
-	if err != nil {
-		return err
-	}
-	expose.Count = count
-
-	e.mmsc = append(e.mmsc, expose)
-
-	return nil
-}
-
-// var quantiles = []float64{0.5, 0.75, 0.9, 0.95, 0.99}
-
-// func (e *Exporter) exportQuantile(record export.Record, agg aggregation.Quantile) error {
-// 	var expose quantile
-
-// 	if err := exportCommon(record, &expose.baseRecord); err != nil {
-// 		return err
-// 	}
-
-// 	desc := record.Descriptor()
-// 	numKind := desc.NumberKind()
-
-// 	if agg, ok := agg.(aggregation.Count); ok {
-// 		count, err := agg.Count()
-// 		if err != nil {
-// 			return err
-// 		}
-// 		expose.Count = count
-// 	}
-
-// 	for _, q := range quantiles {
-// 		n, err := agg.Quantile(q)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		expose.Quantiles = append(expose.Quantiles, float32(n.CoerceToFloat64(numKind)))
-// 	}
-
-// 	e.quantiles = append(e.quantiles, expose)
-
-// 	return nil
-// }
-
-func exportCommon(record export.Record, expose *baseRecord) error {
-	desc := record.Descriptor()
-
-	expose.Name = desc.Name()
-	expose.Description = desc.Description()
-	expose.NumberKind = int8(desc.NumberKind()) // use string?
-	expose.Unit = string(desc.Unit())
-	expose.Time = time.Now().UnixNano()
-
-	if iter := record.Labels().Iter(); iter.Len() > 0 {
-		attrs := record.Resource().Attributes()
-		labels := make([]attribute.KeyValue, 0, len(attrs)+iter.Len())
-		labels = append(labels, attrs...)
-
-		for iter.Next() {
-			labels = append(labels, iter.Attribute())
-		}
-
-		expose.Labels = labels
-	}
-
-	return nil
-}
-
-func (e *Exporter) flush() {
-	if len(e.mmsc) == 0 && len(e.quantiles) == 0 {
-		return
-	}
-
-	go func(mmsc []mmsc, quantiles []quantile) {
-		out := make(map[string]interface{})
-		if len(mmsc) > 0 {
-			out["mmsc"] = mmsc
-		}
-		if len(quantiles) > 0 {
-			out["quantiles"] = quantiles
-		}
-
-		if err := e.send(out); err != nil {
-			internal.Logger.Printf(context.TODO(), "send failed: %s", err)
-		}
-	}(e.mmsc, e.quantiles)
-
-	e.mmsc = nil
-	e.quantiles = nil
 }
 
 func (e *Exporter) send(out interface{}) error {
@@ -262,38 +69,214 @@ func (e *Exporter) send(out interface{}) error {
 	return e.client.Post(ctx, e.endpoint, data)
 }
 
-type baseRecord struct {
-	Name        string                 `msgpack:"name"`
-	Description string                 `msgpack:"description"`
-	Unit        string                 `msgpack:"unit"`
-	NumberKind  int8                   `msgpack:"numberKind"`
-	Labels      internal.KeyValueSlice `msgpack:"labelss"`
+func (e *Exporter) ExportKindFor(desc *metric.Descriptor, kind aggregation.Kind) export.ExportKind {
+	return e.kindSelector.ExportKindFor(desc, kind)
+}
+
+func (e *Exporter) Export(_ context.Context, checkpoint export.CheckpointSet) error {
+	if err := checkpoint.ForEach(e.kindSelector, func(record export.Record) error {
+		switch agg := record.Aggregation().(type) {
+		case aggregation.MinMaxSumCount:
+			return e.exportMMSC(record, agg)
+		case aggregation.Histogram:
+			// TODO
+			return nil
+		case aggregation.Sum:
+			return e.exportSum(record, agg)
+		case aggregation.LastValue:
+			return e.exportLastValue(record, agg)
+		default:
+			name := record.Descriptor().Name()
+			internal.Logger.Printf("%s has unsupported aggregation type: %T", name, agg)
+			return nil
+		}
+	}); err != nil {
+		return err
+	}
+
+	if len(e.records) == 0 {
+		return nil
+	}
+
+	if err := e.send(map[string]interface{}{"records": e.records}); err != nil {
+		internal.Logger.Printf("send failed: %s", err)
+	}
+	e.records = nil
+
+	return nil
+}
+
+func (e *Exporter) exportMMSC(record export.Record, agg aggregation.MinMaxSumCount) error {
+	e.records = append(e.records, metricRecord{})
+	out := &e.records[len(e.records)-1]
+
+	if err := exportCommon(record, out); err != nil {
+		return err
+	}
+
+	out.Aggregation = mmscAgg
+	desc := record.Descriptor()
+	numKind := desc.NumberKind()
+
+	min, err := agg.Min()
+	if err != nil {
+		return err
+	}
+
+	max, err := agg.Max()
+	if err != nil {
+		return err
+	}
+
+	sum, err := agg.Sum()
+	if err != nil {
+		return err
+	}
+
+	count, err := agg.Count()
+	if err != nil {
+		return err
+	}
+
+	out.Data = &mmscData{
+		Min:   min.CoerceToFloat64(numKind),
+		Max:   max.CoerceToFloat64(numKind),
+		Sum:   sum.CoerceToFloat64(numKind),
+		Count: count,
+	}
+
+	return nil
+}
+
+func (e *Exporter) exportSum(record export.Record, agg aggregation.Sum) error {
+	e.records = append(e.records, metricRecord{})
+	out := &e.records[len(e.records)-1]
+
+	if err := exportCommon(record, out); err != nil {
+		return err
+	}
+
+	out.Aggregation = sumAgg
+	desc := record.Descriptor()
+	numKind := desc.NumberKind()
+
+	sum, err := agg.Sum()
+	if err != nil {
+		return err
+	}
+
+	out.Data = &sumData{
+		Sum: sum.CoerceToFloat64(numKind),
+	}
+
+	return nil
+}
+
+func (e *Exporter) exportLastValue(
+	record export.Record, agg aggregation.LastValue,
+) error {
+	e.records = append(e.records, metricRecord{})
+	out := &e.records[len(e.records)-1]
+
+	if err := exportCommon(record, out); err != nil {
+		return err
+	}
+
+	out.Aggregation = lastValueAgg
+	desc := record.Descriptor()
+	numKind := desc.NumberKind()
+
+	value, _, err := agg.LastValue()
+	if err != nil {
+		return err
+	}
+
+	out.Data = &lastValueData{
+		Value: value.CoerceToFloat64(numKind),
+	}
+
+	return nil
+}
+
+func exportCommon(record export.Record, out *metricRecord) error {
+	desc := record.Descriptor()
+
+	out.Name = desc.Name()
+	out.Description = desc.Description()
+	out.Unit = string(desc.Unit())
+	out.Instrument = instrumentKind(desc.InstrumentKind())
+	out.Time = time.Now().UnixNano()
+
+	out.MeterName = desc.InstrumentationName()
+	out.MeterVersion = desc.InstrumentationVersion()
+
+	if res := record.Resource(); res != nil {
+		out.Resource = res.Attributes()
+	}
+
+	if iter := record.Labels().Iter(); iter.Len() > 0 {
+		attrs := make([]attribute.KeyValue, 0, iter.Len())
+		for iter.Next() {
+			attrs = append(attrs, iter.Attribute())
+		}
+		out.Attrs = attrs
+	}
+
+	return nil
+}
+
+func kindSelector() export.ExportKindSelector {
+	return export.StatelessExportKindSelector()
+}
+
+type metricRecord struct {
+	Name        string `msgpack:"name"`
+	Description string `msgpack:"description"`
+	Unit        string `msgpack:"unit"`
+	Aggregation string `msgpack:"aggregation"`
+	Instrument  string `msgpack:"instrument"`
+
+	MeterName    string `msgpack:"meterName"`
+	MeterVersion string `msgpack:"meterVersion"`
+
+	Resource internal.KeyValueSlice `msgpack:"resource"`
+	Attrs    internal.KeyValueSlice `msgpack:"attrs"`
+
+	Data interface{} `msgpack:"data"`
 
 	Time int64 `msgpack:"time"`
 }
 
-type mmsc struct {
-	baseRecord
-
-	Min   float32 `msgpack:"min"`
-	Max   float32 `msgpack:"max"`
+type mmscData struct {
+	Min   float64 `msgpack:"min"`
+	Max   float64 `msgpack:"max"`
 	Sum   float64 `msgpack:"sum"`
 	Count uint64  `msgpack:"count"`
 }
 
-func (rec *mmsc) String() string {
-	return fmt.Sprintf("name=%s min=%f max=%f sum=%f count=%d",
-		rec.Name, rec.Min, rec.Max, rec.Sum, rec.Count)
+type lastValueData struct {
+	Value float64 `msgpack:"value"`
 }
 
-type quantile struct {
-	baseRecord
-
-	Count     uint64    `msgpack:"count"`
-	Quantiles []float32 `msgpack:"quantiles"`
+type sumData struct {
+	Sum float64 `msgpack:"sum"`
 }
 
-func (rec *quantile) String() string {
-	return fmt.Sprintf("name=%s count=%d quantiles=%v",
-		rec.Name, rec.Count, rec.Quantiles)
+func instrumentKind(kind metric.InstrumentKind) string {
+	switch kind {
+	case metric.ValueRecorderInstrumentKind:
+		return "value-recorder"
+	case metric.ValueObserverInstrumentKind:
+		return "value-observer"
+	case metric.CounterInstrumentKind:
+		return "counter"
+	case metric.UpDownCounterInstrumentKind:
+		return "up-down-counter"
+	case metric.SumObserverInstrumentKind:
+		return "sum-observer"
+	case metric.UpDownSumObserverInstrumentKind:
+		return "up-down-sum-observer"
+	default:
+		return "invalid"
+	}
 }

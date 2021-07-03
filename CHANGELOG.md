@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added support for metrics. `uptrace.ConfigureOpentelemetry` now also configures and installs an
+  export pipeline for metrics. `MetricsDisabled` option can be used to disable metrics.
+
 ## v0.21.1
 
 - Added back missing resource attributes: `host.name` and `telemetry.sdk.*`.

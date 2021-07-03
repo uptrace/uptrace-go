@@ -2,9 +2,10 @@ package spanexp
 
 import (
 	"net/http"
-	"time"
 
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/uptrace/uptrace-go/internal"
 )
 
 // Config is the configuration to be used when initializing a client.
@@ -19,9 +20,6 @@ type Config struct {
 
 	// HTTPClient that is used to send data to Uptrace.
 	HTTPClient *http.Client
-	// Max number of retries when sending data to Uptrace.
-	// The default is 3.
-	MaxRetries int
 
 	// A hook that is called before sending a span.
 	BeforeSpanSend func(*Span)
@@ -29,29 +27,20 @@ type Config struct {
 	// Trace enables Uptrace exporter instrumentation.
 	Trace bool
 
-	// ClientTrace enables httptrace instrumentation on the HTTP client used by Uptrace.
-	ClientTrace bool
+	// TraceClient enables httptrace instrumentation on the HTTP client used by Uptrace.
+	TraceClient bool
 }
 
 func (cfg *Config) init() {
 	if cfg.HTTPClient == nil {
-		cfg.HTTPClient = &http.Client{
-			Timeout: 10 * time.Second,
-		}
-	}
-
-	switch cfg.MaxRetries {
-	case -1:
-		cfg.MaxRetries = 0
-	case 0:
-		cfg.MaxRetries = 3
+		cfg.HTTPClient = internal.HTTPClient
 	}
 
 	if cfg.BeforeSpanSend == nil {
 		cfg.BeforeSpanSend = func(*Span) {}
 	}
 
-	if cfg.ClientTrace {
+	if cfg.TraceClient {
 		cfg.Trace = true
 	}
 }

@@ -217,7 +217,7 @@ type Logger struct {
 	msgs []string
 }
 
-func (l *Logger) Printf(ctx context.Context, format string, args ...interface{}) {
+func (l *Logger) Printf(format string, args ...interface{}) {
 	l.msgs = append(l.msgs, fmt.Sprintf(format, args...))
 }
 
