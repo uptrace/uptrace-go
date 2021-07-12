@@ -6,7 +6,6 @@ package metricexp
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -17,6 +16,7 @@ import (
 )
 
 const (
+	histogramAgg = "histogram"
 	mmscAgg      = "mmsc"
 	sumAgg       = "sum"
 	lastValueAgg = "last-value"
@@ -30,7 +30,6 @@ type Exporter struct {
 	client   internal.SimpleClient
 	endpoint string
 
-	utime   int64
 	records []metricRecord
 }
 
@@ -75,15 +74,12 @@ func (e *Exporter) ExportKindFor(desc *metric.Descriptor, kind aggregation.Kind)
 }
 
 func (e *Exporter) Export(_ context.Context, checkpoint export.CheckpointSet) error {
-	e.utime = time.Now().UnixNano()
-
 	if err := checkpoint.ForEach(e.kindSelector, func(record export.Record) error {
 		switch agg := record.Aggregation().(type) {
 		case aggregation.MinMaxSumCount:
 			return e.exportMMSC(record, agg)
 		case aggregation.Histogram:
-			// TODO
-			return nil
+			return e.exportHistogram(record, agg)
 		case aggregation.Sum:
 			return e.exportSum(record, agg)
 		case aggregation.LastValue:
@@ -104,7 +100,7 @@ func (e *Exporter) Export(_ context.Context, checkpoint export.CheckpointSet) er
 	if err := e.send(map[string]interface{}{"records": e.records}); err != nil {
 		internal.Logger.Printf("send failed: %s", err)
 	}
-	e.records = nil
+	e.records = e.records[:0]
 
 	return nil
 }
@@ -117,9 +113,11 @@ func (e *Exporter) exportMMSC(record export.Record, agg aggregation.MinMaxSumCou
 		return err
 	}
 
-	out.Aggregation = mmscAgg
 	desc := record.Descriptor()
 	numKind := desc.NumberKind()
+
+	out.Aggregation = mmscAgg
+	out.ExportKind = exportKind(e.ExportKindFor(desc, agg.Kind()))
 
 	min, err := agg.Min()
 	if err != nil {
@@ -151,6 +149,44 @@ func (e *Exporter) exportMMSC(record export.Record, agg aggregation.MinMaxSumCou
 	return nil
 }
 
+func (e *Exporter) exportHistogram(record export.Record, agg aggregation.Histogram) error {
+	e.records = append(e.records, metricRecord{})
+	out := &e.records[len(e.records)-1]
+
+	if err := e.exportCommon(record, out); err != nil {
+		return err
+	}
+
+	desc := record.Descriptor()
+	numKind := desc.NumberKind()
+	out.Aggregation = histogramAgg
+	out.ExportKind = exportKind(e.ExportKindFor(desc, agg.Kind()))
+
+	sum, err := agg.Sum()
+	if err != nil {
+		return err
+	}
+
+	count, err := agg.Count()
+	if err != nil {
+		return err
+	}
+
+	buckets, err := agg.Histogram()
+	if err != nil {
+		return err
+	}
+
+	out.Data = &histogramData{
+		Sum:        sum.CoerceToFloat64(numKind),
+		Count:      count,
+		Boundaries: buckets.Boundaries,
+		Counts:     buckets.Counts,
+	}
+
+	return nil
+}
+
 func (e *Exporter) exportSum(record export.Record, agg aggregation.Sum) error {
 	e.records = append(e.records, metricRecord{})
 	out := &e.records[len(e.records)-1]
@@ -159,9 +195,10 @@ func (e *Exporter) exportSum(record export.Record, agg aggregation.Sum) error {
 		return err
 	}
 
-	out.Aggregation = sumAgg
 	desc := record.Descriptor()
 	numKind := desc.NumberKind()
+	out.Aggregation = sumAgg
+	out.ExportKind = exportKind(e.ExportKindFor(desc, agg.Kind()))
 
 	sum, err := agg.Sum()
 	if err != nil {
@@ -185,16 +222,17 @@ func (e *Exporter) exportLastValue(
 		return err
 	}
 
-	out.Aggregation = lastValueAgg
 	desc := record.Descriptor()
 	numKind := desc.NumberKind()
+	out.Aggregation = lastValueAgg
+	out.ExportKind = exportKind(e.ExportKindFor(desc, agg.Kind()))
 
 	value, _, err := agg.LastValue()
 	if err != nil {
 		return err
 	}
 
-	out.Data = &lastValueData{
+	out.Data = &valueData{
 		Value: value.CoerceToFloat64(numKind),
 	}
 
@@ -207,8 +245,7 @@ func (e *Exporter) exportCommon(record export.Record, out *metricRecord) error {
 	out.Name = desc.Name()
 	out.Description = desc.Description()
 	out.Unit = string(desc.Unit())
-	out.Instrument = instrumentKind(desc.InstrumentKind())
-	out.Time = e.utime
+	out.Time = record.EndTime().UnixNano()
 
 	out.MeterName = desc.InstrumentationName()
 	out.MeterVersion = desc.InstrumentationVersion()
@@ -237,7 +274,7 @@ type metricRecord struct {
 	Description string `msgpack:"description"`
 	Unit        string `msgpack:"unit"`
 	Aggregation string `msgpack:"aggregation"`
-	Instrument  string `msgpack:"instrument"`
+	ExportKind  string `msgpack:"exportKind"`
 
 	MeterName    string `msgpack:"meterName"`
 	MeterVersion string `msgpack:"meterVersion"`
@@ -250,6 +287,21 @@ type metricRecord struct {
 	Time int64 `msgpack:"time"`
 }
 
+type histogramData struct {
+	Sum        float64   `msgpack:"sum"`
+	Count      uint64    `msgpack:"count"`
+	Boundaries []float64 `msgpack:"boundaries"`
+	Counts     []uint64  `msgpack:"counts"`
+}
+
+type sumData struct {
+	Sum float64 `msgpack:"sum"`
+}
+
+type valueData struct {
+	Value float64 `msgpack:"value"`
+}
+
 type mmscData struct {
 	Min   float64 `msgpack:"min"`
 	Max   float64 `msgpack:"max"`
@@ -257,29 +309,12 @@ type mmscData struct {
 	Count uint64  `msgpack:"count"`
 }
 
-type lastValueData struct {
-	Value float64 `msgpack:"value"`
-}
-
-type sumData struct {
-	Sum float64 `msgpack:"sum"`
-}
-
-func instrumentKind(kind metric.InstrumentKind) string {
-	switch kind {
-	case metric.ValueRecorderInstrumentKind:
-		return "value-recorder"
-	case metric.ValueObserverInstrumentKind:
-		return "value-observer"
-	case metric.CounterInstrumentKind:
-		return "counter"
-	case metric.UpDownCounterInstrumentKind:
-		return "up-down-counter"
-	case metric.SumObserverInstrumentKind:
-		return "sum-observer"
-	case metric.UpDownSumObserverInstrumentKind:
-		return "up-down-sum-observer"
-	default:
-		return "invalid"
+func exportKind(ek export.ExportKind) string {
+	switch ek {
+	case export.DeltaExportKind:
+		return "delta"
+	case export.CumulativeExportKind:
+		return "cumulative"
 	}
+	return ""
 }

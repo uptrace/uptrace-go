@@ -19,27 +19,23 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// SetLogger sets the logger to the given one.
-func SetLogger(logger internal.ILogger) {
-	internal.Logger = logger
-}
-
 // ConfigureOpentelemetry configures OpenTelemetry to export data to Uptrace.
 // By default it:
 //   - creates tracer provider;
 //   - registers Uptrace span exporter;
 //   - sets tracecontext + baggage composite context propagator.
-func ConfigureOpentelemetry(cfg *Config) {
-	ctx := context.TODO()
-
+//
+// You can use UPTRACE_DISABLED env var to completely skip Uptrace configuration.
+func ConfigureOpentelemetry(opts ...Option) {
 	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
 		return
 	}
 
-	if cfg.DSN == "" {
-		if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
-			cfg.DSN = dsn
-		}
+	ctx := context.TODO()
+	cfg := newConfig(opts)
+
+	if cfg.TracingDisabled && cfg.MetricsDisabled {
+		return
 	}
 
 	dsn, err := internal.ParseDSN(cfg.DSN)
@@ -50,16 +46,29 @@ func ConfigureOpentelemetry(cfg *Config) {
 
 	client := newClient(dsn)
 
-	configureTracing(cfg, client)
-	configurePropagator(cfg)
+	if !cfg.TracingDisabled {
+		configurePropagator(cfg)
+		configureTracing(client, cfg)
+	}
 	if !cfg.MetricsDisabled {
-		configureMetrics(ctx, cfg, client)
+		configureMetrics(ctx, client, cfg)
 	}
 
 	atomicClient.Store(client)
 }
 
-func configureTracing(cfg *Config, client *client) {
+func configurePropagator(cfg *config) {
+	textMapPropagator := cfg.TextMapPropagator
+	if textMapPropagator == nil {
+		textMapPropagator = propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		)
+	}
+	otel.SetTextMapPropagator(textMapPropagator)
+}
+
+func configureTracing(client *client, cfg *config) {
 	client.provider = cfg.TracerProvider
 	if client.provider == nil {
 		var opts []sdktrace.TracerProviderOption
@@ -67,8 +76,8 @@ func configureTracing(cfg *Config, client *client) {
 		if res := cfg.newResource(); res != nil {
 			opts = append(opts, sdktrace.WithResource(res))
 		}
-		if cfg.Sampler != nil {
-			opts = append(opts, sdktrace.WithSampler(cfg.Sampler))
+		if cfg.TraceSampler != nil {
+			opts = append(opts, sdktrace.WithSampler(cfg.TraceSampler))
 		}
 
 		client.provider = sdktrace.NewTracerProvider(opts...)
@@ -77,8 +86,8 @@ func configureTracing(cfg *Config, client *client) {
 
 	spe, err := spanexp.NewExporter(&spanexp.Config{
 		DSN:            cfg.DSN,
-		Sampler:        cfg.Sampler,
-		BeforeSpanSend: cfg.BeforeSpanSend,
+		Sampler:        cfg.TraceSampler,
+		BeforeSendSpan: cfg.BeforeSendSpan,
 	})
 	if err != nil {
 		internal.Logger.Printf("spanexp.NewExporter failed: %s", err)
@@ -103,18 +112,7 @@ func configureTracing(cfg *Config, client *client) {
 	}
 }
 
-func configurePropagator(cfg *Config) {
-	textMapPropagator := cfg.TextMapPropagator
-	if textMapPropagator == nil {
-		textMapPropagator = propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{},
-			propagation.Baggage{},
-		)
-	}
-	otel.SetTextMapPropagator(textMapPropagator)
-}
-
-func configureMetrics(ctx context.Context, cfg *Config, client *client) {
+func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	ctrl, err := metricexp.InstallNewPipeline(ctx, &metricexp.Config{
 		DSN: cfg.DSN,
 	}, controller.WithResource(cfg.newResource()))
@@ -177,4 +175,9 @@ func Shutdown(ctx context.Context) error {
 
 func ForceFlush(ctx context.Context) error {
 	return activeClient().ForceFlush(ctx)
+}
+
+// SetLogger sets the logger to the given one.
+func SetLogger(logger internal.ILogger) {
+	internal.Logger = logger
 }

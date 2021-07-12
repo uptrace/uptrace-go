@@ -91,7 +91,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) 
 		out := &outSpans[len(outSpans)-1]
 
 		initUptraceSpan(out, span)
-		e.cfg.BeforeSpanSend(out)
+		e.cfg.BeforeSendSpan(out)
 	}
 
 	if len(outSpans) == 0 {

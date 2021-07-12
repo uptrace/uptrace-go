@@ -22,7 +22,7 @@ type Config struct {
 	HTTPClient *http.Client
 
 	// A hook that is called before sending a span.
-	BeforeSpanSend func(*Span)
+	BeforeSendSpan func(*Span)
 
 	// Trace enables Uptrace exporter instrumentation.
 	Trace bool
@@ -36,8 +36,8 @@ func (cfg *Config) init() {
 		cfg.HTTPClient = internal.HTTPClient
 	}
 
-	if cfg.BeforeSpanSend == nil {
-		cfg.BeforeSpanSend = func(*Span) {}
+	if cfg.BeforeSendSpan == nil {
+		cfg.BeforeSendSpan = func(*Span) {}
 	}
 
 	if cfg.TraceClient {

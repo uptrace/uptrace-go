@@ -28,9 +28,7 @@ func TestInvalidDSN(t *testing.T) {
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "dsn",
-	})
+	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("dsn"))
 
 	require.Equal(t,
 		`Uptrace is disabled: DSN="dsn" does not have a token`,
@@ -45,9 +43,7 @@ func TestUnknownToken(t *testing.T) {
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "https://UNKNOWN@api.uptrace.dev/2",
-	})
+	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("https://UNKNOWN@api.uptrace.dev/2"))
 
 	uptrace.ReportError(ctx, errors.New("hello"))
 	err := uptrace.Shutdown(ctx)
@@ -62,17 +58,16 @@ func TestBeforeSpanSend(t *testing.T) {
 	ctx := context.Background()
 
 	var got *spanexp.Span
+	beforeSendSpan := func(span *spanexp.Span) {
+		got = span
+	}
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "https://token@api.uptrace.dev/1",
-
-		ServiceName:    "test-filters",
-		ServiceVersion: "1.0.0",
-
-		BeforeSpanSend: func(span *spanexp.Span) {
-			got = span
-		},
-	})
+	uptrace.ConfigureOpentelemetry(
+		uptrace.WithDSN("https://token@api.uptrace.dev/1"),
+		uptrace.WithServiceName("test-filters"),
+		uptrace.WithServiceVersion("1.0.0"),
+		uptrace.WithBeforeSendSpan(beforeSendSpan),
+	)
 
 	tracer := otel.Tracer("github.com/your/repo")
 	_, span := tracer.Start(ctx, "main span")
@@ -123,15 +118,13 @@ func TestExporter(t *testing.T) {
 	u, err := url.Parse(server.URL)
 	require.NoError(t, err)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host),
-
-		ResourceAttributes: []attribute.KeyValue{
+	uptrace.ConfigureOpentelemetry(
+		uptrace.WithDSN(fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host)),
+		uptrace.WithResourceAttributes([]attribute.KeyValue{
 			attribute.String("resource1", "resource1-value"),
-		},
-
-		Sampler: sdktrace.AlwaysSample(),
-	})
+		}),
+		uptrace.WithTraceSampler(sdktrace.AlwaysSample()),
+	)
 
 	tracer := otel.Tracer("github.com/your/repo")
 	genSpan(ctx, tracer)

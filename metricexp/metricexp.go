@@ -43,7 +43,7 @@ func NewExportPipeline(
 
 	ctrl := controller.New(
 		processor.New(
-			simple.NewWithInexpensiveDistribution(),
+			simple.NewWithHistogramDistribution(),
 			kindSelector(),
 		),
 		options...,
