@@ -3,7 +3,6 @@ package metricexp
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"go.opentelemetry.io/otel/metric/global"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
@@ -17,8 +16,6 @@ import (
 func InstallNewPipeline(
 	ctx context.Context, config *Config, options ...controller.Option,
 ) (*controller.Controller, error) {
-	options = append(options, controller.WithCollectPeriod(10*time.Second))
-
 	ctrl, err := NewExportPipeline(config, options...)
 	if err != nil {
 		return nil, err

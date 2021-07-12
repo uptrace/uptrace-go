@@ -30,6 +30,7 @@ type Exporter struct {
 	client   internal.SimpleClient
 	endpoint string
 
+	utime   int64
 	records []metricRecord
 }
 
@@ -74,6 +75,8 @@ func (e *Exporter) ExportKindFor(desc *metric.Descriptor, kind aggregation.Kind)
 }
 
 func (e *Exporter) Export(_ context.Context, checkpoint export.CheckpointSet) error {
+	e.utime = time.Now().UnixNano()
+
 	if err := checkpoint.ForEach(e.kindSelector, func(record export.Record) error {
 		switch agg := record.Aggregation().(type) {
 		case aggregation.MinMaxSumCount:
@@ -110,7 +113,7 @@ func (e *Exporter) exportMMSC(record export.Record, agg aggregation.MinMaxSumCou
 	e.records = append(e.records, metricRecord{})
 	out := &e.records[len(e.records)-1]
 
-	if err := exportCommon(record, out); err != nil {
+	if err := e.exportCommon(record, out); err != nil {
 		return err
 	}
 
@@ -152,7 +155,7 @@ func (e *Exporter) exportSum(record export.Record, agg aggregation.Sum) error {
 	e.records = append(e.records, metricRecord{})
 	out := &e.records[len(e.records)-1]
 
-	if err := exportCommon(record, out); err != nil {
+	if err := e.exportCommon(record, out); err != nil {
 		return err
 	}
 
@@ -178,7 +181,7 @@ func (e *Exporter) exportLastValue(
 	e.records = append(e.records, metricRecord{})
 	out := &e.records[len(e.records)-1]
 
-	if err := exportCommon(record, out); err != nil {
+	if err := e.exportCommon(record, out); err != nil {
 		return err
 	}
 
@@ -198,14 +201,14 @@ func (e *Exporter) exportLastValue(
 	return nil
 }
 
-func exportCommon(record export.Record, out *metricRecord) error {
+func (e *Exporter) exportCommon(record export.Record, out *metricRecord) error {
 	desc := record.Descriptor()
 
 	out.Name = desc.Name()
 	out.Description = desc.Description()
 	out.Unit = string(desc.Unit())
 	out.Instrument = instrumentKind(desc.InstrumentKind())
-	out.Time = time.Now().UnixNano()
+	out.Time = e.utime
 
 	out.MeterName = desc.InstrumentationName()
 	out.MeterVersion = desc.InstrumentationVersion()
