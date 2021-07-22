@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -54,41 +53,6 @@ func TestUnknownToken(t *testing.T) {
 		logger.Message())
 }
 
-func TestBeforeSpanSend(t *testing.T) {
-	ctx := context.Background()
-
-	var got *spanexp.Span
-	beforeSendSpan := func(span *spanexp.Span) {
-		got = span
-	}
-
-	uptrace.ConfigureOpentelemetry(
-		uptrace.WithDSN("https://token@api.uptrace.dev/1"),
-		uptrace.WithServiceName("test-filters"),
-		uptrace.WithServiceVersion("1.0.0"),
-		uptrace.WithBeforeSendSpan(beforeSendSpan),
-	)
-
-	tracer := otel.Tracer("github.com/your/repo")
-	_, span := tracer.Start(ctx, "main span")
-	span.End()
-
-	err := uptrace.Shutdown(ctx)
-	require.NoError(t, err)
-
-	require.NotNil(t, got)
-	require.Equal(t, "main span", got.Name)
-
-	set := attribute.NewSet(got.Resource...)
-	val, ok := set.Value(semconv.ServiceNameKey)
-	require.True(t, ok)
-	require.Equal(t, "test-filters", val.AsString())
-
-	val, ok = set.Value(semconv.ServiceVersionKey)
-	require.True(t, ok)
-	require.Equal(t, "1.0.0", val.AsString())
-}
-
 func TestExporter(t *testing.T) {
 	ctx := context.Background()
 
@@ -119,6 +83,7 @@ func TestExporter(t *testing.T) {
 	require.NoError(t, err)
 
 	uptrace.ConfigureOpentelemetry(
+		uptrace.WithMetricsDisabled(),
 		uptrace.WithDSN(fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host)),
 		uptrace.WithResourceAttributes([]attribute.KeyValue{
 			attribute.String("resource1", "resource1-value"),

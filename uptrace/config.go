@@ -4,8 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/uptrace/uptrace-go/spanexp"
-
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -29,7 +27,6 @@ type config struct {
 	TextMapPropagator propagation.TextMapPropagator
 	TracerProvider    *sdktrace.TracerProvider
 	TraceSampler      sdktrace.Sampler
-	BeforeSendSpan    func(*spanexp.Span)
 	PrettyPrint       bool
 
 	// Metrics options
@@ -198,13 +195,6 @@ func WithTraceSampler(sampler sdktrace.Sampler) TracingOption {
 func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOption {
 	return tracingOption(func(cfg *config) {
 		cfg.TextMapPropagator = propagator
-	})
-}
-
-// WithBeforeSendSpan sets a hook that is called before sending a span.
-func WithBeforeSendSpan(fn func(span *spanexp.Span)) TracingOption {
-	return tracingOption(func(cfg *config) {
-		cfg.BeforeSendSpan = fn
 	})
 }
 

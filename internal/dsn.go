@@ -2,15 +2,37 @@ package internal
 
 import (
 	"fmt"
+	"net"
 	"net/url"
+	"strings"
 )
 
 type DSN struct {
+	original string
+
 	ProjectID string
 	Token     string
 
 	Scheme string
 	Host   string
+}
+
+func (dsn *DSN) String() string {
+	return dsn.original
+}
+
+func (dsn *DSN) OTLPEndpoint() string {
+	const subdomain = "otlp."
+
+	endpoint := strings.TrimPrefix(dsn.Host, "api.")
+
+	host, _, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		host = endpoint
+	}
+	port := "4317"
+
+	return subdomain + net.JoinHostPort(host, port)
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {
@@ -23,7 +45,9 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 		return nil, fmt.Errorf("can't parse DSN=%q: %s", dsnStr, err)
 	}
 
-	var dsn DSN
+	dsn := DSN{
+		original: dsnStr,
+	}
 
 	if len(u.Path) > 0 {
 		dsn.ProjectID = u.Path[1:]

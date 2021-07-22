@@ -33,7 +33,7 @@
   )
   ```
 
-- Added support for OpenTelemetry Metrics. All aggregation types are supported.
+- Added support for OpenTelemetry Metrics using standard OTLP exporter.
 - Enabled metrics by default. `WithMetricsDisabled` option can be used to disable metrics.
 
 ## v0.21.1

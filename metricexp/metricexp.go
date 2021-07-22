@@ -39,7 +39,9 @@ func NewExportPipeline(
 		return nil, err
 	}
 
-	options = append(options, controller.WithExporter(exporter))
+	options = append(options,
+		controller.WithExporter(exporter),
+	)
 
 	ctrl := controller.New(
 		processor.New(
