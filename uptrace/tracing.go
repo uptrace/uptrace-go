@@ -6,12 +6,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/encoding/gzip"
 
 	"github.com/uptrace/uptrace-go/internal"
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -68,33 +64,32 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 	client.provider = provider
 }
 
-func otlpTraceClient(dsn *internal.DSN) otlptrace.Client {
-	// endpoint := dsn.OTLPEndpoint()
-	endpoint := "localhost:14317"
+// func otlpTraceClient(dsn *internal.DSN) otlptrace.Client {
+// 	endpoint := dsn.OTLPEndpoint()
 
-	options := []otlptracegrpc.Option{
-		otlptracegrpc.WithEndpoint(endpoint),
-		otlptracegrpc.WithHeaders(map[string]string{
-			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
-			"uptrace-dsn": dsn.String(),
-		}),
-		otlptracegrpc.WithCompressor(gzip.Name),
-	}
+// 	options := []otlptracegrpc.Option{
+// 		otlptracegrpc.WithEndpoint(endpoint),
+// 		otlptracegrpc.WithHeaders(map[string]string{
+// 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
+// 			"uptrace-dsn": dsn.String(),
+// 		}),
+// 		otlptracegrpc.WithCompressor(gzip.Name),
+// 	}
 
-	if dsn.Scheme == "https" {
-		// Create credentials using system certificates.
-		creds := credentials.NewClientTLSFromCert(nil, "")
-		options = append(options, otlptracegrpc.WithTLSCredentials(creds))
-	} else {
-		options = append(options, otlptracegrpc.WithInsecure())
-	}
+// 	if dsn.Scheme == "https" {
+// 		// Create credentials using system certificates.
+// 		creds := credentials.NewClientTLSFromCert(nil, "")
+// 		options = append(options, otlptracegrpc.WithTLSCredentials(creds))
+// 	} else {
+// 		options = append(options, otlptracegrpc.WithInsecure())
+// 	}
 
-	return otlptracegrpc.NewClient(options...)
-}
+// 	return otlptracegrpc.NewClient(options...)
+// }
 
 func queueSize() int {
 	const min = 1000
-	const max = 4000
+	const max = 8000
 
 	n := runtime.GOMAXPROCS(0) * 1000
 	if n < min {
