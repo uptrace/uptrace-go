@@ -9,6 +9,8 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -18,6 +20,9 @@ const dummySpanName = "__dummy__"
 type client struct {
 	dsn    *internal.DSN
 	tracer trace.Tracer
+
+	provider *sdktrace.TracerProvider
+	ctrl     *controller.Controller
 }
 
 func newClient(dsn *internal.DSN) *client {
@@ -25,6 +30,29 @@ func newClient(dsn *internal.DSN) *client {
 		dsn:    dsn,
 		tracer: otel.Tracer("uptrace-go"),
 	}
+}
+
+func (c *client) Shutdown(ctx context.Context) (lastErr error) {
+	if c.provider != nil {
+		if err := c.provider.Shutdown(ctx); err != nil {
+			lastErr = err
+		}
+	}
+	if c.ctrl != nil {
+		if err := c.ctrl.Stop(ctx); err != nil {
+			lastErr = err
+		}
+	}
+	return lastErr
+}
+
+func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
+	if c.provider != nil {
+		if err := c.provider.ForceFlush(ctx); err != nil {
+			lastErr = err
+		}
+	}
+	return lastErr
 }
 
 // TraceURL returns the trace URL for the span.

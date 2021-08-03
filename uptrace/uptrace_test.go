@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/spanexp"
@@ -28,9 +27,7 @@ func TestInvalidDSN(t *testing.T) {
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "dsn",
-	})
+	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("dsn"))
 
 	require.Equal(t,
 		`Uptrace is disabled: DSN="dsn" does not have a token`,
@@ -45,9 +42,7 @@ func TestUnknownToken(t *testing.T) {
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "https://UNKNOWN@api.uptrace.dev/2",
-	})
+	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("https://UNKNOWN@api.uptrace.dev/2"))
 
 	uptrace.ReportError(ctx, errors.New("hello"))
 	err := uptrace.Shutdown(ctx)
@@ -56,42 +51,6 @@ func TestUnknownToken(t *testing.T) {
 	require.Equal(t,
 		`send failed: status=403: project with such id and token not found (DSN="https://UNKNOWN@api.uptrace.dev/2")`,
 		logger.Message())
-}
-
-func TestBeforeSpanSend(t *testing.T) {
-	ctx := context.Background()
-
-	var got *spanexp.Span
-
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: "https://token@api.uptrace.dev/1",
-
-		ServiceName:    "test-filters",
-		ServiceVersion: "1.0.0",
-
-		BeforeSpanSend: func(span *spanexp.Span) {
-			got = span
-		},
-	})
-
-	tracer := otel.Tracer("github.com/your/repo")
-	_, span := tracer.Start(ctx, "main span")
-	span.End()
-
-	err := uptrace.Shutdown(ctx)
-	require.NoError(t, err)
-
-	require.NotNil(t, got)
-	require.Equal(t, "main span", got.Name)
-
-	set := attribute.NewSet(got.Resource...)
-	val, ok := set.Value(semconv.ServiceNameKey)
-	require.True(t, ok)
-	require.Equal(t, "test-filters", val.AsString())
-
-	val, ok = set.Value(semconv.ServiceVersionKey)
-	require.True(t, ok)
-	require.Equal(t, "1.0.0", val.AsString())
 }
 
 func TestExporter(t *testing.T) {
@@ -123,15 +82,14 @@ func TestExporter(t *testing.T) {
 	u, err := url.Parse(server.URL)
 	require.NoError(t, err)
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		DSN: fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host),
-
-		ResourceAttributes: []attribute.KeyValue{
+	uptrace.ConfigureOpentelemetry(
+		uptrace.WithMetricsDisabled(),
+		uptrace.WithDSN(fmt.Sprintf("%s://key@%s/1", u.Scheme, u.Host)),
+		uptrace.WithResourceAttributes([]attribute.KeyValue{
 			attribute.String("resource1", "resource1-value"),
-		},
-
-		Sampler: sdktrace.AlwaysSample(),
-	})
+		}),
+		uptrace.WithTraceSampler(sdktrace.AlwaysSample()),
+	)
 
 	tracer := otel.Tracer("github.com/your/repo")
 	genSpan(ctx, tracer)
@@ -217,7 +175,7 @@ type Logger struct {
 	msgs []string
 }
 
-func (l *Logger) Printf(ctx context.Context, format string, args ...interface{}) {
+func (l *Logger) Printf(format string, args ...interface{}) {
 	l.msgs = append(l.msgs, fmt.Sprintf(format, args...))
 }
 

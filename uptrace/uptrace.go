@@ -3,98 +3,54 @@ package uptrace
 import (
 	"context"
 	"os"
-	"runtime"
 	"sync/atomic"
-	"time"
 
 	"github.com/uptrace/uptrace-go/internal"
-	"github.com/uptrace/uptrace-go/spanexp"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
-
-// SetLogger sets the logger to the given one.
-func SetLogger(logger internal.ILogger) {
-	internal.Logger = logger
-}
 
 // ConfigureOpentelemetry configures OpenTelemetry to export data to Uptrace.
 // By default it:
 //   - creates tracer provider;
 //   - registers Uptrace span exporter;
 //   - sets tracecontext + baggage composite context propagator.
-func ConfigureOpentelemetry(cfg *Config) {
+//
+// You can use UPTRACE_DISABLED env var to completely skip Uptrace configuration.
+func ConfigureOpentelemetry(opts ...Option) {
 	if _, ok := os.LookupEnv("UPTRACE_DISABLED"); ok {
 		return
 	}
 
-	if cfg.DSN == "" {
-		if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
-			cfg.DSN = dsn
-		}
+	ctx := context.TODO()
+	cfg := newConfig(opts)
+
+	if cfg.TracingDisabled && cfg.MetricsDisabled {
+		return
 	}
 
-	configureTracing(cfg)
-	configurePropagator(cfg)
-}
-
-func configureTracing(cfg *Config) {
 	dsn, err := internal.ParseDSN(cfg.DSN)
 	if err != nil {
-		internal.Logger.Printf(context.TODO(), "Uptrace is disabled: %s", err)
+		internal.Logger.Printf("uptrace is disabled: %s", err)
 		return
 	}
 
-	_client.Store(newClient(dsn))
+	client := newClient(dsn)
 
-	provider := cfg.TracerProvider
-	if provider == nil {
-		var opts []sdktrace.TracerProviderOption
-
-		if res := cfg.resource(); res != nil {
-			opts = append(opts, sdktrace.WithResource(cfg.resource()))
-		}
-		if cfg.Sampler != nil {
-			opts = append(opts, sdktrace.WithSampler(cfg.Sampler))
-		}
-
-		provider = sdktrace.NewTracerProvider(opts...)
-		otel.SetTracerProvider(provider)
+	configurePropagator(cfg)
+	if !cfg.TracingDisabled {
+		configureTracing(ctx, client, cfg)
+	}
+	if !cfg.MetricsDisabled {
+		configureMetrics(ctx, client, cfg)
 	}
 
-	spe, err := spanexp.NewExporter(&spanexp.Config{
-		DSN:            cfg.DSN,
-		Sampler:        cfg.Sampler,
-		BeforeSpanSend: cfg.BeforeSpanSend,
-	})
-	if err != nil {
-		internal.Logger.Printf(context.TODO(), "Uptrace is disabled: %s", err)
-		return
-	}
-
-	queueSize := queueSize()
-	bsp := sdktrace.NewBatchSpanProcessor(spe,
-		sdktrace.WithMaxQueueSize(queueSize),
-		sdktrace.WithMaxExportBatchSize(queueSize),
-		sdktrace.WithBatchTimeout(5*time.Second),
-	)
-	provider.RegisterSpanProcessor(bsp)
-
-	if cfg.PrettyPrint {
-		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			internal.Logger.Printf(context.TODO(), err.Error())
-		} else {
-			provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
-		}
-	}
+	atomicClient.Store(client)
 }
 
-func configurePropagator(cfg *Config) {
+func configurePropagator(cfg *config) {
 	textMapPropagator := cfg.TextMapPropagator
 	if textMapPropagator == nil {
 		textMapPropagator = propagation.NewCompositeTextMapPropagator(
@@ -105,37 +61,20 @@ func configurePropagator(cfg *Config) {
 	otel.SetTextMapPropagator(textMapPropagator)
 }
 
-func queueSize() int {
-	const min = 1e3
-	const max = 10e3
-
-	n := runtime.NumCPU() * 1e3
-	if n < min {
-		return min
-	}
-	if n > max {
-		return max
-	}
-	return n
-}
-
 //------------------------------------------------------------------------------
-
 var (
-	fallbackDSN = &internal.DSN{
+	fallbackClient = newClient(&internal.DSN{
 		ProjectID: "<project_id>",
 		Token:     "<token>",
 
 		Scheme: "https",
 		Host:   "api.uptrace.dev",
-	}
-
-	_client        atomic.Value
-	fallbackClient = newClient(fallbackDSN)
+	})
+	atomicClient atomic.Value
 )
 
 func activeClient() *client {
-	v := _client.Load()
+	v := atomicClient.Load()
 	if v == nil {
 		return fallbackClient
 	}
@@ -155,23 +94,14 @@ func ReportPanic(ctx context.Context) {
 }
 
 func Shutdown(ctx context.Context) error {
-	if v, ok := otel.GetTracerProvider().(shutdown); ok {
-		return v.Shutdown(ctx)
-	}
-	return nil
-}
-
-type shutdown interface {
-	Shutdown(context.Context) error
+	return activeClient().Shutdown(ctx)
 }
 
 func ForceFlush(ctx context.Context) error {
-	if v, ok := otel.GetTracerProvider().(forceFlush); ok {
-		return v.ForceFlush(ctx)
-	}
-	return nil
+	return activeClient().ForceFlush(ctx)
 }
 
-type forceFlush interface {
-	ForceFlush(context.Context) error
+// SetLogger sets the logger to the given one.
+func SetLogger(logger internal.ILogger) {
+	internal.Logger = logger
 }

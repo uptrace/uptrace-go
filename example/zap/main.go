@@ -15,12 +15,18 @@ import (
 func main() {
 	ctx := context.Background()
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
+	// Configure OpenTelemetry with sensible defaults.
+	uptrace.ConfigureOpentelemetry(
 		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN:         "",
-		PrettyPrint: true,
-	})
+		// uptrace.WithDSN("https://<key>@api.uptrace.dev/<project_id>"),
+
+		uptrace.WithServiceName("myservice"),
+		uptrace.WithServiceVersion("1.0.0"),
+		uptrace.WithPrettyPrintSpanExporter(),
+	)
+	// Send buffered spans and free resources.
 	defer uptrace.Shutdown(ctx)
+
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {

@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+var HTTPClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
+
 type StatusCodeError struct {
 	code int
 	msg  string

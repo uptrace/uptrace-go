@@ -18,11 +18,14 @@ var tracer = otel.Tracer("app_or_package_name")
 func main() {
 	ctx := context.Background()
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
-		// copy your project DSN here or use UPTRACE_DSN enar
-		DSN: "",
-	})
-	defer uptrace.Shutdown(ctx)
+	// Configure OpenTelemetry with sensible defaults.
+	uptrace.ConfigureOpentelemetry(
+		// copy your project DSN here or use UPTRACE_DSN env var
+		// uptrace.WithDSN("https://<key>@api.uptrace.dev/<project_id>"),
+
+		uptrace.WithServiceName("myservice"),
+		uptrace.WithServiceVersion("1.0.0"),
+	)
 
 	db := pg.Connect(&pg.Options{
 		Addr:     ":5432",

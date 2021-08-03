@@ -19,10 +19,15 @@ var tracer = otel.Tracer("app_or_package_name")
 func main() {
 	ctx := context.Background()
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{
+	// Configure OpenTelemetry with sensible defaults.
+	uptrace.ConfigureOpentelemetry(
 		// copy your project DSN here or use UPTRACE_DSN env var
-		DSN: "",
-	})
+		// uptrace.WithDSN("https://<key>@api.uptrace.dev/<project_id>"),
+
+		uptrace.WithServiceName("myservice"),
+		uptrace.WithServiceVersion("1.0.0"),
+	)
+	// Send buffered spans and free resources.
 	defer uptrace.Shutdown(ctx)
 
 	filter := otelrestful.OTelFilter("service-name")

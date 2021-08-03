@@ -1,5 +1,41 @@
 # Changelog
 
+## Unreleased
+
+- Changed configuration to use options instead of a single `Config` struct. All the previous
+  configuration options are fully supported.
+
+  There are 3 types of options:
+
+  - [Option]() for common options that configure tracing and metrics.
+  - [TracingOption]() for options specific to tracing.
+  - [MetricsOption]() for options specific to metrics.
+
+  For example, to configure tracing and metrics:
+
+  ```go
+  uptrace.ConfigureOpentelemetry(
+      uptrace.WithDSN("https://<token>@api.uptrace.dev/<project_id>"),
+      uptrace.WithServiceName("myservice"),
+      uptrace.WithServiceVersion("1.0.0"),
+  )
+  ```
+
+  To configure only tracing, use `WithMetricsDisabled` option:
+
+  ```go
+  uptrace.ConfigureOpentelemetry(
+      uptrace.WithMetricsDisabled(),
+
+      uptrace.WithDSN("https://<token>@api.uptrace.dev/<project_id>"),
+      uptrace.WithServiceName("myservice"),
+      uptrace.WithServiceVersion("1.0.0"),
+  )
+  ```
+
+- Added support for OpenTelemetry Metrics using standard OTLP exporter.
+- Enabled metrics by default. `WithMetricsDisabled` option can be used to disable metrics.
+
 ## v0.21.1
 
 - Added back missing resource attributes: `host.name` and `telemetry.sdk.*`.

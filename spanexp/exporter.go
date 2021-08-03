@@ -55,7 +55,7 @@ func NewExporter(cfg *Config) (*Exporter, error) {
 
 	e.client.Client = cfg.HTTPClient
 	e.client.Token = dsn.Token
-	e.client.MaxRetries = cfg.MaxRetries
+	e.client.MaxRetries = 3
 
 	e.endpoint = fmt.Sprintf("%s://%s/api/v1/tracing/%s/spans",
 		dsn.Scheme, dsn.Host, dsn.ProjectID)
@@ -91,7 +91,7 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) 
 		out := &outSpans[len(outSpans)-1]
 
 		initUptraceSpan(out, span)
-		e.cfg.BeforeSpanSend(out)
+		e.cfg.BeforeSendSpan(out)
 	}
 
 	if len(outSpans) == 0 {
@@ -117,9 +117,9 @@ func (e *Exporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) 
 
 		if err := e.SendSpans(ctx, out); err != nil {
 			if v, ok := err.(*internal.StatusCodeError); ok && v.Code() == http.StatusForbidden {
-				internal.Logger.Printf(ctx, "send failed: %s (DSN=%q)", err, e.cfg.DSN)
+				internal.Logger.Printf("send failed: %s (DSN=%q)", err, e.cfg.DSN)
 			} else {
-				internal.Logger.Printf(ctx, "send failed: %s", err)
+				internal.Logger.Printf("send failed: %s", err)
 			}
 
 			if currSpan != nil {
@@ -149,7 +149,7 @@ func (e *Exporter) SendSpans(ctx context.Context, out interface{}) error {
 	// Create a new context since then context from Otel is canceled on shutdown.
 	ctx = internal.UndoContext(ctx)
 
-	if e.cfg.Trace && e.cfg.ClientTrace {
+	if e.cfg.Trace && e.cfg.TraceClient {
 		ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 	}
 
