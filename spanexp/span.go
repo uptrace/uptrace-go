@@ -92,7 +92,7 @@ type Link struct {
 	Attrs   KeyValueSlice `msgpack:"attrs"`
 }
 
-func initUptraceLink(out *Link, in *trace.Link) {
+func initUptraceLink(out *Link, in *sdktrace.Link) {
 	out.TraceID = in.SpanContext.TraceID()
 	out.SpanID = asUint64(in.SpanContext.SpanID())
 	out.Attrs = in.Attributes

@@ -57,7 +57,7 @@ func main() {
 		defer cancel()
 	}
 
-	uptrace.ConfigureOpentelemetry(&uptrace.Config{})
+	uptrace.ConfigureOpentelemetry()
 	defer uptrace.Shutdown(ctx)
 
 	ctx, span := tracer.Start(ctx, *cmdFlag)

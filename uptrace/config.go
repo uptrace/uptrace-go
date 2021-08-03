@@ -49,46 +49,36 @@ func newConfig(opts []Option) *config {
 }
 
 func (cfg *config) newResource() *resource.Resource {
-	return buildResource(
-		cfg.Resource, cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
+	if cfg.Resource != nil {
+		return cfg.Resource
+	}
+	return buildResource(cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
 }
 
 func buildResource(
-	res *resource.Resource,
 	resourceAttributes []attribute.KeyValue,
 	serviceName, serviceVersion string,
 ) *resource.Resource {
 	ctx := context.TODO()
 
-	var kvs []attribute.KeyValue
-	kvs = append(kvs, resourceAttributes...)
-
+	var attrs []attribute.KeyValue
+	attrs = append(attrs, resourceAttributes...)
 	if serviceName != "" {
-		kvs = append(kvs, semconv.ServiceNameKey.String(serviceName))
+		attrs = append(attrs, semconv.ServiceNameKey.String(serviceName))
 	}
 	if serviceVersion != "" {
-		kvs = append(kvs, semconv.ServiceVersionKey.String(serviceVersion))
+		attrs = append(attrs, semconv.ServiceVersionKey.String(serviceVersion))
 	}
 
+	res, _ := resource.New(ctx,
+		resource.WithFromEnv(),
+		resource.WithTelemetrySDK(),
+		resource.WithHost(),
+		resource.WithSchemaURL(semconv.SchemaURL),
+		resource.WithAttributes(attrs...))
 	if res == nil {
-		res, _ = resource.New(ctx,
-			resource.WithSchemaURL(semconv.SchemaURL),
-			resource.WithBuiltinDetectors(),
-			resource.WithAttributes(kvs...))
-		if res == nil {
-			res = resource.Default()
-		}
+		return resource.Environment()
 	}
-
-	if len(kvs) > 0 {
-		if res, err := resource.Merge(
-			res,
-			resource.NewWithAttributes(semconv.SchemaURL, kvs...),
-		); err == nil {
-			return res
-		}
-	}
-
 	return res
 }
 
@@ -145,6 +135,8 @@ func WithResourceAttributes(resourceAttributes []attribute.KeyValue) Option {
 // WithResource configures a resource that describes an entity that produces telemetry,
 // for example, such attributes as host.name and service.name. All produced spans and metrics
 // with have these attributes
+//
+// WithResource overrides and replaces any other resource attributes.
 func WithResource(resource *resource.Resource) Option {
 	return option(func(cfg *config) {
 		cfg.Resource = resource

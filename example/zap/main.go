@@ -27,7 +27,6 @@ func main() {
 	// Send buffered spans and free resources.
 	defer uptrace.Shutdown(ctx)
 
-
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
