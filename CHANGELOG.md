@@ -1,15 +1,20 @@
 # Changelog
 
-## Unreleased
+## v1.0.0-RC2
 
+- Updated OpenTelemetry to
+  [v1.0.0-RC2](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.0.0-RC2).
 - Changed configuration to use options instead of a single `Config` struct. All the previous
   configuration options are fully supported.
 
   There are 3 types of options:
 
-  - [Option]() for common options that configure tracing and metrics.
-  - [TracingOption]() for options specific to tracing.
-  - [MetricsOption]() for options specific to metrics.
+  - [Option](https://pkg.go.dev/github.com/uptrace/uptrace-go@v1.0.0-RC2/uptrace#Option) for common
+    options that configure tracing and metrics.
+  - [TracingOption](https://pkg.go.dev/github.com/uptrace/uptrace-go@v1.0.0-RC2/uptrace#TracingOption)
+    for options specific to tracing.
+  - [MetricsOption](https://pkg.go.dev/github.com/uptrace/uptrace-go@v1.0.0-RC2/uptrace#MetricsOption)
+    for options specific to metrics.
 
   For example, to configure tracing and metrics:
 
