@@ -1,7 +1,7 @@
 # Uptrace for Go
 
 ![build workflow](https://github.com/uptrace/uptrace-go/actions/workflows/build.yml/badge.svg)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go@v1.0.0-RC2/uptrace)
 [![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/)
 
 <a href="https://docs.uptrace.dev/go/">
