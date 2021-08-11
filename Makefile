@@ -7,11 +7,6 @@ test:
 	env GOOS=linux GOARCH=386 go test ./...
 	go vet ./...
 
-tag:
-	git tag $(VERSION)
-	git tag extra/otellogrus/$(VERSION)
-	git tag extra/otelzap/$(VERSION)
-
 fmt:
 	gofmt -w -s ./
 	goimports -w  -local github.com/uptrace/uptrace-go ./
