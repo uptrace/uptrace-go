@@ -1,4 +1,4 @@
-ALL_GO_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort)
+PACKAGE_DIRS := $(shell find . -mindepth 2 -type f -name 'go.mod' -exec dirname {} \; | sort)
 
 test:
 	go test ./...
@@ -12,9 +12,9 @@ fmt:
 	goimports -w  -local github.com/uptrace/uptrace-go ./
 
 go_mod_tidy:
-	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	set -e; for dir in $(PACKAGE_DIRS); do \
 	  echo "go mod tidy in $${dir}"; \
 	  (cd "$${dir}" && \
-	    go get -u ./... && \
+	    go get -d && \
 	    go mod tidy); \
 	done

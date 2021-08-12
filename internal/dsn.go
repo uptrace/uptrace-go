@@ -30,9 +30,8 @@ func (dsn *DSN) OTLPEndpoint() string {
 	if err != nil {
 		host = endpoint
 	}
-	port := "4317"
 
-	return subdomain + net.JoinHostPort(host, port)
+	return subdomain + net.JoinHostPort(host, "4317")
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {

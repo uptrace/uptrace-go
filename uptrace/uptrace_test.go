@@ -36,11 +36,8 @@ func TestUnknownToken(t *testing.T) {
 
 	uptrace.ReportError(ctx, errors.New("hello"))
 	err := uptrace.Shutdown(ctx)
-	require.NoError(t, err)
-
-	require.Equal(t,
-		`send failed: status=403: project with such id and token not found (DSN="https://UNKNOWN@api.uptrace.dev/2")`,
-		logger.Message())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), `project with token="UNKNOWN" doesn't exist`)
 }
 
 //------------------------------------------------------------------------------

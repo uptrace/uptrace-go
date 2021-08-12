@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.0-RC3
+
+- Fully switched to using OpenTelemetry Protocol (OTLP) for exporting spans and metrics. This is
+  fully backwards compatible and should not cause any disruptive changes.
+
 ## v1.0.0-RC2
 
 - Updated OpenTelemetry to
