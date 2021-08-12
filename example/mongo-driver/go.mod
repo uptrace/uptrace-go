@@ -5,7 +5,7 @@ go 1.13
 replace github.com/uptrace/uptrace-go => ../..
 
 require (
-	github.com/uptrace/uptrace-go v0.21.1
+	github.com/uptrace/uptrace-go v1.0.0-RC3
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.7.1
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.22.0
