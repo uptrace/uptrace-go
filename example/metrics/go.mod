@@ -7,4 +7,5 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/uptrace/uptrace-go v0.21.1
 	go.opentelemetry.io/otel v1.0.0-RC2
+	go.opentelemetry.io/otel/metric v0.22.0
 )

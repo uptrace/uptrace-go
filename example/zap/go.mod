@@ -12,6 +12,5 @@ require (
 	github.com/uptrace/uptrace-go v0.21.1
 	github.com/uptrace/uptrace-go/extra/otelzap v0.21.1
 	go.opentelemetry.io/otel v1.0.0-RC2
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/zap v1.18.1
+	go.uber.org/zap v1.19.0
 )
