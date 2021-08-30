@@ -105,7 +105,6 @@ func WithDSN(dsn string) Option {
 }
 
 // WithServiceVersion configures a `service.name` resource attribute.
-// You can use this option together with other options that configure resource attributes.
 func WithServiceName(serviceName string) Option {
 	return option(func(cfg *config) {
 		cfg.ServiceName = serviceName
@@ -113,7 +112,6 @@ func WithServiceName(serviceName string) Option {
 }
 
 // WithServiceVersion configures a `service.version` resource attribute, for example, `1.0.0`.
-// You can use this option together with other options that configure resource attributes.
 func WithServiceVersion(serviceVersion string) Option {
 	return option(func(cfg *config) {
 		cfg.ServiceVersion = serviceVersion
@@ -122,7 +120,6 @@ func WithServiceVersion(serviceVersion string) Option {
 
 // WithResourceAttributes configures resource attributes that describe an entity that produces
 // telemetry, for example, such attributes as host.name, service.name, etc.
-// You can use this option together with other options that configure resource attributes.
 //
 // The default is to use `OTEL_RESOURCE_ATTRIBUTES` env var, for example,
 // `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice,service.version=1.0.0`.
@@ -134,7 +131,7 @@ func WithResourceAttributes(resourceAttributes []attribute.KeyValue) Option {
 
 // WithResource configures a resource that describes an entity that produces telemetry,
 // for example, such attributes as host.name and service.name. All produced spans and metrics
-// with have these attributes
+// will have these attributes.
 //
 // WithResource overrides and replaces any other resource attributes.
 func WithResource(resource *resource.Resource) Option {
