@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
-	github.com/uptrace/uptrace-go v1.0.0
+	github.com/uptrace/uptrace-go v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego v0.23.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.23.0 // indirect
 	go.opentelemetry.io/otel v1.0.0-RC3

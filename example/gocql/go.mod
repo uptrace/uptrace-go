@@ -7,7 +7,7 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/gocql/gocql v0.0.0-20210817081954-bc256bbb90de
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/uptrace/uptrace-go v1.0.0
+	github.com/uptrace/uptrace-go v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/gocql/gocql/otelgocql v0.23.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.23.0 // indirect
 	go.opentelemetry.io/otel v1.0.0-RC3

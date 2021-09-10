@@ -7,7 +7,7 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/uptrace/uptrace-go v1.0.0
+	github.com/uptrace/uptrace-go v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.23.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.23.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.23.0 // indirect
