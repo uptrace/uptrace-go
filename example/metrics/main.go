@@ -38,12 +38,12 @@ func main() {
 	go counter(ctx)
 	go counterWithLabels(ctx)
 	go upDownCounter(ctx)
-	go valueRecorder(ctx)
+	go histogram(ctx)
 
 	// Asynchronous instruments.
-	go sumObserver(ctx)
-	go upDownSumObserver(ctx)
-	go valueObserver(ctx)
+	go counterObserver(ctx)
+	go upDownCounterObserver(ctx)
+	go gaugeObserver(ctx)
 
 	fmt.Println("reporting measurements to Uptrace... (press Ctrl+C to stop)")
 
@@ -90,9 +90,9 @@ func counterWithLabels(ctx context.Context) {
 // upDownCounter demonstrates how to measure numbers that can go up and down, for example,
 // number of goroutines or customers.
 //
-// See upDownSumObserver for a better example how to measure number of goroutines.
+// See upDownCounterObserver for a better example how to measure number of goroutines.
 func upDownCounter(ctx context.Context) {
-	counter := meter.NewInt64Counter("app_or_package_name.component1.goroutines",
+	counter := meter.NewInt64UpDownCounter("app_or_package_name.component1.goroutines",
 		metric.WithDescription("Number of goroutines"),
 	)
 
@@ -103,11 +103,11 @@ func upDownCounter(ctx context.Context) {
 	}
 }
 
-// valueRecorder demonstrates how to record a distribution of individual values, for example,
+// histogram demonstrates how to record a distribution of individual values, for example,
 // request or query timings. With this instrument you get total number of records,
 // avg/min/max values, and heatmaps/percentiles.
-func valueRecorder(ctx context.Context) {
-	durRecorder := meter.NewInt64ValueRecorder("app_or_package_name.component1.request_duration",
+func histogram(ctx context.Context) {
+	durRecorder := meter.NewInt64Histogram("app_or_package_name.component1.request_duration",
 		metric.WithUnit("microseconds"),
 		metric.WithDescription("Duration of requests"),
 	)
@@ -120,16 +120,16 @@ func valueRecorder(ctx context.Context) {
 	}
 }
 
-// sumObserver demonstrates how to measure monotonic (non-decreasing) numbers,
+// counterObserver demonstrates how to measure monotonic (non-decreasing) numbers,
 // for example, number of requests or connections.
-func sumObserver(ctx context.Context) {
+func counterObserver(ctx context.Context) {
 	// stats is our data source updated by some library.
 	var stats struct {
 		Hits   int64 // atomic
 		Misses int64 // atomic
 	}
 
-	var hitsCounter, missesCounter metric.Int64SumObserver
+	var hitsCounter, missesCounter metric.Int64CounterObserver
 
 	batchObserver := meter.NewBatchObserver(
 		// SDK periodically calls this function to grab results.
@@ -140,8 +140,8 @@ func sumObserver(ctx context.Context) {
 			)
 		})
 
-	hitsCounter = batchObserver.NewInt64SumObserver("app_or_package_name.component2.cache_hits")
-	missesCounter = batchObserver.NewInt64SumObserver("app_or_package_name.component2.cache_misses")
+	hitsCounter = batchObserver.NewInt64CounterObserver("app_or_package_name.component2.cache_hits")
+	missesCounter = batchObserver.NewInt64CounterObserver("app_or_package_name.component2.cache_misses")
 
 	for {
 		if rand.Float64() < 0.3 {
@@ -154,10 +154,10 @@ func sumObserver(ctx context.Context) {
 	}
 }
 
-// upDownSumObserver demonstrates how to measure numbers that can go up and down,
+// upDownCounterObserver demonstrates how to measure numbers that can go up and down,
 // for example, number of goroutines or customers.
-func upDownSumObserver(ctx context.Context) {
-	_ = meter.NewInt64UpDownSumObserver("app_or_package_name.component2.goroutines",
+func upDownCounterObserver(ctx context.Context) {
+	_ = meter.NewInt64UpDownCounterObserver("app_or_package_name.component2.goroutines",
 		func(ctx context.Context, result metric.Int64ObserverResult) {
 			num := runtime.NumGoroutine()
 			result.Observe(int64(num))
@@ -166,10 +166,10 @@ func upDownSumObserver(ctx context.Context) {
 	)
 }
 
-// valueObserver demonstrates how to measure numbers that can go up and down,
+// gaugeObserver demonstrates how to measure numbers that can go up and down,
 // for example, number of goroutines or customers.
-func valueObserver(ctx context.Context) {
-	_ = meter.NewInt64ValueObserver("app_or_package_name.component2.goroutines2",
+func gaugeObserver(ctx context.Context) {
+	_ = meter.NewInt64GaugeObserver("app_or_package_name.component2.goroutines2",
 		func(ctx context.Context, result metric.Int64ObserverResult) {
 			num := runtime.NumGoroutine()
 			result.Observe(int64(num))
