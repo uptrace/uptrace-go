@@ -7,7 +7,7 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/go-pg/pg/extra/pgotel/v10 v10.10.5
 	github.com/go-pg/pg/v10 v10.10.5
-	github.com/uptrace/uptrace-go v1.0.0
+	github.com/uptrace/uptrace-go v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.23.0 // indirect
 	go.opentelemetry.io/otel v1.0.0-RC3
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.23.0 // indirect

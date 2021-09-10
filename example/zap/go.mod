@@ -9,8 +9,8 @@ replace github.com/uptrace/uptrace-go => ../..
 replace github.com/uptrace/uptrace-go/extra/otelzap => ../../extra/otelzap
 
 require (
-	github.com/uptrace/uptrace-go v1.0.0
-	github.com/uptrace/uptrace-go/extra/otelzap v1.0.0
+	github.com/uptrace/uptrace-go v1.0.1
+	github.com/uptrace/uptrace-go/extra/otelzap v1.0.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.23.0 // indirect
 	go.opentelemetry.io/otel v1.0.0-RC3
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.23.0 // indirect
