@@ -85,7 +85,7 @@ func queueSize() int {
 	const min = 1000
 	const max = 8000
 
-	n := runtime.GOMAXPROCS(0) * 1000
+	n := (runtime.GOMAXPROCS(0) / 2) * 1000
 	if n < min {
 		return min
 	}
