@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1
+
+- Updated OpenTelemetry to
+  [v1.0.0-RC3](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.0.0-RC3).
+
 ## v1.0.0
 
 - No changes. The purpose of this release is to avoid confusion with Go installing v0.21.1 by
