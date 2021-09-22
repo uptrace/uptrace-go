@@ -1,6 +1,8 @@
 package otellogrus
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -120,7 +122,7 @@ func (hook *LoggingHook) Fire(entry *logrus.Entry) error {
 			}
 		}
 
-		attrs = append(attrs, attribute.Any(k, v))
+		attrs = append(attrs, attrAny(k, v))
 	}
 
 	span.AddEvent("log", trace.WithAttributes(attrs...))
@@ -143,4 +145,49 @@ func levelString(lvl logrus.Level) string {
 		s = "warn"
 	}
 	return strings.ToUpper(s)
+}
+
+func attrAny(k string, value interface{}) attribute.KeyValue {
+	if value == nil {
+		return attribute.String(k, "<nil>")
+	}
+
+	if stringer, ok := value.(fmt.Stringer); ok {
+		return attribute.String(k, stringer.String())
+	}
+
+	rv := reflect.ValueOf(value)
+
+	switch rv.Kind() {
+	case reflect.Array:
+		rv = rv.Slice(0, rv.Len())
+		fallthrough
+	case reflect.Slice:
+		switch reflect.TypeOf(value).Elem().Kind() {
+		case reflect.Bool:
+			return attribute.BoolSlice(k, rv.Interface().([]bool))
+		case reflect.Int:
+			return attribute.IntSlice(k, rv.Interface().([]int))
+		case reflect.Int64:
+			return attribute.Int64Slice(k, rv.Interface().([]int64))
+		case reflect.Float64:
+			return attribute.Float64Slice(k, rv.Interface().([]float64))
+		case reflect.String:
+			return attribute.StringSlice(k, rv.Interface().([]string))
+		default:
+			return attribute.KeyValue{Key: attribute.Key(k)}
+		}
+	case reflect.Bool:
+		return attribute.Bool(k, rv.Bool())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return attribute.Int64(k, rv.Int())
+	case reflect.Float64:
+		return attribute.Float64(k, rv.Float())
+	case reflect.String:
+		return attribute.String(k, rv.String())
+	}
+	if b, err := json.Marshal(value); b != nil && err == nil {
+		return attribute.String(k, string(b))
+	}
+	return attribute.String(k, fmt.Sprint(value))
 }
