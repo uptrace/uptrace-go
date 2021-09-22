@@ -58,12 +58,12 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
 	tmpl := `
 	<html>
-	<p>Here are some routes for you:</p>
-	<ul>
-		<li><a href="/hello/world">Hello world</a></li>
-		<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
-	</ul>
-	<p><a href="%s" target="_blank">%s</a></p>
+		<p>Here are some routes for you:</p>
+		<ul>
+			<li><a href="/hello/world">Hello world</a></li>
+			<li><a href="/hello/foo-bar">Hello foo-bar</a></li>
+		</ul>
+		<p><a href="%s" target="_blank">%s</a></p>
 	</html>
 	`
 	fmt.Fprintf(w, tmpl, traceURL, traceURL)
@@ -77,8 +77,8 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 	traceURL := uptrace.TraceURL(trace.SpanFromContext(ctx))
 	tmpl := `
 	<html>
-	<h3>Hello %s</h3>
-	<p><a href="%s" target="_blank">%s</a></p>
+		<h3>Hello %s</h3>
+		<p><a href="%s" target="_blank">%s</a></p>
 	</html>
 	`
 	fmt.Fprintf(w, tmpl, username, traceURL, traceURL)

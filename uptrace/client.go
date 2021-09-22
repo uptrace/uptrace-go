@@ -97,7 +97,7 @@ func (c *client) reportPanic(ctx context.Context, val interface{}) {
 		"log",
 		trace.WithAttributes(
 			attribute.String("log.severity", "panic"),
-			attribute.Any("log.message", val),
+			attribute.String("log.message", fmt.Sprint(val)),
 		),
 	)
 }

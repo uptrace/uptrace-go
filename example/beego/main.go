@@ -5,13 +5,10 @@ import (
 
 	"github.com/astaxie/beego"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/astaxie/beego/otelbeego"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
-
-var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
 	ctx := context.Background()

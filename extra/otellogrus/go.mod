@@ -4,9 +4,7 @@ go 1.14
 
 require (
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
-	go.opentelemetry.io/otel v0.20.0
-	go.opentelemetry.io/otel/oteltest v0.20.0
-	go.opentelemetry.io/otel/trace v0.20.0
-	golang.org/x/sys v0.0.0-20210909193231-528a39cd75f3 // indirect
+	go.opentelemetry.io/otel v1.0.0
+	go.opentelemetry.io/otel/trace v1.0.0
+	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
 )
