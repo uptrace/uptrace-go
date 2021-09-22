@@ -8,6 +8,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.3
 	github.com/go-redis/redis/v8 v8.11.3
-	github.com/uptrace/uptrace-go v1.0.1
+	github.com/uptrace/uptrace-go v1.0.2
 	go.opentelemetry.io/otel v1.0.0
 )
