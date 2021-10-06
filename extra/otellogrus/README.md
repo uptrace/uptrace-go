@@ -1,5 +1,4 @@
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace/uptrace-go/extra/otellogrus)](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otellogrus)
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://docs.uptrace.dev/go/opentelemetry-logrus/)
 
 # OpenTelemetry instrumentation for logrus logging
 
@@ -13,6 +12,8 @@ go get github.com/uptrace/uptrace-go/extra/otellogrus
 ```
 
 ## Usage
+
+You need to install an `otellogrus.Hook` and use `logrus.WithContext` to propagate the active span.
 
 ```go
 import (
@@ -36,3 +37,13 @@ logrus.WithContext(ctx).
 ```
 
 See [example](/example/) for details.
+
+## Options
+
+`otellogrus.NewHook` supports the following
+[options](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otellogrus#Option):
+
+- `otellogrus.WithLevels(logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel)`
+  sets the logrus logging levels on which the hook is fired.
+- `WithErrorStatusLevel(logrus.ErrorLevel)` sets the minimal logrus logging level on which the span
+  status is set to codes.Error.
