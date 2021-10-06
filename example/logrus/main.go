@@ -27,7 +27,7 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	// Add OpenTelemetry logging hook.
-	logrus.AddHook(otellogrus.NewLoggingHook())
+	logrus.AddHook(otellogrus.NewHook())
 
 	tracer := otel.Tracer("app_or_package_name")
 

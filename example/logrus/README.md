@@ -14,7 +14,7 @@ go get github.com/uptrace/uptrace-go/extra/otellogrus
 Then add OpenTelemetry hook:
 
 ```go
-logrus.AddHook(otellogrus.NewLoggingHook())
+logrus.AddHook(otellogrus.NewHook())
 ```
 
 And use `WithContext` to propagate the active span:
@@ -31,5 +31,5 @@ logrus.WithContext(ctx).
 To run this example:
 
 ```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```

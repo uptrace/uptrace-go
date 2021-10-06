@@ -22,24 +22,28 @@ func main() {
 
 		uptrace.WithServiceName("myservice"),
 		uptrace.WithServiceVersion("1.0.0"),
-		uptrace.WithPrettyPrintSpanExporter(),
 	)
 	// Send buffered spans and free resources.
 	defer uptrace.Shutdown(ctx)
 
-	logger, err := zap.NewDevelopment()
+	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
 	}
-	defer logger.Sync()
+	defer zapLogger.Sync()
 
-	logger = otelzap.Wrap(logger, otelzap.WithLevel(zap.NewAtomicLevelAt(zap.ErrorLevel)))
+	logger := otelzap.New(zapLogger)
 
 	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
 
-	// You must use Ctx to propagate the active span.
+	// Use Ctx to propagate the active span.
 	logger.Ctx(ctx).Error("hello from zap",
+		zap.Error(errors.New("hello world")),
+		zap.String("foo", "bar"))
+
+	// Alternatively.
+	logger.ErrorContext(ctx, "hello from zap",
 		zap.Error(errors.New("hello world")),
 		zap.String("foo", "bar"))
 
