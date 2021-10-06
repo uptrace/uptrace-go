@@ -1,11 +1,11 @@
-module github.com/uptrace/opentelemetry-go/otelzap/example
+module github.com/uptrace/uptrace-go/extra/otelzap/example
 
 go 1.17
 
-replace github.com/uptrace/opentelemetry-go/otelzap => ./..
+replace github.com/uptrace/uptrace-go/extra/otelzap => ./..
 
 require (
-	github.com/uptrace/opentelemetry-go/otelzap v0.0.0-00010101000000-000000000000
+	github.com/uptrace/uptrace-go/extra/otelzap v0.0.0-00010101000000-000000000000
 	go.opentelemetry.io/otel v1.0.1
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.0.1
 	go.opentelemetry.io/otel/sdk v1.0.1
@@ -14,7 +14,7 @@ require (
 
 require (
 	go.opentelemetry.io/otel/trace v1.0.1 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 )
