@@ -27,9 +27,11 @@ var (
 type Logger struct {
 	*zap.Logger
 
-	stackTrace       bool
 	minLevel         zapcore.Level
 	errorStatusLevel zapcore.Level
+
+	caller     bool
+	stackTrace bool
 }
 
 // Deprecated. Use New instead.
@@ -40,6 +42,10 @@ func Wrap(logger *zap.Logger, opts ...Option) *Logger {
 func New(logger *zap.Logger, opts ...Option) *Logger {
 	l := &Logger{
 		Logger: logger,
+
+		minLevel:         zap.WarnLevel,
+		errorStatusLevel: zap.ErrorLevel,
+		caller:           true,
 	}
 	for _, opt := range opts {
 		opt(l)
@@ -119,10 +125,22 @@ func (l *Logger) log(
 		return
 	}
 
-	attrs := make([]attribute.KeyValue, 0, 3+len(fields))
+	attrs := make([]attribute.KeyValue, 0, 2+3+len(fields))
 
 	attrs = append(attrs, logSeverityKey.String(levelString(lvl)))
 	attrs = append(attrs, logMessageKey.String(msg))
+
+	if l.caller {
+		if fn, file, line, ok := runtimeCaller(3); ok {
+			if fn != "" {
+				attrs = append(attrs, semconv.CodeFunctionKey.String(fn))
+			}
+			if file != "" {
+				attrs = append(attrs, semconv.CodeFilepathKey.String(file))
+				attrs = append(attrs, semconv.CodeLineNumberKey.Int(line))
+			}
+		}
+	}
 
 	if l.stackTrace {
 		stackTrace := make([]byte, 2048)
@@ -143,6 +161,16 @@ func (l *Logger) log(
 	if lvl >= l.errorStatusLevel {
 		span.SetStatus(codes.Error, msg)
 	}
+}
+
+func runtimeCaller(skip int) (fn, file string, line int, ok bool) {
+	rpc := make([]uintptr, 1)
+	n := runtime.Callers(skip+1, rpc[:])
+	if n < 1 {
+		return
+	}
+	frame, _ := runtime.CallersFrames(rpc).Next()
+	return frame.Function, frame.File, frame.Line, frame.PC != 0
 }
 
 //------------------------------------------------------------------------------

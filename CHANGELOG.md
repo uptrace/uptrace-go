@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.0.3
+
+- Updated OpenTelemetry to
+  [v1.0.1](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.0.1).
+
+### extra/otelzap
+
+- Changed [otelzap](/extra/otelzap/) instrumentation to work with a standard unpatched version of
+  Zap. The logging API is compatible, but you now have to wrap a `zap.Logger` with a
+  `otelzap.Logger` to add OpenTelemetry instrumentation.
+
 ## v1.0.2
 
 - Updated OpenTelemetry to

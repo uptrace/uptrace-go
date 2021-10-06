@@ -14,7 +14,7 @@ func WithLevels(levels ...logrus.Level) Option {
 	}
 }
 
-// WithErrorStatusLevel sets the maximum logrus logging level on which
+// WithErrorStatusLevel sets the minimal logrus logging level on which
 // the span status is set to codes.Error.
 //
 // The default is <= logrus.ErrorLevel.

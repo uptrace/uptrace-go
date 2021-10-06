@@ -25,10 +25,15 @@ func TestOtelLogrus(t *testing.T) {
 				logrus.WithContext(ctx).Info("hello")
 			},
 			require: func(event sdktrace.Event) {
-				require.Equal(t, []attribute.KeyValue{
-					logSeverityKey.String("INFO"),
-					logMessageKey.String("hello"),
-				}, event.Attributes)
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "INFO", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello", msg.AsString())
 			},
 		},
 		{
@@ -36,11 +41,19 @@ func TestOtelLogrus(t *testing.T) {
 				logrus.WithContext(ctx).WithField("foo", "bar").Warn("hello")
 			},
 			require: func(event sdktrace.Event) {
-				require.Equal(t, []attribute.KeyValue{
-					logSeverityKey.String("WARN"),
-					logMessageKey.String("hello"),
-					attribute.String("foo", "bar"),
-				}, event.Attributes)
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "WARN", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello", msg.AsString())
+
+				foo, ok := m["foo"]
+				require.True(t, ok)
+				require.Equal(t, "bar", foo.AsString())
 			},
 		},
 		{
@@ -49,12 +62,23 @@ func TestOtelLogrus(t *testing.T) {
 				logrus.WithContext(ctx).WithError(err).Error("hello")
 			},
 			require: func(event sdktrace.Event) {
-				require.Equal(t, []attribute.KeyValue{
-					logSeverityKey.String("ERROR"),
-					logMessageKey.String("hello"),
-					semconv.ExceptionTypeKey.String("*errors.errorString"),
-					semconv.ExceptionMessageKey.String("some error"),
-				}, event.Attributes)
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "ERROR", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello", msg.AsString())
+
+				excTyp, ok := m[semconv.ExceptionTypeKey]
+				require.True(t, ok)
+				require.Equal(t, "*errors.errorString", excTyp.AsString())
+
+				excMsg, ok := m[semconv.ExceptionMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "some error", excMsg.AsString())
 			},
 		},
 		{
@@ -64,18 +88,15 @@ func TestOtelLogrus(t *testing.T) {
 				logrus.SetReportCaller(false)
 			},
 			require: func(event sdktrace.Event) {
-				m := make(map[attribute.Key]attribute.Value, len(event.Attributes))
-				for _, kv := range event.Attributes {
-					m[kv.Key] = kv.Value
-				}
+				m := attrMap(event.Attributes)
 
-				value, ok := m[semconv.CodeFunctionKey]
+				fn, ok := m[semconv.CodeFunctionKey]
 				require.True(t, ok)
-				require.Contains(t, value.AsString(), "github.com/uptrace/uptrace-go/extra/otellogrus.TestOtelLogrus")
+				require.Contains(t, fn.AsString(), "github.com/uptrace/uptrace-go/extra/otellogrus.TestOtelLogrus")
 
-				value, ok = m[semconv.CodeFilepathKey]
+				file, ok := m[semconv.CodeFilepathKey]
 				require.True(t, ok)
-				require.Contains(t, value.AsString(), "otellogrus/otellogrus_test.go")
+				require.Contains(t, file.AsString(), "otellogrus/otellogrus_test.go")
 
 				_, ok = m[semconv.CodeLineNumberKey]
 				require.True(t, ok)
@@ -113,4 +134,12 @@ func TestOtelLogrus(t *testing.T) {
 		require.Equal(t, "log", event.Name)
 		test.require(event)
 	}
+}
+
+func attrMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {
+	m := make(map[attribute.Key]attribute.Value, len(attrs))
+	for _, kv := range attrs {
+		m[kv.Key] = kv.Value
+	}
+	return m
 }
