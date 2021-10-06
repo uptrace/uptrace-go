@@ -1,35 +1,33 @@
 package otelzap
 
-import (
-	"go.uber.org/zap/zapcore"
-)
+import "go.uber.org/zap/zapcore"
 
 // Option applies a configuration to the given config.
-type Option interface {
-	Apply(*OtelCore)
+type Option func(l *Logger)
+
+// WithMinLevel sets the minimal zap logging level on which the log message
+// is recorded on the span.
+//
+// The default is >= zap.ErrorLevel.
+func WithMinLevel(lvl zapcore.Level) Option {
+	return func(l *Logger) {
+		l.minLevel = lvl
+	}
 }
 
-// optionFunc is a function type that applies a particular
-// configuration to the logrus hook.
-type optionFunc func(core *OtelCore)
-
-// Apply will apply the option to the logrus hook.
-func (o optionFunc) Apply(core *OtelCore) {
-	o(core)
-}
-
-func WithLevel(enab zapcore.LevelEnabler) Option {
-	return optionFunc(func(core *OtelCore) {
-		core.LevelEnabler = enab
-	})
-}
-
-// WithErrorStatusLevel sets the maximum logrus logging level on which
+// WithErrorStatusLevel sets the minimal zap logging level on which
 // the span status is set to codes.Error.
 //
-// The default is <= logrus.ErrorLevel.
-func WithErrorStatusLevel(level zapcore.Level) Option {
-	return optionFunc(func(core *OtelCore) {
-		core.errorStatusLevel = level
-	})
+// The default is >= zap.ErrorLevel.
+func WithErrorStatusLevel(lvl zapcore.Level) Option {
+	return func(l *Logger) {
+		l.errorStatusLevel = lvl
+	}
+}
+
+// WithStackTrace sets the flag to capture logs with a stack trace.
+func WithStackTrace(flag bool) Option {
+	return func(l *Logger) {
+		l.stackTrace = flag
+	}
 }

@@ -1,15 +1,18 @@
 package otelzap
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
+	"runtime"
 	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -18,79 +21,113 @@ import (
 var (
 	logSeverityKey = attribute.Key("log.severity")
 	logMessageKey  = attribute.Key("log.message")
-
-	exceptionTypeKey    = attribute.Key("exception.type")
-	exceptionMessageKey = attribute.Key("exception.message")
-	exceptionStacktrace = attribute.Key("exception.stacktrace")
-
-	codeFunctionKey = attribute.Key("code.function")
-	codeFilepathKey = attribute.Key("code.filepath")
-	codeLinenoKey   = attribute.Key("code.lineno")
 )
 
-func Wrap(logger *zap.Logger, opts ...Option) *zap.Logger {
-	return logger.WithOptions(zap.WrapCore(func(c zapcore.Core) zapcore.Core {
-		otelCore := NewOtelCore(opts...)
-		return zapcore.NewTee(c, otelCore)
-	}))
-}
+// Logger is a thin wrapper for zap.Logger that adds Ctx method.
+type Logger struct {
+	*zap.Logger
 
-type OtelCore struct {
-	zapcore.LevelEnabler
+	stackTrace       bool
+	minLevel         zapcore.Level
 	errorStatusLevel zapcore.Level
 }
 
-var _ zapcore.Core = (*OtelCore)(nil)
+// Deprecated. Use New instead.
+func Wrap(logger *zap.Logger, opts ...Option) *Logger {
+	return New(logger, opts...)
+}
 
-func NewOtelCore(opts ...Option) *OtelCore {
-	core := &OtelCore{
-		LevelEnabler:     zap.NewAtomicLevelAt(zap.ErrorLevel),
-		errorStatusLevel: zapcore.ErrorLevel,
+func New(logger *zap.Logger, opts ...Option) *Logger {
+	l := &Logger{
+		Logger: logger,
 	}
 	for _, opt := range opts {
-		opt.Apply(core)
+		opt(l)
 	}
-	return core
+	return l
 }
 
-func (c *OtelCore) With(fields []zapcore.Field) zapcore.Core {
-	return c
+// WithOptions clones the current Logger, applies the supplied Options,
+// and returns the resulting Logger. It's safe to use concurrently.
+func (l *Logger) WithOptions(opts ...zap.Option) *Logger {
+	clone := *l
+	clone.Logger = l.Logger.WithOptions(opts...)
+	return &clone
 }
 
-func (c *OtelCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if c.Enabled(ent.Level) {
-		return ce.AddCore(ent, c)
+// Clone clones the current logger applying the supplied options.
+func (l *Logger) Clone(opts ...Option) *Logger {
+	clone := *l
+	for _, opt := range opts {
+		opt(&clone)
 	}
-	return ce
+	return &clone
 }
 
-func (c *OtelCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
-	if ent.Ctx == nil {
-		return nil
+// Ctx returns a new logger with context.
+func (l *Logger) Ctx(ctx context.Context) LoggerWithCtx {
+	return LoggerWithCtx{
+		ctx: ctx,
+		l:   l,
+	}
+}
+
+func (l *Logger) DebugContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.DebugLevel, msg, fields)
+	l.Debug(msg, fields...)
+}
+
+func (l *Logger) InfoContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.InfoLevel, msg, fields)
+	l.Info(msg, fields...)
+}
+
+func (l *Logger) WarnContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.WarnLevel, msg, fields)
+	l.Warn(msg, fields...)
+}
+
+func (l *Logger) ErrorContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.ErrorLevel, msg, fields)
+	l.Error(msg, fields...)
+}
+
+func (l *Logger) DPanicContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.DPanicLevel, msg, fields)
+	l.DPanic(msg, fields...)
+}
+
+func (l *Logger) PanicContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.PanicLevel, msg, fields)
+	l.Panic(msg, fields...)
+}
+
+func (l *Logger) FatalContext(ctx context.Context, msg string, fields ...zapcore.Field) {
+	l.log(ctx, zap.FatalLevel, msg, fields)
+	l.Fatal(msg, fields...)
+}
+
+func (l *Logger) log(
+	ctx context.Context, lvl zapcore.Level, msg string, fields []zapcore.Field,
+) {
+	if lvl < l.minLevel {
+		return
 	}
 
-	span := trace.SpanFromContext(ent.Ctx)
+	span := trace.SpanFromContext(ctx)
 	if !span.IsRecording() {
-		return nil
+		return
 	}
 
-	attrs := make([]attribute.KeyValue, 0, len(fields)+2+3+1)
+	attrs := make([]attribute.KeyValue, 0, 3+len(fields))
 
-	attrs = append(attrs, logSeverityKey.String(levelString(ent.Level)))
-	attrs = append(attrs, logMessageKey.String(ent.Message))
+	attrs = append(attrs, logSeverityKey.String(levelString(lvl)))
+	attrs = append(attrs, logMessageKey.String(msg))
 
-	if ent.Caller.Defined {
-		if ent.Caller.Function != "" {
-			attrs = append(attrs, codeFunctionKey.String(ent.Caller.Function))
-		}
-		if ent.Caller.File != "" {
-			attrs = append(attrs, codeFilepathKey.String(ent.Caller.File))
-			attrs = append(attrs, codeLinenoKey.Int(ent.Caller.Line))
-		}
-	}
-
-	if ent.Stack != "" {
-		attrs = append(attrs, exceptionStacktrace.String(ent.Stack))
+	if l.stackTrace {
+		stackTrace := make([]byte, 2048)
+		n := runtime.Stack(stackTrace, false)
+		attrs = append(attrs, semconv.ExceptionStacktraceKey.String(string(stackTrace[0:n])))
 	}
 
 	for _, f := range fields {
@@ -101,20 +138,109 @@ func (c *OtelCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
 		attrs = appendField(attrs, f)
 	}
 
-	span.AddEvent("log",
-		trace.WithTimestamp(ent.Time),
-		trace.WithAttributes(attrs...))
+	span.AddEvent("log", trace.WithAttributes(attrs...))
 
-	if ent.Level >= c.errorStatusLevel {
-		span.SetStatus(codes.Error, ent.Message)
+	if lvl >= l.errorStatusLevel {
+		span.SetStatus(codes.Error, msg)
 	}
-
-	return nil
 }
 
-func (c *OtelCore) Sync() error {
-	return nil
+//------------------------------------------------------------------------------
+
+// LoggerWithCtx is a wrapper for Logger that also carries a context.Context.
+type LoggerWithCtx struct {
+	ctx context.Context
+	l   *Logger
 }
+
+func (l LoggerWithCtx) Context() context.Context {
+	return l.ctx
+}
+
+func (l LoggerWithCtx) Logger() *Logger {
+	return l.l
+}
+
+func (l LoggerWithCtx) ZapLogger() *zap.Logger {
+	return l.l.Logger
+}
+
+// WithOptions clones the current Logger, applies the supplied Options,
+// and returns the resulting Logger. It's safe to use concurrently.
+func (l LoggerWithCtx) WithOptions(opts ...zap.Option) LoggerWithCtx {
+	return LoggerWithCtx{
+		ctx: l.ctx,
+		l:   l.l.WithOptions(opts...),
+	}
+}
+
+// Clone clones the current logger applying the supplied options.
+func (l LoggerWithCtx) Clone(opts ...Option) LoggerWithCtx {
+	return LoggerWithCtx{
+		ctx: l.ctx,
+		l:   l.l.Clone(opts...),
+	}
+}
+
+// Debug logs a message at DebugLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+func (l LoggerWithCtx) Debug(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.DebugLevel, msg, fields)
+	l.l.Debug(msg, fields...)
+}
+
+// Info logs a message at InfoLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+func (l LoggerWithCtx) Info(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.InfoLevel, msg, fields)
+	l.l.Info(msg, fields...)
+}
+
+// Warn logs a message at WarnLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+func (l LoggerWithCtx) Warn(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.WarnLevel, msg, fields)
+	l.l.Warn(msg, fields...)
+}
+
+// Error logs a message at ErrorLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+func (l LoggerWithCtx) Error(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.ErrorLevel, msg, fields)
+	l.l.Error(msg, fields...)
+}
+
+// DPanic logs a message at DPanicLevel. The message includes any fields
+// passed at the log site, as well as any fields accumulated on the logger.
+//
+// If the logger is in development mode, it then panics (DPanic means
+// "development panic"). This is useful for catching errors that are
+// recoverable, but shouldn't ever happen.
+func (l LoggerWithCtx) DPanic(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.DPanicLevel, msg, fields)
+	l.l.DPanic(msg, fields...)
+}
+
+// Panic logs a message at PanicLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+//
+// The logger then panics, even if logging at PanicLevel is disabled.
+func (l LoggerWithCtx) Panic(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.PanicLevel, msg, fields)
+	l.l.Panic(msg, fields...)
+}
+
+// Fatal logs a message at FatalLevel. The message includes any fields passed
+// at the log site, as well as any fields accumulated on the logger.
+//
+// The logger then calls os.Exit(1), even if logging at FatalLevel is
+// disabled.
+func (l LoggerWithCtx) Fatal(msg string, fields ...zapcore.Field) {
+	l.l.log(l.ctx, zap.FatalLevel, msg, fields)
+	l.l.Fatal(msg, fields...)
+}
+
+//------------------------------------------------------------------------------
 
 func appendField(attrs []attribute.KeyValue, f zapcore.Field) []attribute.KeyValue {
 	switch f.Type {
@@ -160,8 +286,8 @@ func appendField(attrs []attribute.KeyValue, f zapcore.Field) []attribute.KeyVal
 	case zapcore.ErrorType:
 		err := f.Interface.(error)
 		typ := reflect.TypeOf(err).String()
-		attrs = append(attrs, exceptionTypeKey.String(typ))
-		attrs = append(attrs, exceptionMessageKey.String(err.Error()))
+		attrs = append(attrs, semconv.ExceptionTypeKey.String(typ))
+		attrs = append(attrs, semconv.ExceptionMessageKey.String(err.Error()))
 		return attrs
 	case zapcore.ReflectType:
 		attr := attrAny(f.Key, f.Interface)
@@ -173,7 +299,7 @@ func appendField(attrs []attribute.KeyValue, f zapcore.Field) []attribute.KeyVal
 		return attrs
 
 	default:
-		attr := attribute.String(f.Key+"_error", fmt.Sprintf("unknown field type: %v", f))
+		attr := attribute.String(f.Key+"_error", fmt.Sprintf("otelzap: unknown field type: %v", f))
 		return append(attrs, attr)
 	}
 }
