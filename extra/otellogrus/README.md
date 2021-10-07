@@ -1,6 +1,6 @@
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace/uptrace-go/extra/otellogrus)](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otellogrus)
 
-# OpenTelemetry instrumentation for logrus logging
+# OpenTelemetry Go instrumentation for logrus logging
 
 This instrumentation records logrus log messages as events on the existing span that is passed via a
 `context.Context`. It does not record anything if a context does not contain a span.

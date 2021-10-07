@@ -1,6 +1,6 @@
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace/uptrace-go/extra/otelzap)](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelzap)
 
-# OpenTelemetry instrumentation for Zap logging library
+# OpenTelemetry Go instrumentation for Zap logging library
 
 This instrumentation records Zap log messages as events on the existing span that is passed via a
 `context.Context`. It does not record anything if a context does not contain a span.

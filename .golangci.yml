@@ -3,3 +3,6 @@ issues:
     - text: 'Error return value of `uptrace.Shutdown` is not checked'
       linters:
         - errcheck
+    - text: 'Drivers should implement'
+      linters:
+        - staticcheck
