@@ -18,7 +18,8 @@ func main() {
 	defer stop()
 
 	db, err := otelsql.Open("sqlite", "file::memory:?cache=shared",
-		otelsql.WithAttributes(semconv.DBSystemSqlite))
+		otelsql.WithAttributes(semconv.DBSystemSqlite),
+		otelsql.WithDBName("mydb"))
 	if err != nil {
 		panic(err)
 	}
