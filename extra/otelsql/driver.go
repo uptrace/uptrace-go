@@ -6,12 +6,9 @@ import (
 	"database/sql/driver"
 	"errors"
 
-	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 )
-
-var dbRowsAffected = attribute.Key("db.rows_affected")
 
 // Open is a wrapper over sql.Open that instruments the sql.DB to record executed queries
 // using OpenTelemetry API.
@@ -29,20 +26,27 @@ func Open(driverName, dsn string, opts ...Option) (*sql.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		return sql.OpenDB(connector), nil
+		return sqlOpenDB(connector, d.cfg), nil
 	}
 
-	return sql.OpenDB(&dsnConnector{
+	return sqlOpenDB(&dsnConnector{
 		driver: d,
 		dsn:    dsn,
-	}), nil
+	}, d.cfg), nil
 }
 
 // OpenDB is a wrapper over sql.OpenDB that instruments the sql.DB to record executed queries
 // using OpenTelemetry API.
 func OpenDB(connector driver.Connector, opts ...Option) *sql.DB {
 	cfg := newConfig(opts...)
-	return sql.OpenDB(newConnector(connector.Driver(), connector, cfg))
+	c := newConnector(connector.Driver(), connector, cfg)
+	return sqlOpenDB(c, cfg)
+}
+
+func sqlOpenDB(connector driver.Connector, cfg *config) *sql.DB {
+	db := sql.OpenDB(connector)
+	reportMetrics(db, cfg.attrs)
+	return db
 }
 
 type dsnConnector struct {
