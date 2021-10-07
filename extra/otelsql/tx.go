@@ -24,14 +24,15 @@ func newTx(ctx context.Context, tx driver.Tx, cfg *config) *otelTx {
 }
 
 func (tx *otelTx) Commit() error {
-	return tx.cfg.withSpan(tx.ctx, "tx.Commit", func(ctx context.Context, span trace.Span) error {
-		return tx.tx.Commit()
-	})
+	return tx.cfg.withSpan(tx.ctx, "tx.Commit", "",
+		func(ctx context.Context, span trace.Span) error {
+			return tx.tx.Commit()
+		})
 }
 
 func (tx *otelTx) Rollback() error {
-	return tx.cfg.withSpan(tx.ctx, "tx.Rollback", func(
-		ctx context.Context, span trace.Span) error {
-		return tx.tx.Rollback()
-	})
+	return tx.cfg.withSpan(tx.ctx, "tx.Rollback", "",
+		func(ctx context.Context, span trace.Span) error {
+			return tx.tx.Rollback()
+		})
 }

@@ -13,7 +13,8 @@
 uptrace-go is an OpenTelemery distribution configured to export
 [traces](https://docs.uptrace.dev/tracing/#spans) to Uptrace.
 
-It also contains a few instrumentations that did not make it to the main repo:
+This repo also contains a few instrumentations that did not make it to the opentelemetry-contrib
+repo:
 
 - [otellogrus](/extra/otellogrus/) - OpenTelemetry instrumentation for
   [Logrus](https://github.com/sirupsen/logrus).

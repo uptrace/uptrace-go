@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"errors"
 
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -45,7 +44,7 @@ func OpenDB(connector driver.Connector, opts ...Option) *sql.DB {
 
 func sqlOpenDB(connector driver.Connector, cfg *config) *sql.DB {
 	db := sql.OpenDB(connector)
-	reportMetrics(db, cfg.attrs)
+	reportDBStats(db, cfg)
 	return db
 }
 
@@ -56,11 +55,12 @@ type dsnConnector struct {
 
 func (c *dsnConnector) Connect(ctx context.Context) (driver.Conn, error) {
 	var conn driver.Conn
-	err := c.driver.cfg.withSpan(ctx, "db.Connect", func(ctx context.Context, span trace.Span) error {
-		var err error
-		conn, err = c.driver.Open(c.dsn)
-		return err
-	})
+	err := c.driver.cfg.withSpan(ctx, "db.Connect", "",
+		func(ctx context.Context, span trace.Span) error {
+			var err error
+			conn, err = c.driver.Open(c.dsn)
+			return err
+		})
 	return conn, err
 }
 
@@ -124,11 +124,12 @@ func newConnector(d driver.Driver, c driver.Connector, cfg *config) *connector {
 
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	var conn driver.Conn
-	if err := c.cfg.withSpan(ctx, "db.Connect", func(ctx context.Context, span trace.Span) error {
-		var err error
-		conn, err = c.Connector.Connect(ctx)
-		return err
-	}); err != nil {
+	if err := c.cfg.withSpan(ctx, "db.Connect", "",
+		func(ctx context.Context, span trace.Span) error {
+			var err error
+			conn, err = c.Connector.Connect(ctx)
+			return err
+		}); err != nil {
 		return nil, err
 	}
 	return newConn(conn, c.cfg), nil
@@ -186,9 +187,10 @@ type pingFunc func(ctx context.Context) error
 func (c *otelConn) createPingFunc(conn driver.Conn) pingFunc {
 	if pinger, ok := conn.(driver.Pinger); ok {
 		return func(ctx context.Context) error {
-			return c.cfg.withSpan(ctx, "db.Ping", func(ctx context.Context, span trace.Span) error {
-				return pinger.Ping(ctx)
-			})
+			return c.cfg.withSpan(ctx, "db.Ping", "",
+				func(ctx context.Context, span trace.Span) error {
+					return pinger.Ping(ctx)
+				})
 		}
 	}
 	return func(ctx context.Context) error {
@@ -246,28 +248,23 @@ func (c *otelConn) createExecCtxFunc(conn driver.Conn) execCtxFunc {
 
 	return func(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 		var res driver.Result
-		if err := c.cfg.withSpan(ctx, "db.Exec", func(ctx context.Context, span trace.Span) error {
-			isRecording := span.IsRecording()
-
-			if isRecording {
-				span.SetAttributes(semconv.DBStatementKey.String(c.cfg.formatQuery(query)))
-			}
-
-			var err error
-			res, err = fn(ctx, query, args)
-			if err != nil {
-				return err
-			}
-
-			if isRecording {
-				rows, err := res.RowsAffected()
-				if err == nil {
-					span.SetAttributes(dbRowsAffected.Int64(rows))
+		if err := c.cfg.withSpan(ctx, "db.Exec", query,
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				res, err = fn(ctx, query, args)
+				if err != nil {
+					return err
 				}
-			}
 
-			return nil
-		}); err != nil {
+				if span.IsRecording() {
+					rows, err := res.RowsAffected()
+					if err == nil {
+						span.SetAttributes(dbRowsAffected.Int64(rows))
+					}
+				}
+
+				return nil
+			}); err != nil {
 			return nil, err
 		}
 		return res, nil
@@ -324,15 +321,12 @@ func (c *otelConn) createQueryCtxFunc(conn driver.Conn) queryCtxFunc {
 
 	return func(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 		var rows driver.Rows
-		err := c.cfg.withSpan(ctx, "db.Query", func(ctx context.Context, span trace.Span) error {
-			if span.IsRecording() {
-				span.SetAttributes(semconv.DBStatementKey.String(c.cfg.formatQuery(query)))
-			}
-
-			var err error
-			rows, err = fn(ctx, query, args)
-			return err
-		})
+		err := c.cfg.withSpan(ctx, "db.Query", query,
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				rows, err = fn(ctx, query, args)
+				return err
+			})
 		return rows, err
 	}
 }
@@ -360,16 +354,12 @@ func (c *otelConn) createPrepareCtxFunc(conn driver.Conn) prepareCtxFunc {
 
 	return func(ctx context.Context, query string) (driver.Stmt, error) {
 		var stmt driver.Stmt
-		if err := c.cfg.withSpan(ctx, "db.Prepare", func(
-			ctx context.Context, span trace.Span) error {
-			if span.IsRecording() {
-				span.SetAttributes(semconv.DBStatementKey.String(c.cfg.formatQuery(query)))
-			}
-
-			var err error
-			stmt, err = fn(ctx, query)
-			return err
-		}); err != nil {
+		if err := c.cfg.withSpan(ctx, "db.Prepare", query,
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				stmt, err = fn(ctx, query)
+				return err
+			}); err != nil {
 			return nil, err
 		}
 		return newStmt(stmt, query, c.cfg), nil
@@ -397,12 +387,12 @@ func (c *otelConn) createBeginTxFunc(conn driver.Conn) beginTxFunc {
 
 	return func(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
 		var tx driver.Tx
-		if err := c.cfg.withSpan(ctx, "db.Begin", func(
-			ctx context.Context, span trace.Span) error {
-			var err error
-			tx, err = fn(ctx, opts)
-			return err
-		}); err != nil {
+		if err := c.cfg.withSpan(ctx, "db.Begin", "",
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				tx, err = fn(ctx, opts)
+				return err
+			}); err != nil {
 			return nil, err
 		}
 		return newTx(ctx, tx, c.cfg), nil

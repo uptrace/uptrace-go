@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"io"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -17,15 +18,18 @@ import (
 
 var dbRowsAffected = attribute.Key("db.rows_affected")
 
-const instrumName = "github.com/uptrace/uptrace-go/extra/otelsql"
-
 type config struct {
 	provider trace.TracerProvider
 	tracer   trace.Tracer
 	attrs    []attribute.KeyValue
+
+	meter          metric.MeterMust
+	queryHistogram metric.Int64Histogram
 }
 
 func newConfig(opts ...Option) *config {
+	const instrumName = "github.com/uptrace/uptrace-go/extra/otelsql"
+
 	c := &config{}
 	for _, opt := range opts {
 		opt(c)
@@ -36,15 +40,40 @@ func newConfig(opts ...Option) *config {
 	}
 	c.tracer = c.provider.Tracer(instrumName)
 
+	c.meter = metric.Must(global.Meter(instrumName))
+	c.queryHistogram = c.meter.NewInt64Histogram(
+		"go.sql.query_timing",
+		metric.WithDescription("Timing of processed queries"),
+		metric.WithUnit("milliseconds"),
+	)
+
 	return c
 }
 
 func (c *config) withSpan(
-	ctx context.Context, name string, fn func(ctx context.Context, span trace.Span) error,
+	ctx context.Context,
+	spanName string,
+	query string,
+	fn func(ctx context.Context, span trace.Span) error,
 ) error {
-	ctx, span := c.tracer.Start(ctx, name, trace.WithAttributes(c.attrs...))
+	var startTime time.Time
+	if query != "" {
+		startTime = time.Now()
+	}
+
+	attrs := make([]attribute.KeyValue, 0, len(c.attrs)+1)
+	attrs = append(attrs, c.attrs...)
+	if query != "" {
+		attrs = append(attrs, semconv.DBStatementKey.String(c.formatQuery(query)))
+	}
+
+	ctx, span := c.tracer.Start(ctx, spanName, trace.WithAttributes(attrs...))
 	err := fn(ctx, span)
 	span.End()
+
+	if query != "" {
+		c.queryHistogram.Record(ctx, time.Since(startTime).Milliseconds(), c.attrs...)
+	}
 
 	if !span.IsRecording() {
 		return err
@@ -53,7 +82,7 @@ func (c *config) withSpan(
 	switch err {
 	case nil,
 		driver.ErrSkip,
-		io.EOF: // end of rows
+		io.EOF: // end of rows iterator
 		// ignore
 	default:
 		span.RecordError(err)
@@ -98,8 +127,9 @@ func WithDBName(name string) Option {
 	}
 }
 
-func reportMetrics(db *sql.DB, labels []attribute.KeyValue) {
-	meter := metric.Must(global.Meter(instrumName))
+func reportDBStats(db *sql.DB, cfg *config) {
+	meter := cfg.meter
+	labels := cfg.attrs
 
 	var maxOpenConns metric.Int64GaugeObserver
 	var openConns metric.Int64GaugeObserver

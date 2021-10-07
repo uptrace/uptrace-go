@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql/driver"
 
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -60,28 +59,23 @@ func (s *otelStmt) createExecCtxFunc(stmt driver.Stmt) stmtExecCtxFunc {
 
 	return func(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
 		var res driver.Result
-		err := s.cfg.withSpan(ctx, "stmt.Exec", func(ctx context.Context, span trace.Span) error {
-			isRecording := span.IsRecording()
-
-			if isRecording {
-				span.SetAttributes(semconv.DBStatementKey.String(s.cfg.formatQuery(s.query)))
-			}
-
-			var err error
-			res, err = fn(ctx, args)
-			if err != nil {
-				return err
-			}
-
-			if isRecording {
-				rows, err := res.RowsAffected()
-				if err == nil {
-					span.SetAttributes(dbRowsAffected.Int64(rows))
+		err := s.cfg.withSpan(ctx, "stmt.Exec", s.query,
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				res, err = fn(ctx, args)
+				if err != nil {
+					return err
 				}
-			}
 
-			return nil
-		})
+				if span.IsRecording() {
+					rows, err := res.RowsAffected()
+					if err == nil {
+						span.SetAttributes(dbRowsAffected.Int64(rows))
+					}
+				}
+
+				return nil
+			})
 		return res, err
 	}
 }
@@ -115,15 +109,12 @@ func (s *otelStmt) createQueryCtxFunc(stmt driver.Stmt) stmtQueryCtxFunc {
 
 	return func(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 		var rows driver.Rows
-		err := s.cfg.withSpan(ctx, "stmt.Query", func(ctx context.Context, span trace.Span) error {
-			if span.IsRecording() {
-				span.SetAttributes(semconv.DBStatementKey.String(s.cfg.formatQuery(s.query)))
-			}
-
-			var err error
-			rows, err = fn(ctx, args)
-			return err
-		})
+		err := s.cfg.withSpan(ctx, "stmt.Query", s.query,
+			func(ctx context.Context, span trace.Span) error {
+				var err error
+				rows, err = fn(ctx, args)
+				return err
+			})
 		return rows, err
 	}
 }

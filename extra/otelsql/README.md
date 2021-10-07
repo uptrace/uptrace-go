@@ -21,15 +21,15 @@ package:
 
 ```go
 import (
-    "github.com/uptrace/uptrace-go/extra/otelsql"
-    semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"github.com/uptrace/uptrace-go/extra/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 db, err := otelsql.Open("sqlite", "file::memory:?cache=shared",
 	otelsql.WithAttributes(semconv.DBSystemSqlite),
-    otelsql.WithDBName("mydb"))
+	otelsql.WithDBName("mydb"))
 if err != nil {
-    panic(err)
+	panic(err)
 }
 ```
 
