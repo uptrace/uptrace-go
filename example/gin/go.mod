@@ -12,9 +12,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/uptrace/uptrace-go v1.0.2
-	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.24.0
-	go.opentelemetry.io/otel v1.0.0
-	go.opentelemetry.io/otel/trace v1.0.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.25.0
+	go.opentelemetry.io/otel v1.0.1
+	go.opentelemetry.io/otel/trace v1.0.1
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -11,7 +11,7 @@ import (
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding/gzip"
 
@@ -29,8 +29,8 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	}
 
 	ctrl := controller.New(
-		processor.New(
-			simple.NewWithHistogramDistribution(),
+		processor.NewFactory(
+			selector.NewWithHistogramDistribution(),
 			exportKindSelector,
 		),
 		controller.WithExporter(exp),
@@ -47,7 +47,7 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 		internal.Logger.Printf("runtimemetrics.Start failed: %s", err)
 	}
 
-	global.SetMeterProvider(ctrl.MeterProvider())
+	global.SetMeterProvider(ctrl)
 	client.ctrl = ctrl
 }
 
