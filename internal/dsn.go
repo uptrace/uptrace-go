@@ -36,7 +36,7 @@ func (dsn *DSN) OTLPEndpoint() string {
 
 func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsnStr == "" {
-		return nil, fmt.Errorf("either Config.DSN or UPTRACE_DSN required")
+		return nil, fmt.Errorf("DSN is empty (use WithDSN or UPTRACE_DSN env var)")
 	}
 
 	u, err := url.Parse(dsnStr)
