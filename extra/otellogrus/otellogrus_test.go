@@ -3,6 +3,7 @@ package otellogrus
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -112,27 +113,29 @@ func TestOtelLogrus(t *testing.T) {
 		logrus.InfoLevel,
 	)))
 
-	for _, test := range tests {
-		sr := tracetest.NewSpanRecorder()
-		provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(sr))
-		tracer := provider.Tracer("test")
+	for i, test := range tests {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			sr := tracetest.NewSpanRecorder()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(sr))
+			tracer := provider.Tracer("test")
 
-		ctx := context.Background()
-		ctx, span := tracer.Start(ctx, "main")
+			ctx := context.Background()
+			ctx, span := tracer.Start(ctx, "main")
 
-		test.log(ctx)
+			test.log(ctx)
 
-		span.End()
+			span.End()
 
-		spans := sr.Ended()
-		require.Equal(t, 1, len(spans))
+			spans := sr.Ended()
+			require.Equal(t, 1, len(spans))
 
-		events := spans[0].Events()
-		require.Equal(t, 1, len(events))
+			events := spans[0].Events()
+			require.Equal(t, 1, len(events))
 
-		event := events[0]
-		require.Equal(t, "log", event.Name)
-		test.require(event)
+			event := events[0]
+			require.Equal(t, "log", event.Name)
+			test.require(event)
+		})
 	}
 }
 
