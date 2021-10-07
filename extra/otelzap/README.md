@@ -40,8 +40,8 @@ See [example](/example/) for details.
 
 ## Options
 
-`otelzap.New` accepts a couple of
-[options](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelzap#Option):
+[otelzap.New](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelzap#New) accepts a couple
+of [options](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelzap#Option):
 
 - `otelzap.WithMinLevel(zap.WarnLevel)` sets the minimal zap logging level on which the log message
   is recorded on the span.

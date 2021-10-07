@@ -40,7 +40,8 @@ See [example](/example/) for details.
 
 ## Options
 
-`otellogrus.NewHook` supports the following
+[otellogrus.NewHook](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otellogrus#NewHook)
+accepts the following
 [options](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otellogrus#Option):
 
 - `otellogrus.WithLevels(logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel)`
