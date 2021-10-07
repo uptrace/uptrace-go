@@ -7,7 +7,7 @@ replace github.com/uptrace/uptrace-go => ../..
 require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/uptrace/uptrace-go v1.0.2
+	github.com/uptrace/uptrace-go v1.0.3
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.7.3
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.25.0

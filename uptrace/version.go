@@ -2,5 +2,5 @@ package uptrace
 
 // Version is the current release version.
 func Version() string {
-	return "1.0.2"
+	return "1.0.3"
 }
