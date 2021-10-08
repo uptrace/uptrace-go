@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.4
+
+- Changed otelsql to not set `error` status on sql.ErrNoRows errors.
+
 ## v1.0.3
 
 - Updated OpenTelemetry to

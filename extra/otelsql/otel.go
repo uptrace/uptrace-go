@@ -82,7 +82,8 @@ func (c *config) withSpan(
 	switch err {
 	case nil,
 		driver.ErrSkip,
-		io.EOF: // end of rows iterator
+		io.EOF, // end of rows iterator
+		sql.ErrNoRows:
 		// ignore
 	default:
 		span.RecordError(err)
