@@ -6,7 +6,7 @@
 
 Install [redisotel](https://github.com/go-redis/redis/tree/master/extra/redisotel) instrumentation:
 
-```bash
+```shell
 go get github.com/go-redis/redis/extra/redisotel/v8
 ```
 
@@ -23,12 +23,12 @@ rdb.AddHook(redisotel.NewTracingHook())
 
 To run this example you need a Redis Server. You can start one with Docker:
 
-```bash
-make up
+```shell
+docker-compose up -d
 ```
 
 Then run the example:
 
-```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```

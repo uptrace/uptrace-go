@@ -2,7 +2,7 @@
 
 # OpenTelemetry Go instrumentation for database/sql package
 
-This OpenTelemetry instrumentation records database queries (including `Tx` and `Stmt` queries) and
+otelsql instrumentation records database queries (including `Tx` and `Stmt` queries) and reports
 `DBStats` metrics.
 
 ## Installation
@@ -13,7 +13,7 @@ go get github.com/uptrace/uptrace-go/extra/otelsql
 
 ## Usage
 
-To instrument database/sql client, you need to connect to a database using the API provided by this
+To instrument database/sql, you need to connect to a database using the API provided by this
 package:
 
 - `sql.Open(driverName, dsn)` becomes `otelsql.Open(driverName, dsn)`.
@@ -33,6 +33,16 @@ if err != nil {
 }
 ```
 
+And then use context-aware API to propagate the active span via
+[context](https://docs.uptrace.dev/guide/go.html#context):
+
+```go
+var num int
+if err := db.QueryRowContext(ctx, "SELECT 42").Scan(&num); err != nil {
+	panic(err)
+}
+```
+
 See [example](/example/) for details.
 
 ## Options
@@ -46,6 +56,6 @@ same [options](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelsql#Op
 - [WithDBName](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelsql#WithDBName) configures
   a `db.name` attribute.
 - [WithDBSystem](https://pkg.go.dev/github.com/uptrace/uptrace-go/extra/otelsql#WithDBSystem)
-  configures a `db.system` attribute. You should prefer using WithAttributes and
+  configures a `db.system` attribute. When possible, you should prefer using WithAttributes and
   [semconv](https://pkg.go.dev/go.opentelemetry.io/otel/semconv/v1.4.0), for example,
   `otelsql.WithAttributes(semconv.DBSystemSqlite)`.

@@ -6,4 +6,4 @@ To run this example:
 UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```
 
-See [otelsql](https://github.com/uptrace/uptrace-go/tree/master/extra/otelsql) for documentation.
+See [documentation](https://docs.uptrace.dev/opentelemetry/go-database-sql.html) for details.

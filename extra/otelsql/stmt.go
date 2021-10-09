@@ -10,8 +10,8 @@ import (
 type otelStmt struct {
 	driver.Stmt
 
-	query string
-	cfg   *config
+	query   string
+	instrum *dbInstrum
 
 	execCtx  stmtExecCtxFunc
 	queryCtx stmtQueryCtxFunc
@@ -19,11 +19,11 @@ type otelStmt struct {
 
 var _ driver.Stmt = (*otelStmt)(nil)
 
-func newStmt(stmt driver.Stmt, query string, cfg *config) *otelStmt {
+func newStmt(stmt driver.Stmt, query string, instrum *dbInstrum) *otelStmt {
 	s := &otelStmt{
-		Stmt:  stmt,
-		query: query,
-		cfg:   cfg,
+		Stmt:    stmt,
+		query:   query,
+		instrum: instrum,
 	}
 	s.execCtx = s.createExecCtxFunc(stmt)
 	s.queryCtx = s.createQueryCtxFunc(stmt)
@@ -59,7 +59,7 @@ func (s *otelStmt) createExecCtxFunc(stmt driver.Stmt) stmtExecCtxFunc {
 
 	return func(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
 		var res driver.Result
-		err := s.cfg.withSpan(ctx, "stmt.Exec", s.query,
+		err := s.instrum.withSpan(ctx, "stmt.Exec", s.query,
 			func(ctx context.Context, span trace.Span) error {
 				var err error
 				res, err = fn(ctx, args)
@@ -109,7 +109,7 @@ func (s *otelStmt) createQueryCtxFunc(stmt driver.Stmt) stmtQueryCtxFunc {
 
 	return func(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 		var rows driver.Rows
-		err := s.cfg.withSpan(ctx, "stmt.Query", s.query,
+		err := s.instrum.withSpan(ctx, "stmt.Query", s.query,
 			func(ctx context.Context, span trace.Span) error {
 				var err error
 				rows, err = fn(ctx, args)

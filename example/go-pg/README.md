@@ -24,14 +24,14 @@ db.AddQueryHook(pgotel.NewTracingHook())
 
 ## Example
 
-To run this example you need a PostgreSQL server. You can start one with Docker:
+To run this example, you need a PostgreSQL server. You can start one with Docker:
 
 ```bash
-make up
+docker-compose up -d
 ```
 
 Then run the example:
 
-```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```

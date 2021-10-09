@@ -16,41 +16,62 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+const instrumName = "github.com/uptrace/uptrace-go/extra/otelsql"
+
 var dbRowsAffected = attribute.Key("db.rows_affected")
 
 type config struct {
 	provider trace.TracerProvider
 	tracer   trace.Tracer
+	meter    metric.Meter
 	attrs    []attribute.KeyValue
-
-	meter          metric.MeterMust
-	queryHistogram metric.Int64Histogram
 }
 
-func newConfig(opts ...Option) *config {
-	const instrumName = "github.com/uptrace/uptrace-go/extra/otelsql"
-
+func newConfig(opts []Option) *config {
 	c := &config{}
 	for _, opt := range opts {
 		opt(c)
 	}
+	return c
+}
 
-	if c.provider == nil {
-		c.provider = otel.GetTracerProvider()
+func (c *config) formatQuery(query string) string {
+	return query
+}
+
+type dbInstrum struct {
+	*config
+
+	queryHistogram metric.Int64Histogram
+}
+
+func newDBInstrum(opts []Option) *dbInstrum {
+	t := &dbInstrum{
+		config: newConfig(opts),
 	}
-	c.tracer = c.provider.Tracer(instrumName)
 
-	c.meter = metric.Must(global.Meter(instrumName))
-	c.queryHistogram = c.meter.NewInt64Histogram(
+	if t.provider == nil {
+		t.provider = otel.GetTracerProvider()
+	}
+	if t.tracer == nil {
+		t.tracer = t.provider.Tracer(instrumName)
+	}
+
+	if t.meter.MeterImpl() == nil {
+		t.meter = global.Meter(instrumName)
+	}
+
+	meter := metric.Must(t.meter)
+	t.queryHistogram = meter.NewInt64Histogram(
 		"go.sql.query_timing",
 		metric.WithDescription("Timing of processed queries"),
 		metric.WithUnit("milliseconds"),
 	)
 
-	return c
+	return t
 }
 
-func (c *config) withSpan(
+func (t *dbInstrum) withSpan(
 	ctx context.Context,
 	spanName string,
 	query string,
@@ -61,18 +82,18 @@ func (c *config) withSpan(
 		startTime = time.Now()
 	}
 
-	attrs := make([]attribute.KeyValue, 0, len(c.attrs)+1)
-	attrs = append(attrs, c.attrs...)
+	attrs := make([]attribute.KeyValue, 0, len(t.attrs)+1)
+	attrs = append(attrs, t.attrs...)
 	if query != "" {
-		attrs = append(attrs, semconv.DBStatementKey.String(c.formatQuery(query)))
+		attrs = append(attrs, semconv.DBStatementKey.String(t.formatQuery(query)))
 	}
 
-	ctx, span := c.tracer.Start(ctx, spanName, trace.WithAttributes(attrs...))
+	ctx, span := t.tracer.Start(ctx, spanName, trace.WithAttributes(attrs...))
 	err := fn(ctx, span)
 	span.End()
 
 	if query != "" {
-		c.queryHistogram.Record(ctx, time.Since(startTime).Milliseconds(), c.attrs...)
+		t.queryHistogram.Record(ctx, time.Since(startTime).Milliseconds(), t.attrs...)
 	}
 
 	if !span.IsRecording() {
@@ -91,10 +112,6 @@ func (c *config) withSpan(
 	}
 
 	return err
-}
-
-func (c *config) formatQuery(query string) string {
-	return query
 }
 
 type Option func(c *config)
@@ -128,8 +145,22 @@ func WithDBName(name string) Option {
 	}
 }
 
-func reportDBStats(db *sql.DB, cfg *config) {
-	meter := cfg.meter
+// WithMeter configures a metric.Meter used to create instruments.
+func WithMeter(meter metric.Meter) Option {
+	return func(c *config) {
+		c.meter = meter
+	}
+}
+
+// ReportDBStatsMetrics reports DBStats metrics using OpenTelemetry Metrics API.
+func ReportDBStatsMetrics(db *sql.DB, opts ...Option) {
+	cfg := newConfig(opts)
+
+	if cfg.meter.MeterImpl() == nil {
+		cfg.meter = global.Meter(instrumName)
+	}
+
+	meter := metric.Must(cfg.meter)
 	labels := cfg.attrs
 
 	var maxOpenConns metric.Int64GaugeObserver

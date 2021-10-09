@@ -25,12 +25,12 @@ And use `mc.WithContext` to propagate the active span.
 
 To run this example you need a memcached server. You can start one with Docker:
 
-```
-make up
+```shell
+docker-compose up -d
 ```
 
 Then run the example:
 
-```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```
