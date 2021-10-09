@@ -19,9 +19,8 @@ opentelemetry-contrib repo:
 - [otellogrus](/extra/otellogrus/) records [Logrus](https://github.com/sirupsen/logrus) logs as
   events.
 - [otelzap](/extra/otelzap/) records [Zap](https://github.com/uber-go/zap) logs as events.
-- [otelsql](/extra/otelsql/) - records database/sql queries and report DBStats metrics.
-- [otelgorm](/extra/otelgorm/) - records [GORM](https://gorm.io/) queries and reports DBStats
-  metrics.
+- [otelsql](/extra/otelsql/) records database/sql queries and report DBStats metrics.
+- [otelgorm](/extra/otelgorm/) records [GORM](https://gorm.io/) queries and reports DBStats metrics.
 
 ## Quickstart
 
@@ -84,4 +83,4 @@ func main() {
 }
 ```
 
-For more details, please see [documentation](https://docs.uptrace.dev/go/) and [examples](example).
+For more details, see [documentation](https://docs.uptrace.dev/go/) and [examples](example).
