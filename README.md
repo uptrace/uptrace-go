@@ -21,6 +21,7 @@ repo:
 - [otelzap](/extra/otelzap/) - OpenTelemetry instrumentation for
   [Zap](https://github.com/uber-go/zap) logging.
 - [otelsql](/extra/otelsql/) - OpenTelemetry instrumentation for database/sql.
+- [otelgorm](/extra/otelgorm/) - OpenTelemetry instrumentation for [GORM](https://gorm.io/).
 
 ## Quickstart
 

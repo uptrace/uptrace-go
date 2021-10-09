@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/uptrace/uptrace-go/internal"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -16,8 +18,6 @@ type config struct {
 
 	// Common options
 
-	ServiceName        string
-	ServiceVersion     string
 	ResourceAttributes []attribute.KeyValue
 	Resource           *resource.Resource
 
@@ -50,25 +50,17 @@ func newConfig(opts []Option) *config {
 
 func (cfg *config) newResource() *resource.Resource {
 	if cfg.Resource != nil {
+		if len(cfg.ResourceAttributes) > 0 {
+			internal.Logger.Printf("WithResource is used with other resource options (discarding %v)",
+				cfg.ResourceAttributes)
+		}
 		return cfg.Resource
 	}
-	return buildResource(cfg.ResourceAttributes, cfg.ServiceName, cfg.ServiceVersion)
+	return buildResource(cfg.ResourceAttributes)
 }
 
-func buildResource(
-	resourceAttributes []attribute.KeyValue,
-	serviceName, serviceVersion string,
-) *resource.Resource {
+func buildResource(attrs []attribute.KeyValue) *resource.Resource {
 	ctx := context.TODO()
-
-	var attrs []attribute.KeyValue
-	attrs = append(attrs, resourceAttributes...)
-	if serviceName != "" {
-		attrs = append(attrs, semconv.ServiceNameKey.String(serviceName))
-	}
-	if serviceVersion != "" {
-		attrs = append(attrs, semconv.ServiceVersionKey.String(serviceVersion))
-	}
 
 	res, _ := resource.New(ctx,
 		resource.WithFromEnv(),
@@ -104,17 +96,28 @@ func WithDSN(dsn string) Option {
 	})
 }
 
-// WithServiceVersion configures a `service.name` resource attribute.
+// WithServiceVersion configures `service.name` resource attribute.
 func WithServiceName(serviceName string) Option {
 	return option(func(cfg *config) {
-		cfg.ServiceName = serviceName
+		attr := semconv.ServiceNameKey.String(serviceName)
+		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
 	})
 }
 
-// WithServiceVersion configures a `service.version` resource attribute, for example, `1.0.0`.
+// WithServiceVersion configures `service.version` resource attribute, for example, `1.0.0`.
 func WithServiceVersion(serviceVersion string) Option {
 	return option(func(cfg *config) {
-		cfg.ServiceVersion = serviceVersion
+		attr := semconv.ServiceVersionKey.String(serviceVersion)
+		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
+	})
+}
+
+// WithDeploymentEnvironment configures `deployment.environment` resource attribute,
+// for example, `production`.
+func WithDeploymentEnvironment(env string) Option {
+	return option(func(cfg *config) {
+		attr := semconv.DeploymentEnvironmentKey.String(env)
+		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
 	})
 }
 

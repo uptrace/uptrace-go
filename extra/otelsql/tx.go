@@ -8,30 +8,30 @@ import (
 )
 
 type otelTx struct {
-	ctx context.Context
-	tx  driver.Tx
-	cfg *config
+	ctx     context.Context
+	tx      driver.Tx
+	instrum *dbInstrum
 }
 
 var _ driver.Tx = (*otelTx)(nil)
 
-func newTx(ctx context.Context, tx driver.Tx, cfg *config) *otelTx {
+func newTx(ctx context.Context, tx driver.Tx, instrum *dbInstrum) *otelTx {
 	return &otelTx{
-		ctx: ctx,
-		tx:  tx,
-		cfg: cfg,
+		ctx:     ctx,
+		tx:      tx,
+		instrum: instrum,
 	}
 }
 
 func (tx *otelTx) Commit() error {
-	return tx.cfg.withSpan(tx.ctx, "tx.Commit", "",
+	return tx.instrum.withSpan(tx.ctx, "tx.Commit", "",
 		func(ctx context.Context, span trace.Span) error {
 			return tx.tx.Commit()
 		})
 }
 
 func (tx *otelTx) Rollback() error {
-	return tx.cfg.withSpan(tx.ctx, "tx.Rollback", "",
+	return tx.instrum.withSpan(tx.ctx, "tx.Rollback", "",
 		func(ctx context.Context, span trace.Span) error {
 			return tx.tx.Rollback()
 		})

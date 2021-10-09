@@ -24,11 +24,11 @@ rdb.AddHook(redisotel.NewTracingHook())
 To run this example you need a Redis cluster. You can start one with Docker:
 
 ```shell
-make up
+docker-compose up -d
 ```
 
 To run this example:
 
 ```shell
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```

@@ -8,7 +8,7 @@ Install
 [otelgocql](https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master/instrumentation/github.com/gocql/gocql/otelgocql)
 instrumentation:
 
-```bash
+```shell
 go get go.opentelemetry.io/contrib/instrumentation/github.com/gocql/gocql/otelgocql
 ```
 
@@ -23,12 +23,12 @@ session, err := otelgocql.NewSessionWithTracing(ctx, cluster)
 
 To run this example you need a Cassandra server. You can start one with Docker:
 
-```bash
-make up
+```shell
+docker-compose up -d
 ```
 
 Then run the example:
 
-```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+```shell
+UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run .
 ```
