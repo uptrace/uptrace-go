@@ -7,8 +7,8 @@ replace github.com/uptrace/uptrace-go => ../..
 replace github.com/uptrace/uptrace-go/extra/otelsql => ../../extra/otelsql
 
 require (
-	github.com/uptrace/uptrace-go v1.0.3
-	github.com/uptrace/uptrace-go/extra/otelsql v1.0.3
+	github.com/uptrace/uptrace-go v1.0.4
+	github.com/uptrace/uptrace-go/extra/otelsql v1.0.4
 	go.opentelemetry.io/otel v1.0.1
 	modernc.org/sqlite v1.13.1
 )
@@ -34,18 +34,18 @@ require (
 	go.opentelemetry.io/otel/trace v1.0.1 // indirect
 	go.opentelemetry.io/proto/otlp v0.9.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20211006190231-62292e806868 // indirect
+	golang.org/x/net v0.0.0-20211008194852-3b03d305991f // indirect
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/genproto v0.0.0-20211005153810-c76a74d43a8e // indirect
+	google.golang.org/genproto v0.0.0-20211008145708-270636b82663 // indirect
 	google.golang.org/grpc v1.41.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.35.8 // indirect
-	modernc.org/ccgo/v3 v3.12.18 // indirect
-	modernc.org/libc v1.11.24 // indirect
+	modernc.org/ccgo/v3 v3.12.21 // indirect
+	modernc.org/libc v1.11.27 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.0.5 // indirect
 	modernc.org/opt v0.1.1 // indirect

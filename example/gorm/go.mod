@@ -9,11 +9,11 @@ replace github.com/uptrace/uptrace-go/extra/otelsql => ../../extra/otelsql
 replace github.com/uptrace/uptrace-go/extra/otelgorm => ../../extra/otelgorm
 
 require (
-	github.com/uptrace/uptrace-go v0.0.0-00010101000000-000000000000
-	github.com/uptrace/uptrace-go/extra/otelgorm v0.0.0-00010101000000-000000000000
+	github.com/uptrace/uptrace-go v1.0.4
+	github.com/uptrace/uptrace-go/extra/otelgorm v1.0.4
 	go.opentelemetry.io/otel v1.0.1
 	gorm.io/driver/sqlite v1.1.6
-	gorm.io/gorm v1.21.15
+	gorm.io/gorm v1.21.16
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8 // indirect
-	github.com/uptrace/uptrace-go/extra/otelsql v0.0.0-00010101000000-000000000000 // indirect
+	github.com/uptrace/uptrace-go/extra/otelsql v1.0.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.25.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.24.0 // indirect
@@ -37,10 +37,10 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.0.1 // indirect
 	go.opentelemetry.io/proto/otlp v0.9.0 // indirect
-	golang.org/x/net v0.0.0-20211006190231-62292e806868 // indirect
+	golang.org/x/net v0.0.0-20211008194852-3b03d305991f // indirect
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211005153810-c76a74d43a8e // indirect
+	google.golang.org/genproto v0.0.0-20211008145708-270636b82663 // indirect
 	google.golang.org/grpc v1.41.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )
