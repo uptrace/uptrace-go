@@ -2,6 +2,7 @@
 
 ## v1.0.4
 
+- Added [otelgorm](/extra/otelgorm/) instrumentation for GORM.
 - Changed otelsql to not set `error` status on sql.ErrNoRows errors.
 
 ## v1.0.3
