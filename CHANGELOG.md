@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.5
+
+- otelzap: added support for sugared loggers.
+
 ## v1.0.4
 
 - Added [otelgorm](/extra/otelgorm/) instrumentation for GORM.
