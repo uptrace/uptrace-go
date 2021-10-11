@@ -9,8 +9,8 @@ replace github.com/uptrace/uptrace-go/extra/otelsql => ../../extra/otelsql
 replace github.com/uptrace/uptrace-go/extra/otelgorm => ../../extra/otelgorm
 
 require (
-	github.com/uptrace/uptrace-go v1.0.4
-	github.com/uptrace/uptrace-go/extra/otelgorm v1.0.4
+	github.com/uptrace/uptrace-go v1.0.5
+	github.com/uptrace/uptrace-go/extra/otelgorm v1.0.5
 	go.opentelemetry.io/otel v1.0.1
 	gorm.io/driver/sqlite v1.1.6
 	gorm.io/gorm v1.21.16
@@ -23,7 +23,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8 // indirect
-	github.com/uptrace/uptrace-go/extra/otelsql v1.0.4 // indirect
+	github.com/uptrace/uptrace-go/extra/otelsql v1.0.5 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.25.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.24.0 // indirect
