@@ -5,7 +5,7 @@ go 1.17
 replace github.com/uptrace/uptrace-go/extra/otelsql => ./..
 
 require (
-	github.com/uptrace/uptrace-go/extra/otelsql v1.0.4
+	github.com/uptrace/uptrace-go/extra/otelsql v1.0.5
 	go.opentelemetry.io/otel v1.0.1
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.0.1
 	go.opentelemetry.io/otel/sdk v1.0.1
@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
@@ -25,8 +26,8 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.35.8 // indirect
-	modernc.org/ccgo/v3 v3.12.21 // indirect
-	modernc.org/libc v1.11.27 // indirect
+	modernc.org/ccgo/v3 v3.12.23 // indirect
+	modernc.org/libc v1.11.29 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.0.5 // indirect
 	modernc.org/opt v0.1.1 // indirect
