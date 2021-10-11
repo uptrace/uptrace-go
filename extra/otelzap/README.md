@@ -13,8 +13,8 @@ go get github.com/uptrace/uptrace-go/extra/otelzap
 
 ## Usage
 
-You need to create a `otelzap.Logger` that wraps a `zap.Logger` and provides context-aware logging
-API.
+You need to create a `otelzap.Logger` that wraps a `zap.Logger` and accepts
+[context](https://docs.uptrace.dev/guide/go.html#context) to propage the active span.
 
 ```go
 import (
@@ -22,7 +22,7 @@ import (
     "github.com/uptrace/uptrace-go/extra/otelzap"
 )
 
-// Wrap zap logger.
+// Wrap zap logger to extend Zap with the API that accepts a context.Context.
 log := otelzap.New(zap.L())
 
 // And then pass ctx to propagate the span.
@@ -37,6 +37,31 @@ log.ErrorContext(ctx, "hello from zap",
 ```
 
 See [example](/example/) for details.
+
+### Sugared logger
+
+You can also use sugared logger API in a similar way:
+
+```go
+log := otelzap.New(zap.L())
+sugar := log.Sugar()
+
+sugar.Ctx(ctx).Infow("failed to fetch URL",
+  // Structured context as loosely typed key-value pairs.
+  "url", url,
+  "attempt", 3,
+  "backoff", time.Second,
+)
+sugar.InfowContext(ctx, "failed to fetch URL",
+  // Structured context as loosely typed key-value pairs.
+  "url", url,
+  "attempt", 3,
+  "backoff", time.Second,
+)
+
+sugar.Ctx(ctx).Infof("Failed to fetch URL: %s", url)
+sugar.InfofContext(ctx, "Failed to fetch URL: %s", url)
+```
 
 ## Options
 

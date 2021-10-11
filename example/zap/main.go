@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
@@ -26,28 +27,32 @@ func main() {
 	// Send buffered spans and free resources.
 	defer uptrace.Shutdown(ctx)
 
-	zapLogger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	defer zapLogger.Sync()
-
-	logger := otelzap.New(zapLogger)
-
 	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
 
 	// Use Ctx to propagate the active span.
-	logger.Ctx(ctx).Error("hello from zap",
-		zap.Error(errors.New("hello world")),
-		zap.String("foo", "bar"))
-
-	// Alternatively.
-	logger.ErrorContext(ctx, "hello from zap",
+	Logger(ctx).Error("hello from zap",
 		zap.Error(errors.New("hello world")),
 		zap.String("foo", "bar"))
 
 	span.End()
 
-	fmt.Printf("trace: %s\n", uptrace.TraceURL(span))
+	fmt.Printf("\ntrace: %s\n", uptrace.TraceURL(span))
+}
+
+var (
+	once   sync.Once
+	logger *otelzap.Logger
+)
+
+// Logger ensures that the caller does not forget to pass the context.
+func Logger(ctx context.Context) otelzap.LoggerWithCtx {
+	once.Do(func() {
+		l, err := zap.NewDevelopment()
+		if err != nil {
+			panic(err)
+		}
+		logger = otelzap.New(l)
+	})
+	return logger.Ctx(ctx)
 }

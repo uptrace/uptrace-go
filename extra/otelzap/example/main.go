@@ -34,6 +34,7 @@ var (
 	logger *otelzap.Logger
 )
 
+// Logger ensures that the caller does not forget to pass the context.
 func Logger(ctx context.Context) otelzap.LoggerWithCtx {
 	once.Do(func() {
 		l, err := zap.NewDevelopment()
