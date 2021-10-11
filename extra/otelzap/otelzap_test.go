@@ -15,8 +15,8 @@ import (
 )
 
 type Test struct {
-	log     func(context.Context, *Logger)
-	require func(sdktrace.Event)
+	log     func(ctx context.Context, log *Logger)
+	require func(t *testing.T, event sdktrace.Event)
 }
 
 func TestOtelZap(t *testing.T) {
@@ -25,7 +25,7 @@ func TestOtelZap(t *testing.T) {
 			log: func(ctx context.Context, log *Logger) {
 				log.Ctx(ctx).Info("hello")
 			},
-			require: func(event sdktrace.Event) {
+			require: func(t *testing.T, event sdktrace.Event) {
 				m := attrMap(event.Attributes)
 
 				sev, ok := m[logSeverityKey]
@@ -36,23 +36,14 @@ func TestOtelZap(t *testing.T) {
 				require.True(t, ok)
 				require.Equal(t, "hello", msg.AsString())
 
-				fn, ok := m[semconv.CodeFunctionKey]
-				require.True(t, ok)
-				require.Contains(t, fn.AsString(), "ithub.com/uptrace/uptrace-go/extra/otelzap.TestOtelZap")
-
-				file, ok := m[semconv.CodeFilepathKey]
-				require.True(t, ok)
-				require.Contains(t, file.AsString(), "otelzap/otelzap_test.go")
-
-				_, ok = m[semconv.CodeLineNumberKey]
-				require.True(t, ok)
+				requireCodeAttrs(t, m)
 			},
 		},
 		{
 			log: func(ctx context.Context, log *Logger) {
 				log.InfoContext(ctx, "hello")
 			},
-			require: func(event sdktrace.Event) {
+			require: func(t *testing.T, event sdktrace.Event) {
 				m := attrMap(event.Attributes)
 
 				sev, ok := m[logSeverityKey]
@@ -62,13 +53,15 @@ func TestOtelZap(t *testing.T) {
 				msg, ok := m[logMessageKey]
 				require.True(t, ok)
 				require.Equal(t, "hello", msg.AsString())
+
+				requireCodeAttrs(t, m)
 			},
 		},
 		{
 			log: func(ctx context.Context, log *Logger) {
 				log.Ctx(ctx).Warn("hello", zap.String("foo", "bar"))
 			},
-			require: func(event sdktrace.Event) {
+			require: func(t *testing.T, event sdktrace.Event) {
 				m := attrMap(event.Attributes)
 
 				sev, ok := m[logSeverityKey]
@@ -82,6 +75,8 @@ func TestOtelZap(t *testing.T) {
 				foo, ok := m["foo"]
 				require.True(t, ok)
 				require.Equal(t, "bar", foo.AsString())
+
+				requireCodeAttrs(t, m)
 			},
 		},
 		{
@@ -89,7 +84,7 @@ func TestOtelZap(t *testing.T) {
 				err := errors.New("some error")
 				log.Ctx(ctx).Error("hello", zap.Error(err))
 			},
-			require: func(event sdktrace.Event) {
+			require: func(t *testing.T, event sdktrace.Event) {
 				m := attrMap(event.Attributes)
 
 				sev, ok := m[logSeverityKey]
@@ -107,6 +102,8 @@ func TestOtelZap(t *testing.T) {
 				excMsg, ok := m[semconv.ExceptionMessageKey]
 				require.True(t, ok)
 				require.Equal(t, "some error", excMsg.AsString())
+
+				requireCodeAttrs(t, m)
 			},
 		},
 		{
@@ -114,12 +111,102 @@ func TestOtelZap(t *testing.T) {
 				log = log.Clone(WithStackTrace(true))
 				log.Ctx(ctx).Info("hello")
 			},
-			require: func(event sdktrace.Event) {
+			require: func(t *testing.T, event sdktrace.Event) {
 				m := attrMap(event.Attributes)
 
 				stack, ok := m[semconv.ExceptionStacktraceKey]
 				require.True(t, ok)
 				require.NotZero(t, stack.AsString())
+
+				requireCodeAttrs(t, m)
+			},
+		},
+		{
+			log: func(ctx context.Context, log *Logger) {
+				log.Sugar().ErrorwContext(ctx, "hello", "foo", "bar")
+			},
+			require: func(t *testing.T, event sdktrace.Event) {
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "ERROR", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello", msg.AsString())
+
+				foo, ok := m["foo"]
+				require.True(t, ok)
+				require.NotZero(t, foo.AsString())
+
+				requireCodeAttrs(t, m)
+			},
+		},
+		{
+			log: func(ctx context.Context, log *Logger) {
+				log.Sugar().ErrorfContext(ctx, "hello %s", "world")
+			},
+			require: func(t *testing.T, event sdktrace.Event) {
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "ERROR", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello world", msg.AsString())
+
+				tpl, ok := m[logTemplateKey]
+				require.True(t, ok)
+				require.Equal(t, "hello %s", tpl.AsString())
+
+				requireCodeAttrs(t, m)
+			},
+		},
+		{
+			log: func(ctx context.Context, log *Logger) {
+				log.Sugar().Ctx(ctx).Errorw("hello", "foo", "bar")
+			},
+			require: func(t *testing.T, event sdktrace.Event) {
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "ERROR", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello", msg.AsString())
+
+				foo, ok := m["foo"]
+				require.True(t, ok)
+				require.NotZero(t, foo.AsString())
+
+				requireCodeAttrs(t, m)
+			},
+		},
+		{
+			log: func(ctx context.Context, log *Logger) {
+				log.Sugar().Ctx(ctx).Errorf("hello %s", "world")
+			},
+			require: func(t *testing.T, event sdktrace.Event) {
+				m := attrMap(event.Attributes)
+
+				sev, ok := m[logSeverityKey]
+				require.True(t, ok)
+				require.Equal(t, "ERROR", sev.AsString())
+
+				msg, ok := m[logMessageKey]
+				require.True(t, ok)
+				require.Equal(t, "hello world", msg.AsString())
+
+				tpl, ok := m[logTemplateKey]
+				require.True(t, ok)
+				require.Equal(t, "hello %s", tpl.AsString())
+
+				requireCodeAttrs(t, m)
 			},
 		},
 	}
@@ -148,9 +235,22 @@ func TestOtelZap(t *testing.T) {
 
 			event := events[0]
 			require.Equal(t, "log", event.Name)
-			test.require(event)
+			test.require(t, event)
 		})
 	}
+}
+
+func requireCodeAttrs(t *testing.T, m map[attribute.Key]attribute.Value) {
+	fn, ok := m[semconv.CodeFunctionKey]
+	require.True(t, ok)
+	require.Contains(t, fn.AsString(), "otelzap.TestOtelZap")
+
+	file, ok := m[semconv.CodeFilepathKey]
+	require.True(t, ok)
+	require.Contains(t, file.AsString(), "otelzap/otelzap_test.go")
+
+	_, ok = m[semconv.CodeLineNumberKey]
+	require.True(t, ok)
 }
 
 func attrMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {

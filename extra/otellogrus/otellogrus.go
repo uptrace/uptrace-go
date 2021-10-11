@@ -114,12 +114,23 @@ func levelString(lvl logrus.Level) string {
 }
 
 func attrAny(key string, value interface{}) attribute.KeyValue {
-	if value == nil {
+	switch value := value.(type) {
+	case nil:
 		return attribute.String(key, "<nil>")
-	}
-
-	if stringer, ok := value.(fmt.Stringer); ok {
-		return attribute.String(key, stringer.String())
+	case string:
+		return attribute.String(key, value)
+	case int:
+		return attribute.Int(key, value)
+	case int64:
+		return attribute.Int64(key, value)
+	case uint64:
+		return attribute.Int64(key, int64(value))
+	case float64:
+		return attribute.Float64(key, value)
+	case bool:
+		return attribute.Bool(key, value)
+	case fmt.Stringer:
+		return attribute.String(key, value.String())
 	}
 
 	rv := reflect.ValueOf(value)
