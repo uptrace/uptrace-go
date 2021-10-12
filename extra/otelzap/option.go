@@ -29,15 +29,25 @@ func WithErrorStatusLevel(lvl zapcore.Level) Option {
 // line number, and function name of the caller.
 //
 // It is enabled by default.
-func WithCaller(flag bool) Option {
+func WithCaller(on bool) Option {
 	return func(l *Logger) {
-		l.caller = flag
+		l.caller = on
 	}
 }
 
 // WithStackTrace configures the logger to capture logs with a stack trace.
-func WithStackTrace(flag bool) Option {
+func WithStackTrace(on bool) Option {
 	return func(l *Logger) {
-		l.stackTrace = flag
+		l.stackTrace = on
+	}
+}
+
+// WithTraceID configures the logger to add `trace_id` field to structured log messages.
+//
+// This option is only useful with backends that don't support OTLP and instead parse log
+// messages to extract structured information.
+func WithTraceIDField(on bool) Option {
+	return func(l *Logger) {
+		l.withTraceID = on
 	}
 }
