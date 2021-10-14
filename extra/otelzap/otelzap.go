@@ -30,6 +30,8 @@ var (
 type Logger struct {
 	*zap.Logger
 
+	withTraceID bool
+
 	minLevel         zapcore.Level
 	errorStatusLevel zapcore.Level
 
@@ -93,49 +95,49 @@ func (l *Logger) Ctx(ctx context.Context) LoggerWithCtx {
 }
 
 func (l *Logger) DebugContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.DebugLevel, msg, fields)
+	fields = l.logFields(ctx, zap.DebugLevel, msg, fields)
 	l.Debug(msg, fields...)
 }
 
 func (l *Logger) InfoContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.InfoLevel, msg, fields)
+	fields = l.logFields(ctx, zap.InfoLevel, msg, fields)
 	l.Info(msg, fields...)
 }
 
 func (l *Logger) WarnContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.WarnLevel, msg, fields)
+	fields = l.logFields(ctx, zap.WarnLevel, msg, fields)
 	l.Warn(msg, fields...)
 }
 
 func (l *Logger) ErrorContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.ErrorLevel, msg, fields)
+	fields = l.logFields(ctx, zap.ErrorLevel, msg, fields)
 	l.Error(msg, fields...)
 }
 
 func (l *Logger) DPanicContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.DPanicLevel, msg, fields)
+	fields = l.logFields(ctx, zap.DPanicLevel, msg, fields)
 	l.DPanic(msg, fields...)
 }
 
 func (l *Logger) PanicContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.PanicLevel, msg, fields)
+	fields = l.logFields(ctx, zap.PanicLevel, msg, fields)
 	l.Panic(msg, fields...)
 }
 
 func (l *Logger) FatalContext(ctx context.Context, msg string, fields ...zapcore.Field) {
-	l.logFields(ctx, zap.FatalLevel, msg, fields)
+	fields = l.logFields(ctx, zap.FatalLevel, msg, fields)
 	l.Fatal(msg, fields...)
 }
 
 func (l *Logger) logFields(
 	ctx context.Context, lvl zapcore.Level, msg string, fields []zapcore.Field,
-) {
+) []zapcore.Field {
 	if lvl < l.minLevel {
-		return
+		return fields
 	}
 	span := trace.SpanFromContext(ctx)
 	if !span.IsRecording() {
-		return
+		return fields
 	}
 
 	attrs := make([]attribute.KeyValue, 0, numAttr+len(fields))
@@ -149,6 +151,13 @@ func (l *Logger) logFields(
 	}
 
 	l.log(span, lvl, msg, attrs)
+
+	if l.withTraceID {
+		traceID := span.SpanContext().TraceID().String()
+		fields = append(fields, zap.String("trace_id", traceID))
+	}
+
+	return fields
 }
 
 func (l *Logger) log(
@@ -421,7 +430,7 @@ func (s *SugaredLogger) logArgs(
 func (s *SugaredLogger) InfowContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.InfoLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.InfoLevel, msg, keysAndValues)
 	s.Infow(msg, keysAndValues...)
 }
 
@@ -430,7 +439,7 @@ func (s *SugaredLogger) InfowContext(
 func (s *SugaredLogger) WarnwContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.WarnLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.WarnLevel, msg, keysAndValues)
 	s.Warnw(msg, keysAndValues...)
 }
 
@@ -439,7 +448,7 @@ func (s *SugaredLogger) WarnwContext(
 func (s *SugaredLogger) ErrorwContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.ErrorLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.ErrorLevel, msg, keysAndValues)
 	s.Errorw(msg, keysAndValues...)
 }
 
@@ -449,7 +458,7 @@ func (s *SugaredLogger) ErrorwContext(
 func (s *SugaredLogger) DPanicwContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.DPanicLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.DPanicLevel, msg, keysAndValues)
 	s.DPanicw(msg, keysAndValues...)
 }
 
@@ -458,7 +467,7 @@ func (s *SugaredLogger) DPanicwContext(
 func (s *SugaredLogger) PanicwContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.PanicLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.PanicLevel, msg, keysAndValues)
 	s.Panicw(msg, keysAndValues...)
 }
 
@@ -467,19 +476,19 @@ func (s *SugaredLogger) PanicwContext(
 func (s *SugaredLogger) FatalwContext(
 	ctx context.Context, msg string, keysAndValues ...interface{},
 ) {
-	s.logKVs(ctx, zap.FatalLevel, msg, keysAndValues)
+	keysAndValues = s.logKVs(ctx, zap.FatalLevel, msg, keysAndValues)
 	s.Fatalw(msg, keysAndValues...)
 }
 
 func (s *SugaredLogger) logKVs(
 	ctx context.Context, lvl zapcore.Level, msg string, kvs []interface{},
-) {
+) []interface{} {
 	if lvl < s.l.minLevel {
-		return
+		return kvs
 	}
 	span := trace.SpanFromContext(ctx)
 	if !span.IsRecording() {
-		return
+		return kvs
 	}
 
 	attrs := make([]attribute.KeyValue, 0, numAttr+len(kvs))
@@ -491,6 +500,13 @@ func (s *SugaredLogger) logKVs(
 	}
 
 	s.l.log(span, lvl, msg, attrs)
+
+	if s.l.withTraceID {
+		traceID := span.SpanContext().TraceID().String()
+		kvs = append(kvs, "trace_id", traceID)
+	}
+
+	return kvs
 }
 
 //------------------------------------------------------------------------------
