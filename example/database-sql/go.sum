@@ -80,6 +80,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.0 h1:u0UYJQ1IneGS/XeuDsfdPPMp4Z6wqAvQR76QxeVf60g=
+github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.0/go.mod h1:W6GYMBRbmq3vqAvNejjY1N/KnbzJy6vavFVP2Ql4ikw=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.25.0 h1:itnrHq1f5YYyQBmEND9yBMn9aCPyh4zhzUGJyltEpZE=

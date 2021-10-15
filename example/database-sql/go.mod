@@ -4,11 +4,9 @@ go 1.17
 
 replace github.com/uptrace/uptrace-go => ../..
 
-replace github.com/uptrace/uptrace-go/extra/otelsql => ../../extra/otelsql
-
 require (
+	github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.0
 	github.com/uptrace/uptrace-go v1.0.5
-	github.com/uptrace/uptrace-go/extra/otelsql v1.0.5
 	go.opentelemetry.io/otel v1.0.1
 	modernc.org/sqlite v1.13.1
 )

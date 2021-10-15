@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uptrace/uptrace-go/extra/otelgorm"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
 	"gorm.io/driver/sqlite"

@@ -4,10 +4,6 @@ go 1.17
 
 replace github.com/uptrace/uptrace-go => ../..
 
-replace github.com/uptrace/uptrace-go/extra/otelsql => ../../extra/otelsql
-
-replace github.com/uptrace/uptrace-go/extra/otelgorm => ../../extra/otelgorm
-
 require (
 	github.com/uptrace/uptrace-go v1.0.5
 	github.com/uptrace/uptrace-go/extra/otelgorm v1.0.5
