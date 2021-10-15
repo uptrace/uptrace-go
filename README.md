@@ -13,15 +13,6 @@
 uptrace-go is an OpenTelemery distribution configured to export
 [traces](https://docs.uptrace.dev/tracing/#spans) to Uptrace.
 
-This repo also contains a few OpenTelemetry instrumentations that did not make it to the
-opentelemetry-contrib repo:
-
-- [otellogrus](/extra/otellogrus/) records [Logrus](https://github.com/sirupsen/logrus) logs as
-  events.
-- [otelzap](/extra/otelzap/) records [Zap](https://github.com/uber-go/zap) logs as events.
-- [otelsql](/extra/otelsql/) records database/sql queries and report DBStats metrics.
-- [otelgorm](/extra/otelgorm/) records [GORM](https://gorm.io/) queries and reports DBStats metrics.
-
 ## Quickstart
 
 Install uptrace-go:
