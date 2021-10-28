@@ -1,7 +1,7 @@
 # OpenTelemetry Prometheus exporter example
 
 This is an example for
-[Sending OpenTelemetry Metrics to Prometheus](https://opentelemetry.uptrace.dev/guide/prometheus.html).
+[Sending OpenTelemetry Metrics to Prometheus](https://blog.uptrace.dev/posts/prometheus-opentelemetry-metrics.html).
 To run this example:
 
 ```shell
@@ -22,4 +22,4 @@ test_my_counter
 ## See also
 
 - [OpenTelemetry Metrics](https://opentelemetry.uptrace.dev/guide/metrics.html)
-- [Metrics API for Go](https://opentelemetry.uptrace.dev/guide/go-metrics.html)
+- [OpenTelemetry Metrics API for Go](https://opentelemetry.uptrace.dev/guide/go-metrics.html)
