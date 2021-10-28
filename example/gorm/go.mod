@@ -1,6 +1,6 @@
-module github.com/uptrace/uptrace-go/example/gorm-sqlite
+module github.com/uptrace/uptrace-go/example/gorm
 
-go 1.17
+go 1.16
 
 replace github.com/uptrace/uptrace-go => ../..
 
