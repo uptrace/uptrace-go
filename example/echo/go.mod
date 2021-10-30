@@ -8,10 +8,8 @@ require (
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/uptrace/uptrace-go v1.0.5
-	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.25.0
-	go.opentelemetry.io/otel/trace v1.0.1
+	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.26.0
+	go.opentelemetry.io/otel/trace v1.1.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211008194852-3b03d305991f // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	google.golang.org/genproto v0.0.0-20211008145708-270636b82663 // indirect
 )
