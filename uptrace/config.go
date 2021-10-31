@@ -6,39 +6,43 @@ import (
 
 	"github.com/uptrace/uptrace-go/internal"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
 type config struct {
-	DSN string
+	dsn string
 
 	// Common options
 
-	ResourceAttributes []attribute.KeyValue
-	Resource           *resource.Resource
+	resourceAttributes []attribute.KeyValue
+	resource           *resource.Resource
 
 	// Tracing options
 
-	TracingDisabled   bool
-	TextMapPropagator propagation.TextMapPropagator
-	TracerProvider    *sdktrace.TracerProvider
-	TraceSampler      sdktrace.Sampler
-	PrettyPrint       bool
+	tracingEnabled    bool
+	textMapPropagator propagation.TextMapPropagator
+	tracerProvider    *sdktrace.TracerProvider
+	traceSampler      sdktrace.Sampler
+	prettyPrint       bool
 
 	// Metrics options
 
-	MetricsDisabled bool
+	metricsEnabled bool
 }
 
 func newConfig(opts []Option) *config {
-	cfg := new(config)
+	cfg := &config{
+		tracingEnabled: true,
+		metricsEnabled: true,
+	}
 
 	if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
-		cfg.DSN = dsn
+		cfg.dsn = dsn
 	}
 
 	for _, opt := range opts {
@@ -49,26 +53,27 @@ func newConfig(opts []Option) *config {
 }
 
 func (cfg *config) newResource() *resource.Resource {
-	if cfg.Resource != nil {
-		if len(cfg.ResourceAttributes) > 0 {
+	if cfg.resource != nil {
+		if len(cfg.resourceAttributes) > 0 {
 			internal.Logger.Printf("WithResource is used with other resource options (discarding %v)",
-				cfg.ResourceAttributes)
+				cfg.resourceAttributes)
 		}
-		return cfg.Resource
+		return cfg.resource
 	}
-	return buildResource(cfg.ResourceAttributes)
+	return buildResource(cfg.resourceAttributes)
 }
 
 func buildResource(attrs []attribute.KeyValue) *resource.Resource {
 	ctx := context.TODO()
 
-	res, _ := resource.New(ctx,
+	res, err := resource.New(ctx,
 		resource.WithFromEnv(),
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
 		resource.WithSchemaURL(semconv.SchemaURL),
 		resource.WithAttributes(attrs...))
-	if res == nil {
+	if err != nil {
+		otel.Handle(err)
 		return resource.Environment()
 	}
 	return res
@@ -92,7 +97,7 @@ func (fn option) apply(cfg *config) {
 // The default is to use UPTRACE_DSN environment variable.
 func WithDSN(dsn string) Option {
 	return option(func(cfg *config) {
-		cfg.DSN = dsn
+		cfg.dsn = dsn
 	})
 }
 
@@ -100,7 +105,7 @@ func WithDSN(dsn string) Option {
 func WithServiceName(serviceName string) Option {
 	return option(func(cfg *config) {
 		attr := semconv.ServiceNameKey.String(serviceName)
-		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
+		cfg.resourceAttributes = append(cfg.resourceAttributes, attr)
 	})
 }
 
@@ -108,7 +113,7 @@ func WithServiceName(serviceName string) Option {
 func WithServiceVersion(serviceVersion string) Option {
 	return option(func(cfg *config) {
 		attr := semconv.ServiceVersionKey.String(serviceVersion)
-		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
+		cfg.resourceAttributes = append(cfg.resourceAttributes, attr)
 	})
 }
 
@@ -117,7 +122,7 @@ func WithServiceVersion(serviceVersion string) Option {
 func WithDeploymentEnvironment(env string) Option {
 	return option(func(cfg *config) {
 		attr := semconv.DeploymentEnvironmentKey.String(env)
-		cfg.ResourceAttributes = append(cfg.ResourceAttributes, attr)
+		cfg.resourceAttributes = append(cfg.resourceAttributes, attr)
 	})
 }
 
@@ -126,9 +131,9 @@ func WithDeploymentEnvironment(env string) Option {
 //
 // The default is to use `OTEL_RESOURCE_ATTRIBUTES` env var, for example,
 // `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice,service.version=1.0.0`.
-func WithResourceAttributes(resourceAttributes []attribute.KeyValue) Option {
+func WithResourceAttributes(attrs []attribute.KeyValue) Option {
 	return option(func(cfg *config) {
-		cfg.ResourceAttributes = resourceAttributes
+		cfg.resourceAttributes = append(cfg.resourceAttributes, attrs...)
 	})
 }
 
@@ -139,7 +144,7 @@ func WithResourceAttributes(resourceAttributes []attribute.KeyValue) Option {
 // WithResource overrides and replaces any other resource attributes.
 func WithResource(resource *resource.Resource) Option {
 	return option(func(cfg *config) {
-		cfg.Resource = resource
+		cfg.resource = resource
 	})
 }
 
@@ -160,25 +165,30 @@ func (fn tracingOption) apply(cfg *config) {
 
 func (fn tracingOption) tracing() {}
 
-// TracingDisabled can be used to skip tracing configuration.
-func WithTracingDisabled() TracingOption {
+// WithTracingEnabled can be used to enable/disable tracing.
+func WithTracingEnabled(on bool) TracingOption {
 	return tracingOption(func(cfg *config) {
-		cfg.TracingDisabled = true
+		cfg.tracingEnabled = on
 	})
+}
+
+// WithTracingDisabled disables tracing.
+func WithTracingDisabled() TracingOption {
+	return WithTracingEnabled(false)
 }
 
 // TracerProvider overwrites the default Uptrace tracer provider.
 // You can use it to configure Uptrace distro to use OTLP exporter.
 func WithTracerProvider(provider *sdktrace.TracerProvider) TracingOption {
 	return tracingOption(func(cfg *config) {
-		cfg.TracerProvider = provider
+		cfg.tracerProvider = provider
 	})
 }
 
 // WithTraceSampler configures a span sampler.
 func WithTraceSampler(sampler sdktrace.Sampler) TracingOption {
 	return tracingOption(func(cfg *config) {
-		cfg.TraceSampler = sampler
+		cfg.traceSampler = sampler
 	})
 }
 
@@ -186,7 +196,7 @@ func WithTraceSampler(sampler sdktrace.Sampler) TracingOption {
 // The default is propagation.TraceContext and propagation.Baggage.
 func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOption {
 	return tracingOption(func(cfg *config) {
-		cfg.TextMapPropagator = propagator
+		cfg.textMapPropagator = propagator
 	})
 }
 
@@ -194,7 +204,7 @@ func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOpti
 // It is useful for debugging or demonstration purposes.
 func WithPrettyPrintSpanExporter() TracingOption {
 	return tracingOption(func(cfg *config) {
-		cfg.PrettyPrint = true
+		cfg.prettyPrint = true
 	})
 }
 
@@ -215,9 +225,14 @@ func (fn metricsOption) apply(cfg *config) {
 
 func (fn metricsOption) metrics() {}
 
-// WithMetricsDisabled can be used to skip metrics configuration.
-func WithMetricsDisabled() MetricsOption {
+// WithMetricsEnabled can be used to enable/disable metrics.
+func WithMetricsEnabled(on bool) MetricsOption {
 	return metricsOption(func(cfg *config) {
-		cfg.MetricsDisabled = true
+		cfg.metricsEnabled = on
 	})
+}
+
+// WithMetricsDisabled disables metrics.
+func WithMetricsDisabled() MetricsOption {
+	return WithMetricsEnabled(false)
 }

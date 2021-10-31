@@ -17,15 +17,15 @@ import (
 )
 
 func configureTracing(ctx context.Context, client *client, cfg *config) {
-	provider := cfg.TracerProvider
+	provider := cfg.tracerProvider
 	if provider == nil {
 		var opts []sdktrace.TracerProviderOption
 
 		if res := cfg.newResource(); res != nil {
 			opts = append(opts, sdktrace.WithResource(res))
 		}
-		if cfg.TraceSampler != nil {
-			opts = append(opts, sdktrace.WithSampler(cfg.TraceSampler))
+		if cfg.traceSampler != nil {
+			opts = append(opts, sdktrace.WithSampler(cfg.traceSampler))
 		}
 
 		provider = sdktrace.NewTracerProvider(opts...)
@@ -46,7 +46,7 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 	)
 	provider.RegisterSpanProcessor(bsp)
 
-	if cfg.PrettyPrint {
+	if cfg.prettyPrint {
 		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			internal.Logger.Printf(err.Error())

@@ -27,11 +27,11 @@ func ConfigureOpentelemetry(opts ...Option) {
 	ctx := context.TODO()
 	cfg := newConfig(opts)
 
-	if cfg.TracingDisabled && cfg.MetricsDisabled {
+	if !cfg.tracingEnabled && cfg.metricsEnabled {
 		return
 	}
 
-	dsn, err := internal.ParseDSN(cfg.DSN)
+	dsn, err := internal.ParseDSN(cfg.dsn)
 	if err != nil {
 		internal.Logger.Printf("uptrace is disabled: %s", err)
 		return
@@ -40,10 +40,10 @@ func ConfigureOpentelemetry(opts ...Option) {
 	client := newClient(dsn)
 
 	configurePropagator(cfg)
-	if !cfg.TracingDisabled {
+	if cfg.tracingEnabled {
 		configureTracing(ctx, client, cfg)
 	}
-	if !cfg.MetricsDisabled {
+	if cfg.metricsEnabled {
 		configureMetrics(ctx, client, cfg)
 	}
 
@@ -51,7 +51,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 }
 
 func configurePropagator(cfg *config) {
-	textMapPropagator := cfg.TextMapPropagator
+	textMapPropagator := cfg.textMapPropagator
 	if textMapPropagator == nil {
 		textMapPropagator = propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{},
@@ -62,6 +62,7 @@ func configurePropagator(cfg *config) {
 }
 
 //------------------------------------------------------------------------------
+
 var (
 	fallbackClient = newClient(&internal.DSN{
 		ProjectID: "<project_id>",
