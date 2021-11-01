@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.0
+
+- Update OpenTelemetry to
+  [v1.1.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.1.0).
+- Move instrumentations to
+  [opentelemetry-go-extra](https://github.com/uptrace/opentelemetry-go-extra)
+
 ## v1.0.5
 
 - otelzap: added support for sugared loggers.
