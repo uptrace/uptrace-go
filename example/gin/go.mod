@@ -11,10 +11,12 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/ugorji/go v1.2.6 // indirect
-	github.com/uptrace/uptrace-go v1.0.5
+	github.com/uptrace/uptrace-go v1.1.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.26.0
 	go.opentelemetry.io/otel v1.1.0
 	go.opentelemetry.io/otel/trace v1.1.0
+	go.opentelemetry.io/proto/otlp v0.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/sys v0.0.0-20211031064116-611d5d643895 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
