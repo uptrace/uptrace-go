@@ -3,7 +3,6 @@ package uptrace
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/uptrace/uptrace-go/internal"
 
@@ -57,9 +56,7 @@ func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
 
 // TraceURL returns the trace URL for the span.
 func (c *client) TraceURL(span trace.Span) string {
-	host := strings.TrimPrefix(c.dsn.Host, "api.")
-	return fmt.Sprintf("%s://%s/search/%s?q=%s",
-		c.dsn.Scheme, host, c.dsn.ProjectID, span.SpanContext().TraceID())
+	return "https://app.uptrace.dev/traces/" + span.SpanContext().TraceID().String()
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
