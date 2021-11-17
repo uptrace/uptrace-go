@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go/extra/otellogrus => ./..
 
 require (
 	github.com/sirupsen/logrus v1.8.1
-	github.com/uptrace/uptrace-go/extra/otellogrus v1.1.0
+	github.com/uptrace/uptrace-go/extra/otellogrus v1.2.0
 	go.opentelemetry.io/otel v1.2.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.2.0
 	go.opentelemetry.io/otel/sdk v1.2.0
