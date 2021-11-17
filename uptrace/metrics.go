@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric/global"
-	export "go.opentelemetry.io/otel/sdk/export/metric"
+	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
@@ -19,10 +19,10 @@ import (
 )
 
 func configureMetrics(ctx context.Context, client *client, cfg *config) {
-	exportKindSelector := export.StatelessExportKindSelector()
+	exportKindSelector := aggregation.StatelessTemporalitySelector()
 
 	exp, err := otlpmetric.New(ctx, otlpmetricClient(client.dsn),
-		otlpmetric.WithMetricExportKindSelector(exportKindSelector))
+		otlpmetric.WithMetricAggregationTemporalitySelector(exportKindSelector))
 	if err != nil {
 		internal.Logger.Printf("otlpmetric.New failed: %s", err)
 		return
