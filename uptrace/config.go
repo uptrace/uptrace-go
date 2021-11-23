@@ -20,6 +20,7 @@ type config struct {
 	// Common options
 
 	resourceAttributes []attribute.KeyValue
+	resourceDetectors  []resource.Detector
 	resource           *resource.Resource
 
 	// Tracing options
@@ -55,23 +56,25 @@ func newConfig(opts []Option) *config {
 func (cfg *config) newResource() *resource.Resource {
 	if cfg.resource != nil {
 		if len(cfg.resourceAttributes) > 0 {
-			internal.Logger.Printf("WithResource is used with other resource options (discarding %v)",
+			internal.Logger.Printf("WithResource overrides WithResourceAttributes (discarding %v)",
 				cfg.resourceAttributes)
+		}
+		if len(cfg.resourceDetectors) > 0 {
+			internal.Logger.Printf("WithResource overrides WithResourceDetectors (discarding %v)",
+				cfg.resourceDetectors)
 		}
 		return cfg.resource
 	}
-	return buildResource(cfg.resourceAttributes)
-}
 
-func buildResource(attrs []attribute.KeyValue) *resource.Resource {
 	ctx := context.TODO()
 
 	res, err := resource.New(ctx,
+		resource.WithSchemaURL(semconv.SchemaURL),
 		resource.WithFromEnv(),
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
-		resource.WithSchemaURL(semconv.SchemaURL),
-		resource.WithAttributes(attrs...))
+		resource.WithDetectors(cfg.resourceDetectors...),
+		resource.WithAttributes(cfg.resourceAttributes...))
 	if err != nil {
 		otel.Handle(err)
 		return resource.Environment()
@@ -134,6 +137,13 @@ func WithDeploymentEnvironment(env string) Option {
 func WithResourceAttributes(attrs []attribute.KeyValue) Option {
 	return option(func(cfg *config) {
 		cfg.resourceAttributes = append(cfg.resourceAttributes, attrs...)
+	})
+}
+
+// WithResourceDetectors adds detectors to be evaluated for the configured resource.
+func WithResourceDetectors(detectors ...resource.Detector) Option {
+	return option(func(cfg *config) {
+		cfg.resourceDetectors = append(cfg.resourceDetectors, detectors...)
 	})
 }
 
