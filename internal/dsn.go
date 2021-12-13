@@ -2,9 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"net"
 	"net/url"
-	"strings"
 )
 
 type DSN struct {
@@ -22,16 +20,10 @@ func (dsn *DSN) String() string {
 }
 
 func (dsn *DSN) OTLPEndpoint() string {
-	const subdomain = "otlp."
-
-	endpoint := strings.TrimPrefix(dsn.Host, "api.")
-
-	host, _, err := net.SplitHostPort(endpoint)
-	if err != nil {
-		host = endpoint
+	if dsn.Host == "uptrace.dev" {
+		return "otlp.uptrace.dev:4317"
 	}
-
-	return subdomain + net.JoinHostPort(host, "4317")
+	return dsn.Host
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {
@@ -68,6 +60,9 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	}
 
 	dsn.Host = u.Host
+	if dsn.Host == "api.uptrace.dev" {
+		dsn.Host = "uptrace.dev"
+	}
 	if dsn.Host == "" {
 		return nil, fmt.Errorf("DSN=%q does not have a host", dsnStr)
 	}

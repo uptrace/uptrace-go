@@ -1,15 +1,35 @@
 # Changelog
 
+## v1.3.0
+
+- Added `WithResourceDetectors` to configure resource detectors, for example:
+
+- Updated OpenTelemetry to
+  [v1.3.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.3.0).
+
+```go
+import (
+	"github.com/uptrace/uptrace-go/uptrace"
+	"go.opentelemetry.io/contrib/detectors/aws/ec2"
+)
+
+uptrace.ConfigureOpentelemetry(
+	uptrace.WithResourceDetectors(ec2.NewResourceDetector()),
+)
+```
+
+See [documentation](https://docs.uptrace.dev/guide/go.html#resource-detectors) for details.
+
 ## v1.2.0
 
-- Update OpenTelemetry to
+- Updated OpenTelemetry to
   [v1.2.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.2.0).
 
 ## v1.1.0
 
-- Update OpenTelemetry to
+- Updated OpenTelemetry to
   [v1.1.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.1.0).
-- Move instrumentations to
+- Moved instrumentations to
   [opentelemetry-go-extra](https://github.com/uptrace/opentelemetry-go-extra)
 
 ## v1.0.5
