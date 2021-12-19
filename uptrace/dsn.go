@@ -1,4 +1,4 @@
-package internal
+package uptrace
 
 import (
 	"fmt"
@@ -8,18 +8,25 @@ import (
 type DSN struct {
 	original string
 
-	ProjectID string
-	Token     string
-
 	Scheme string
 	Host   string
+
+	ProjectID string
+	Token     string
 }
 
 func (dsn *DSN) String() string {
 	return dsn.original
 }
 
-func (dsn *DSN) OTLPEndpoint() string {
+func (dsn *DSN) AppHost() string {
+	if dsn.Host == "uptrace.dev" {
+		return "app.uptrace.dev"
+	}
+	return dsn.Host
+}
+
+func (dsn *DSN) OTLPHost() string {
 	if dsn.Host == "uptrace.dev" {
 		return "otlp.uptrace.dev:4317"
 	}
@@ -40,6 +47,22 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 		original: dsnStr,
 	}
 
+	dsn.Scheme = u.Scheme
+	if dsn.Scheme == "" {
+		return nil, fmt.Errorf("DSN=%q does not have a scheme", dsnStr)
+	}
+
+	dsn.Host = u.Host
+	if dsn.Host == "" {
+		return nil, fmt.Errorf("DSN=%q does not have a host", dsnStr)
+	}
+	if dsn.Host == "api.uptrace.dev" {
+		dsn.Host = "uptrace.dev"
+	}
+	if dsn.Host == "uptrace.dev" {
+		return &dsn, nil
+	}
+
 	if len(u.Path) > 0 {
 		dsn.ProjectID = u.Path[1:]
 	}
@@ -52,19 +75,6 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	}
 	if dsn.Token == "" {
 		return nil, fmt.Errorf("DSN=%q does not have a token", dsnStr)
-	}
-
-	dsn.Scheme = u.Scheme
-	if dsn.Scheme == "" {
-		return nil, fmt.Errorf("DSN=%q does not have a scheme", dsnStr)
-	}
-
-	dsn.Host = u.Host
-	if dsn.Host == "api.uptrace.dev" {
-		dsn.Host = "uptrace.dev"
-	}
-	if dsn.Host == "" {
-		return nil, fmt.Errorf("DSN=%q does not have a host", dsnStr)
 	}
 
 	return &dsn, nil

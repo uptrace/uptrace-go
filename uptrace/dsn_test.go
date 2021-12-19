@@ -1,9 +1,9 @@
-package internal_test
+package uptrace_test
 
 import (
 	"testing"
 
-	"github.com/uptrace/uptrace-go/internal"
+	"github.com/uptrace/uptrace-go/uptrace"
 
 	"github.com/stretchr/testify/require"
 )
@@ -20,8 +20,8 @@ func TestParseDSN(t *testing.T) {
 		{"https://key@localhost:1234/1", "localhost:1234"},
 	}
 	for _, test := range tests {
-		dsn, err := internal.ParseDSN(test.dsn)
+		dsn, err := uptrace.ParseDSN(test.dsn)
 		require.NoError(t, err)
-		require.Equal(t, test.otlp, dsn.OTLPEndpoint())
+		require.Equal(t, test.otlp, dsn.OTLPHost())
 	}
 }

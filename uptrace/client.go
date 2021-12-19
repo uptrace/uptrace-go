@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uptrace/uptrace-go/internal"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
@@ -17,14 +15,14 @@ const dummySpanName = "__dummy__"
 
 // client represents Uptrace client.
 type client struct {
-	dsn    *internal.DSN
+	dsn    *DSN
 	tracer trace.Tracer
 
 	provider *sdktrace.TracerProvider
 	ctrl     *controller.Controller
 }
 
-func newClient(dsn *internal.DSN) *client {
+func newClient(dsn *DSN) *client {
 	return &client{
 		dsn:    dsn,
 		tracer: otel.Tracer("uptrace-go"),
@@ -56,7 +54,10 @@ func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
 
 // TraceURL returns the trace URL for the span.
 func (c *client) TraceURL(span trace.Span) string {
-	return "https://app.uptrace.dev/traces/" + span.SpanContext().TraceID().String()
+	return fmt.Sprintf(
+		"%s://%s/traces/%s",
+		c.dsn.Scheme, c.dsn.AppHost(), span.SpanContext().TraceID(),
+	)
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.

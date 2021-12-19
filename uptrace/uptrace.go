@@ -31,7 +31,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 		return
 	}
 
-	dsn, err := internal.ParseDSN(cfg.dsn)
+	dsn, err := ParseDSN(cfg.dsn)
 	if err != nil {
 		internal.Logger.Printf("uptrace is disabled: %s", err)
 		return
@@ -64,7 +64,7 @@ func configurePropagator(cfg *config) {
 //------------------------------------------------------------------------------
 
 var (
-	fallbackClient = newClient(&internal.DSN{
+	fallbackClient = newClient(&DSN{
 		ProjectID: "<project_id>",
 		Token:     "<token>",
 
