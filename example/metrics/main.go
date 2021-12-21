@@ -72,15 +72,13 @@ func counterWithLabels(ctx context.Context) {
 	counter := meter.NewInt64Counter("app_or_package_name.component1.cache",
 		metric.WithDescription("Cache hits and misses"),
 	)
-	// Bind the counter to some labels.
-	hits := counter.Bind(attribute.String("type", "hits"))
-	misses := counter.Bind(attribute.String("type", "misses"))
-
 	for {
 		if rand.Float64() < 0.3 {
-			misses.Add(ctx, 1)
+			// add a count to hits
+			counter.Add(ctx, 1, attribute.String("type", "hits"))
 		} else {
-			hits.Add(ctx, 1)
+			// add a count to misses
+			counter.Add(ctx, 1, attribute.String("type", "misses"))
 		}
 
 		time.Sleep(time.Millisecond)
