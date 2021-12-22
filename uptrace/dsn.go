@@ -2,6 +2,7 @@ package uptrace
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 )
 
@@ -23,7 +24,11 @@ func (dsn *DSN) AppHost() string {
 	if dsn.Host == "uptrace.dev" {
 		return "app.uptrace.dev"
 	}
-	return dsn.Host
+	host, _, err := net.SplitHostPort(dsn.Host)
+	if err != nil {
+		return dsn.Host
+	}
+	return net.JoinHostPort(host, "15678")
 }
 
 func (dsn *DSN) OTLPHost() string {
@@ -59,7 +64,7 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsn.Host == "api.uptrace.dev" {
 		dsn.Host = "uptrace.dev"
 	}
-	if dsn.Host == "uptrace.dev" {
+	if dsn.Host != "uptrace.dev" {
 		return &dsn, nil
 	}
 
