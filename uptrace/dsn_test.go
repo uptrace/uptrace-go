@@ -24,4 +24,14 @@ func TestParseDSN(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, test.otlp, dsn.OTLPHost())
 	}
+
+	dsn, err := uptrace.ParseDSN("http://localhost:14317")
+	require.NoError(t, err)
+	require.Equal(t, "localhost:14317", dsn.OTLPHost())
+	require.Equal(t, "http://localhost:14318", dsn.AppAddr())
+
+	dsn, err = uptrace.ParseDSN("https://key@uptrace.dev/project_id")
+	require.NoError(t, err)
+	require.Equal(t, "otlp.uptrace.dev:4317", dsn.OTLPHost())
+	require.Equal(t, "https://app.uptrace.dev", dsn.AppAddr())
 }

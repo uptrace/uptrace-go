@@ -20,15 +20,15 @@ func (dsn *DSN) String() string {
 	return dsn.original
 }
 
-func (dsn *DSN) AppHost() string {
+func (dsn *DSN) AppAddr() string {
 	if dsn.Host == "uptrace.dev" {
-		return "app.uptrace.dev"
+		return "https://app.uptrace.dev"
 	}
 	host, _, err := net.SplitHostPort(dsn.Host)
 	if err != nil {
 		return dsn.Host
 	}
-	return net.JoinHostPort(host, "15678")
+	return dsn.Scheme + "://" + net.JoinHostPort(host, "14318")
 }
 
 func (dsn *DSN) OTLPHost() string {
