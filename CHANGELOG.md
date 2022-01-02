@@ -2,10 +2,10 @@
 
 ## v1.3.0
 
-- Added `WithResourceDetectors` to configure resource detectors, for example:
-
 - Updated OpenTelemetry to
   [v1.3.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.3.0).
+
+- Added `WithResourceDetectors` to configure resource detectors, for example:
 
 ```go
 import (
