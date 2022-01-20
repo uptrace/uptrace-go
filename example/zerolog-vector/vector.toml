@@ -1,0 +1,11 @@
+[sources.in]
+  type = "file"
+  include = ["zerolog.log"]
+
+[sinks.out]
+  type = "http"
+  inputs = ["in"]
+  encoding.codec = "ndjson"
+  compression = "gzip"
+  uri = "https://api.uptrace.dev/api/v1/vector-logs"
+  headers.uptrace-dsn = "https://<token>@uptrace.dev/<project_id>"

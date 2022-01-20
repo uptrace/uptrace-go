@@ -1,6 +1,6 @@
 module github.com/uptrace/uptrace-go/example/basic
 
-go 1.15
+go 1.17
 
 replace github.com/uptrace/uptrace-go => ../..
 
