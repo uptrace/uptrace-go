@@ -16,7 +16,7 @@ logger.Error().
 	Msg("message from zerolog")
 ```
 
-That may not very convenient, so we recommend to try
+That is not very convenient, so we recommend to use
 [Zap](https://github.com/uptrace/opentelemetry-go-extra/tree/main/otelzap) or
 [logrus](https://github.com/uptrace/opentelemetry-go-extra/tree/main/otellogrus) instead.
 
