@@ -64,9 +64,6 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsn.Host == "api.uptrace.dev" {
 		dsn.Host = "uptrace.dev"
 	}
-	if dsn.Host != "uptrace.dev" {
-		return &dsn, nil
-	}
 
 	if len(u.Path) > 0 {
 		dsn.ProjectID = u.Path[1:]

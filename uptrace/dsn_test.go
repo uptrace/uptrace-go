@@ -25,7 +25,7 @@ func TestParseDSN(t *testing.T) {
 		require.Equal(t, test.otlp, dsn.OTLPHost())
 	}
 
-	dsn, err := uptrace.ParseDSN("http://localhost:14317")
+	dsn, err := uptrace.ParseDSN("http://token@localhost:14317/project_id")
 	require.NoError(t, err)
 	require.Equal(t, "localhost:14317", dsn.OTLPHost())
 	require.Equal(t, "http://localhost:14318", dsn.AppAddr())
