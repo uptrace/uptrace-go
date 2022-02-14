@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/rs/zerolog v1.26.1
-	github.com/uptrace/uptrace-go v1.3.1
+	github.com/uptrace/uptrace-go v1.4.0
 	go.opentelemetry.io/otel v1.4.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
@@ -27,7 +27,6 @@ require (
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.4.0 // indirect
-	go.opentelemetry.io/otel/sdk/export/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.4.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.12.0 // indirect
