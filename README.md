@@ -44,7 +44,7 @@ func main() {
 	// Configure OpenTelemetry with sensible defaults.
 	uptrace.ConfigureOpentelemetry(
 		// copy your project DSN here or use UPTRACE_DSN env var
-		// uptrace.WithDSN("https://<key>@api.uptrace.dev/<project_id>"),
+		// uptrace.WithDSN("https://<key>@uptrace.dev/<project_id>"),
 
 		uptrace.WithServiceName("myservice"),
 		uptrace.WithServiceVersion("1.0.0"),
