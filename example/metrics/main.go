@@ -55,7 +55,7 @@ func main() {
 // counter demonstrates how to measure non-decreasing numbers, for example,
 // number of requests or connections.
 func counter(ctx context.Context) {
-	counter := meter.NewInt64Counter("app_or_package_name.component1.requests",
+	counter := meter.NewInt64Counter("some.prefix.requests",
 		metric.WithDescription("Number of requests"),
 	)
 
@@ -69,7 +69,7 @@ func counter(ctx context.Context) {
 // to measurements. Using this simple trick, you can get number of hits, misses,
 // sum = hits + misses, and hit_rate = hits / (hits + misses).
 func counterWithLabels(ctx context.Context) {
-	counter := meter.NewInt64Counter("app_or_package_name.component1.cache",
+	counter := meter.NewInt64Counter("some.prefix.cache",
 		metric.WithDescription("Cache hits and misses"),
 	)
 	for {
@@ -90,7 +90,7 @@ func counterWithLabels(ctx context.Context) {
 //
 // See upDownCounterObserver for a better example how to measure number of goroutines.
 func upDownCounter(ctx context.Context) {
-	counter := meter.NewInt64UpDownCounter("app_or_package_name.component1.goroutines",
+	counter := meter.NewInt64UpDownCounter("some.prefix.goroutines",
 		metric.WithDescription("Number of goroutines"),
 	)
 
@@ -105,7 +105,7 @@ func upDownCounter(ctx context.Context) {
 // request or query timings. With this instrument you get total number of records,
 // avg/min/max values, and heatmaps/percentiles.
 func histogram(ctx context.Context) {
-	durRecorder := meter.NewInt64Histogram("app_or_package_name.component1.request_duration",
+	durRecorder := meter.NewInt64Histogram("some.prefix.request_duration",
 		metric.WithUnit("microseconds"),
 		metric.WithDescription("Duration of requests"),
 	)
@@ -138,8 +138,8 @@ func counterObserver(ctx context.Context) {
 			)
 		})
 
-	hitsCounter = batchObserver.NewInt64CounterObserver("app_or_package_name.component2.cache_hits")
-	missesCounter = batchObserver.NewInt64CounterObserver("app_or_package_name.component2.cache_misses")
+	hitsCounter = batchObserver.NewInt64CounterObserver("some.prefix.cache_hits")
+	missesCounter = batchObserver.NewInt64CounterObserver("some.prefix.cache_misses")
 
 	for {
 		if rand.Float64() < 0.3 {
@@ -155,7 +155,7 @@ func counterObserver(ctx context.Context) {
 // upDownCounterObserver demonstrates how to measure numbers that can go up and down,
 // for example, number of goroutines or customers.
 func upDownCounterObserver(ctx context.Context) {
-	_ = meter.NewInt64UpDownCounterObserver("app_or_package_name.component2.goroutines",
+	_ = meter.NewInt64UpDownCounterObserver("some.prefix.goroutines",
 		func(ctx context.Context, result metric.Int64ObserverResult) {
 			num := runtime.NumGoroutine()
 			result.Observe(int64(num))
@@ -164,11 +164,11 @@ func upDownCounterObserver(ctx context.Context) {
 	)
 }
 
-// gaugeObserver demonstrates how to measure numbers that can go up and down,
-// for example, number of goroutines or customers.
+// gaugeObserver demonstrates how to measure non-additive numbers that can go up and down,
+// for example, cache hit rate or memory utilization.
 func gaugeObserver(ctx context.Context) {
-	_ = meter.NewInt64GaugeObserver("app_or_package_name.component2.goroutines2",
-		func(ctx context.Context, result metric.Int64ObserverResult) {
+	_ = meter.NewFloat64GaugeObserver("some.prefix.goroutines2",
+		func(ctx context.Context, result metric.Float64ObserverResult) {
 			num := runtime.NumGoroutine()
 			result.Observe(int64(num))
 		},
