@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.5.0
+
+- Updated OpenTelemetry to
+  [v1.5.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.5.0).
+
 ## v1.4.0
 
 - Updated OpenTelemetry to
