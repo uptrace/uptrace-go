@@ -8,7 +8,7 @@ exclude go.opentelemetry.io/proto/otlp v0.15.0
 
 require (
 	github.com/rs/zerolog v1.26.1
-	github.com/uptrace/uptrace-go v1.5.0
+	github.com/uptrace/uptrace-go v1.6.0
 	go.opentelemetry.io/otel v1.6.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
