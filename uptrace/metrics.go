@@ -43,12 +43,12 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 		return
 	}
 
+	global.SetMeterProvider(ctrl)
+	client.ctrl = ctrl
+
 	if err := runtimemetrics.Start(); err != nil {
 		internal.Logger.Printf("runtimemetrics.Start failed: %s", err)
 	}
-
-	global.SetMeterProvider(ctrl)
-	client.ctrl = ctrl
 }
 
 func otlpmetricClient(dsn *DSN) otlpmetric.Client {
