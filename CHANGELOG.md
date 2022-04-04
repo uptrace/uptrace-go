@@ -5,6 +5,14 @@
 - Updated OpenTelemetry to
   [v1.6.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.6.0).
 
+If you are getting
+`cannot use sum.CoerceToFloat64(desc.NumberKind()) (value of type float64) as type *float64 in struct literal`,
+add the following line to `go.mod` and run `go mod tidy`:
+
+```
+exclude go.opentelemetry.io/proto/otlp v0.15.0
+```
+
 ## v1.5.0
 
 - Updated OpenTelemetry to
