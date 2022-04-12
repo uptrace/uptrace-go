@@ -9,13 +9,16 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 var tracer = otel.Tracer("app_or_package_name")
 
 func main() {
+	log := otelzap.New(zap.NewExample())
 	ctx := context.Background()
 
 	// Configure OpenTelemetry with sensible defaults.
@@ -34,13 +37,13 @@ func main() {
 
 	countryInfo, err := fetchCountryInfo(ctx)
 	if err != nil {
-		span.RecordError(err)
+		log.ErrorContext(ctx, "fetchCountryInfo failed", zap.Error(err))
 		return
 	}
 
 	countryCode, countryName, err := parseCountryInfo(ctx, countryInfo)
 	if err != nil {
-		span.RecordError(err)
+		log.ErrorContext(ctx, "parseCountryInfo failed", zap.Error(err))
 		return
 	}
 
