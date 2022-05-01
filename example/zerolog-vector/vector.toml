@@ -2,10 +2,24 @@
   type = "file"
   include = ["zerolog.log"]
 
-[sinks.out]
-  type = "http"
-  inputs = ["in"]
-  encoding.codec = "ndjson"
-  compression = "gzip"
-  uri = "https://api.uptrace.dev/api/v1/vector-logs"
-  headers.uptrace-dsn = "https://<token>@uptrace.dev/<project_id>"
+# [sinks.uptrace]
+#   type = "http"
+#   inputs = ["in"]
+#   encoding.codec = "ndjson"
+#   compression = "gzip"
+#   uri = "https://api.uptrace.dev/api/v1/vector-logs"
+#   headers.uptrace-dsn = "https://<token>@uptrace.dev/<project_id>"
+
+[sinks.cloki]
+type = "loki"
+inputs = [ "in" ]
+endpoint = "http://localhost:3100"
+
+  [sinks.cloki.labels]
+  forwarder = "vector"
+  event = "{{ event_field }}"
+  key = "value"
+  "\"{{ event_field }}\"" = "{{ another_event_field }}"
+
+  [sinks.cloki.encoding]
+  codec = "json"
