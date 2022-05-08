@@ -69,7 +69,6 @@ func (cfg *config) newResource() *resource.Resource {
 	ctx := context.TODO()
 
 	res, err := resource.New(ctx,
-		resource.WithSchemaURL(semconv.SchemaURL),
 		resource.WithFromEnv(),
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
