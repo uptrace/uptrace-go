@@ -18,6 +18,10 @@ func TestParseDSN(t *testing.T) {
 		{"https://key@uptrace.dev/1", "otlp.uptrace.dev:4317"},
 		{"https://key@api.uptrace.dev/1", "otlp.uptrace.dev:4317"},
 		{"https://key@localhost:1234/1", "localhost:1234"},
+		{
+			"https://AQDan_E_EPe3QAF9fMP0PiVr5UWOu4q5@demo-api.uptrace.dev:4317/1",
+			"demo-api.uptrace.dev:4317",
+		},
 	}
 	for _, test := range tests {
 		dsn, err := uptrace.ParseDSN(test.dsn)
