@@ -13,7 +13,9 @@
 [sinks.cloki]
 type = "loki"
 inputs = [ "in" ]
-endpoint = "http://localhost:3100"
+endpoint = "http://localhost:14317/1"
+tenant_id = "https://project1_secret_token@localhost/1"
+
 
   [sinks.cloki.labels]
   forwarder = "vector"
