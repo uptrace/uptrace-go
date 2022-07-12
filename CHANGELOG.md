@@ -1,9 +1,14 @@
 # Changelog
 
-## v1.7.3
+## v1.8.0
 
 - Updated OpenTelemetry to
-  [v1.7.9](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.7.0).
+  [v1.8.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.8.0).
+
+## v1.7.0
+
+- Updated OpenTelemetry to
+  [v1.7.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.7.0).
 
 ## v1.6.3
 
