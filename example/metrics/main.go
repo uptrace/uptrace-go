@@ -46,7 +46,7 @@ func main() {
 
 	// Advanced.
 	go counterWithLabels(ctx)
-	go counterObserverAdvanced()
+	go counterObserverAdvanced(ctx)
 
 	fmt.Println("reporting measurements to Uptrace... (press Ctrl+C to stop)")
 
@@ -136,7 +136,7 @@ func counterObserver(ctx context.Context) {
 // for example, number of goroutines or customers.
 func upDownCounterObserver(ctx context.Context) {
 	counter, err := meter.AsyncInt64().UpDownCounter(
-		"some.prefix.up_down_counter",
+		"some.prefix.up_down_counter_async",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
 	)
