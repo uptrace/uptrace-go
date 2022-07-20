@@ -56,7 +56,7 @@ uptrace.ConfigureOpentelemetry(
 )
 ```
 
-See [documentation](https://docs.uptrace.dev/guide/go.html#resource-detectors) for details.
+See [documentation](https://uptrace.dev/docs/go.html#resource-detectors) for details.
 
 ## v1.2.0
 

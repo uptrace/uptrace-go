@@ -4,7 +4,7 @@ This example demonstrates how to collect [Zerolog](https://github.com/rs/zerolog
 [Vector](https://vector.dev/).
 
 Because Zerolog does not support
-[context](https://opentelemetry.uptrace.dev/guide/go-tracing.html#context), we have to propagate
+[context](https://uptrace.dev/opentelemetry/go-tracing.html#context), we have to propagate
 `trace_id` and `span_id` in the log message:
 
 ```shell
@@ -37,4 +37,4 @@ UPTRACE_DSN="https://<token>@uptrace.dev/<project_id>" go run .
 ```
 
 Click the link in your terminal to open Uptrace. See
-[Logging](https://docs.uptrace.dev/guide/logging.html) for details.
+[Logging](https://uptrace.dev/docs/logging.html) for details.
