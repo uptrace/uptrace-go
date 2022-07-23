@@ -27,7 +27,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 	ctx := context.TODO()
 	cfg := newConfig(opts)
 
-	if !cfg.tracingEnabled && cfg.metricsEnabled {
+	if !cfg.tracingEnabled && !cfg.metricsEnabled {
 		return
 	}
 
