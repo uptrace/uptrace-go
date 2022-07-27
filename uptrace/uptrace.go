@@ -9,6 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -100,6 +101,10 @@ func Shutdown(ctx context.Context) error {
 
 func ForceFlush(ctx context.Context) error {
 	return activeClient().ForceFlush(ctx)
+}
+
+func TracerProvider() *sdktrace.TracerProvider {
+	return activeClient().tp
 }
 
 // SetLogger sets the logger to the given one.

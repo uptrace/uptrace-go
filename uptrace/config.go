@@ -30,6 +30,7 @@ type config struct {
 	tracerProvider    *sdktrace.TracerProvider
 	traceSampler      sdktrace.Sampler
 	prettyPrint       bool
+	bspOptions        []sdktrace.BatchSpanProcessorOption
 
 	// Metrics options
 
@@ -201,12 +202,17 @@ func WithTraceSampler(sampler sdktrace.Sampler) TracingOption {
 	})
 }
 
-// WithTextMapPropagator sets the global TextMapPropagator used by OpenTelemetry.
+// WithPropagator sets the global TextMapPropagator used by OpenTelemetry.
 // The default is propagation.TraceContext and propagation.Baggage.
-func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOption {
+func WithPropagator(propagator propagation.TextMapPropagator) TracingOption {
 	return tracingOption(func(cfg *config) {
 		cfg.textMapPropagator = propagator
 	})
+}
+
+// WithTextMapPropagator is an alias for WithPropagator.
+func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOption {
+	return WithPropagator(propagator)
 }
 
 // WithPrettyPrintSpanExporter adds a span exproter that prints spans to stdout.
@@ -214,6 +220,13 @@ func WithTextMapPropagator(propagator propagation.TextMapPropagator) TracingOpti
 func WithPrettyPrintSpanExporter() TracingOption {
 	return tracingOption(func(cfg *config) {
 		cfg.prettyPrint = true
+	})
+}
+
+// WithBatchSpanProcessorOption specifies options used to created BatchSpanProcessor.
+func WithBatchSpanProcessorOption(opts ...sdktrace.BatchSpanProcessorOption) TracingOption {
+	return tracingOption(func(cfg *config) {
+		cfg.bspOptions = append(cfg.bspOptions, opts...)
 	})
 }
 

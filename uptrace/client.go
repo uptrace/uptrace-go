@@ -18,8 +18,8 @@ type client struct {
 	dsn    *DSN
 	tracer trace.Tracer
 
-	provider *sdktrace.TracerProvider
-	ctrl     *controller.Controller
+	tp   *sdktrace.TracerProvider
+	ctrl *controller.Controller
 }
 
 func newClient(dsn *DSN) *client {
@@ -30,22 +30,24 @@ func newClient(dsn *DSN) *client {
 }
 
 func (c *client) Shutdown(ctx context.Context) (lastErr error) {
-	if c.provider != nil {
-		if err := c.provider.Shutdown(ctx); err != nil {
+	if c.tp != nil {
+		if err := c.tp.Shutdown(ctx); err != nil {
 			lastErr = err
 		}
+		c.tp = nil
 	}
 	if c.ctrl != nil {
 		if err := c.ctrl.Stop(ctx); err != nil {
 			lastErr = err
 		}
+		c.ctrl = nil
 	}
 	return lastErr
 }
 
 func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
-	if c.provider != nil {
-		if err := c.provider.ForceFlush(ctx); err != nil {
+	if c.tp != nil {
+		if err := c.tp.ForceFlush(ctx); err != nil {
 			lastErr = err
 		}
 	}
@@ -76,7 +78,9 @@ func (c *client) ReportPanic(ctx context.Context) {
 	}
 	c.reportPanic(ctx, val)
 	// Force flush since we are about to exit on panic.
-	_ = ForceFlush(ctx)
+	if c.tp != nil {
+		_ = c.tp.ForceFlush(ctx)
+	}
 	// Re-throw the panic.
 	panic(val)
 }

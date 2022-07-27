@@ -39,11 +39,14 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 	}
 
 	queueSize := queueSize()
-	bsp := sdktrace.NewBatchSpanProcessor(exp,
+	bspOptions := []sdktrace.BatchSpanProcessorOption{
 		sdktrace.WithMaxQueueSize(queueSize),
 		sdktrace.WithMaxExportBatchSize(queueSize),
-		sdktrace.WithBatchTimeout(10*time.Second),
-	)
+		sdktrace.WithBatchTimeout(10 * time.Second),
+	}
+	bspOptions = append(bspOptions, cfg.bspOptions...)
+
+	bsp := sdktrace.NewBatchSpanProcessor(exp, bspOptions...)
 	provider.RegisterSpanProcessor(bsp)
 
 	if cfg.prettyPrint {
@@ -55,7 +58,7 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 		}
 	}
 
-	client.provider = provider
+	client.tp = provider
 }
 
 func otlpTraceClient(dsn *DSN) otlptrace.Client {
