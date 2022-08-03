@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.0
+
+- Updated OpenTelemetry to
+  [v1.9.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.9.0) and semconv
+  v1.12.0.
+
 ## v1.8.0
 
 - Updated OpenTelemetry to
