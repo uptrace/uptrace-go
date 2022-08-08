@@ -134,7 +134,7 @@ func WithDeploymentEnvironment(env string) Option {
 //
 // The default is to use `OTEL_RESOURCE_ATTRIBUTES` env var, for example,
 // `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice,service.version=1.0.0`.
-func WithResourceAttributes(attrs []attribute.KeyValue) Option {
+func WithResourceAttributes(attrs ...attribute.KeyValue) Option {
 	return option(func(cfg *config) {
 		cfg.resourceAttributes = append(cfg.resourceAttributes, attrs...)
 	})
