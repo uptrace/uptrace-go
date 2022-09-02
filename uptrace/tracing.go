@@ -16,23 +16,23 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 )
 
-func configureTracing(ctx context.Context, client *client, cfg *config) {
-	provider := cfg.tracerProvider
+func configureTracing(ctx context.Context, client *client, conf *config) {
+	provider := conf.tracerProvider
 	if provider == nil {
 		var opts []sdktrace.TracerProviderOption
 
-		if res := cfg.newResource(); res != nil {
+		if res := conf.newResource(); res != nil {
 			opts = append(opts, sdktrace.WithResource(res))
 		}
-		if cfg.traceSampler != nil {
-			opts = append(opts, sdktrace.WithSampler(cfg.traceSampler))
+		if conf.traceSampler != nil {
+			opts = append(opts, sdktrace.WithSampler(conf.traceSampler))
 		}
 
 		provider = sdktrace.NewTracerProvider(opts...)
 		otel.SetTracerProvider(provider)
 	}
 
-	exp, err := otlptrace.New(ctx, otlpTraceClient(client.dsn))
+	exp, err := otlptrace.New(ctx, otlpTraceClient(conf, client.dsn))
 	if err != nil {
 		internal.Logger.Printf("otlptrace.New failed: %s", err)
 		return
@@ -44,12 +44,12 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 		sdktrace.WithMaxExportBatchSize(queueSize),
 		sdktrace.WithBatchTimeout(10 * time.Second),
 	}
-	bspOptions = append(bspOptions, cfg.bspOptions...)
+	bspOptions = append(bspOptions, conf.bspOptions...)
 
 	bsp := sdktrace.NewBatchSpanProcessor(exp, bspOptions...)
 	provider.RegisterSpanProcessor(bsp)
 
-	if cfg.prettyPrint {
+	if conf.prettyPrint {
 		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			internal.Logger.Printf(err.Error())
@@ -61,7 +61,7 @@ func configureTracing(ctx context.Context, client *client, cfg *config) {
 	client.tp = provider
 }
 
-func otlpTraceClient(dsn *DSN) otlptrace.Client {
+func otlpTraceClient(conf *config, dsn *DSN) otlptrace.Client {
 	options := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(dsn.OTLPHost()),
 		otlptracegrpc.WithHeaders(map[string]string{
@@ -71,7 +71,10 @@ func otlpTraceClient(dsn *DSN) otlptrace.Client {
 		otlptracegrpc.WithCompressor(gzip.Name),
 	}
 
-	if dsn.Scheme == "https" {
+	if conf.tlsConf != nil {
+		creds := credentials.NewTLS(conf.tlsConf)
+		options = append(options, otlptracegrpc.WithTLSCredentials(creds))
+	} else if dsn.Scheme == "https" {
 		// Create credentials using system certificates.
 		creds := credentials.NewClientTLSFromCert(nil, "")
 		options = append(options, otlptracegrpc.WithTLSCredentials(creds))

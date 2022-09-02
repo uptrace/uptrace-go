@@ -2,11 +2,11 @@
 
 ![build workflow](https://github.com/uptrace/uptrace-go/actions/workflows/build.yml/badge.svg)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go/uptrace)
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/docs/go.html)
-[![Chat](https://discordapp.com/api/guilds/1000404569202884628/widget.png)](https://discord.gg/YF8tdP8Pmk)
+[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/get/uptrace-go.html)
+[![Chat](https://img.shields.io/badge/-telegram-red?color=white&logo=telegram&logoColor=black)](https://t.me/uptrace)
 
-<a href="https://uptrace.dev/docs/go.html">
-  <img src="https://uptrace.dev/docs/devicon/go-original.svg" height="200px" />
+<a href="https://uptrace.dev/get/uptrace-go.html">
+  <img src="https://uptrace.dev/get/devicon/go-original.svg" height="200px" />
 </a>
 
 ## Introduction
@@ -79,5 +79,5 @@ func main() {
 ## Links
 
 - [Examples](example)
-- [Documentation](https://uptrace.dev/docs/go.html)
+- [Documentation](https://uptrace.dev/get/uptrace-go.html)
 - [Instrumentations](https://uptrace.dev/opentelemetry/instrumentations/?lang=go)

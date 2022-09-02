@@ -2,6 +2,7 @@ package uptrace
 
 import (
 	"context"
+	"crypto/tls"
 	"os"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -22,6 +23,8 @@ type config struct {
 	resourceAttributes []attribute.KeyValue
 	resourceDetectors  []resource.Detector
 	resource           *resource.Resource
+
+	tlsConf *tls.Config
 
 	// Tracing options
 
@@ -155,6 +158,12 @@ func WithResourceDetectors(detectors ...resource.Detector) Option {
 func WithResource(resource *resource.Resource) Option {
 	return option(func(cfg *config) {
 		cfg.resource = resource
+	})
+}
+
+func WithTLSConfig(tlsConf *tls.Config) Option {
+	return option(func(cfg *config) {
+		cfg.tlsConf = tlsConf
 	})
 }
 
