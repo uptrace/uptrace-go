@@ -37,4 +37,4 @@ UPTRACE_DSN="https://<token>@uptrace.dev/<project_id>" go run .
 ```
 
 Click the link in your terminal to open Uptrace. See
-[Logging](https://uptrace.dev/docs/logging.html) for details.
+[Structured Logging](https://uptrace.dev/opentelemetry/structured-logging.html) for details.

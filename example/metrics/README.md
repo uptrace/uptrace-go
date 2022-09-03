@@ -10,4 +10,4 @@ For more details, see:
 
 - [Introduction to OpenTelemetry metrics](https://uptrace.dev/opentelemetry/metrics.html)
 - [Go Metrics API](https://uptrace.dev/opentelemetry/go-metrics.html#instruments)
-- [Uptrace query language for metrics](https://uptrace.dev/docs/querying-metrics.html)
+- [Uptrace query language for metrics](https://uptrace.dev/get/querying-metrics.html)
