@@ -5,13 +5,11 @@ import (
 	"time"
 
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric/global"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/metric/view"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding/gzip"
 
@@ -19,39 +17,30 @@ import (
 )
 
 func configureMetrics(ctx context.Context, client *client, cfg *config) {
-	exportKindSelector := aggregation.StatelessTemporalitySelector()
-
-	exp, err := otlpmetric.New(ctx, otlpmetricClient(client.dsn),
-		otlpmetric.WithMetricAggregationTemporalitySelector(exportKindSelector))
+	exp, err := otlpmetricClient(ctx, client.dsn)
 	if err != nil {
-		internal.Logger.Printf("otlpmetric.New failed: %s", err)
 		return
 	}
 
-	ctrl := controller.New(
-		processor.NewFactory(
-			selector.NewWithHistogramDistribution(),
-			exportKindSelector,
-		),
-		controller.WithExporter(exp),
-		controller.WithCollectPeriod(10*time.Second), // same as default
-		controller.WithResource(cfg.newResource()),
+	reader := metric.NewPeriodicReader(
+		exp,
+		metric.WithInterval(20*time.Second),
+		metric.WithTemporalitySelector(statelessTemporalitySelector),
+	)
+	provider := metric.NewMeterProvider(
+		metric.WithReader(reader),
+		metric.WithResource(cfg.newResource()),
 	)
 
-	if err := ctrl.Start(ctx); err != nil {
-		internal.Logger.Printf("ctrl.Start failed: %s", err)
-		return
-	}
-
-	global.SetMeterProvider(ctrl)
-	client.ctrl = ctrl
+	global.SetMeterProvider(provider)
+	client.mp = provider
 
 	if err := runtimemetrics.Start(); err != nil {
 		internal.Logger.Printf("runtimemetrics.Start failed: %s", err)
 	}
 }
 
-func otlpmetricClient(dsn *DSN) otlpmetric.Client {
+func otlpmetricClient(ctx context.Context, dsn *DSN) (metric.Exporter, error) {
 	options := []otlpmetricgrpc.Option{
 		otlpmetricgrpc.WithEndpoint(dsn.OTLPHost()),
 		otlpmetricgrpc.WithHeaders(map[string]string{
@@ -69,5 +58,9 @@ func otlpmetricClient(dsn *DSN) otlpmetric.Client {
 		options = append(options, otlpmetricgrpc.WithInsecure())
 	}
 
-	return otlpmetricgrpc.NewClient(options...)
+	return otlpmetricgrpc.New(ctx, options...)
+}
+
+func statelessTemporalitySelector(kind view.InstrumentKind) metricdata.Temporality {
+	return metricdata.DeltaTemporality
 }

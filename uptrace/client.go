@@ -6,7 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	"go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -18,8 +18,8 @@ type client struct {
 	dsn    *DSN
 	tracer trace.Tracer
 
-	tp   *sdktrace.TracerProvider
-	ctrl *controller.Controller
+	tp *sdktrace.TracerProvider
+	mp *metric.MeterProvider
 }
 
 func newClient(dsn *DSN) *client {
@@ -36,11 +36,11 @@ func (c *client) Shutdown(ctx context.Context) (lastErr error) {
 		}
 		c.tp = nil
 	}
-	if c.ctrl != nil {
-		if err := c.ctrl.Stop(ctx); err != nil {
+	if c.mp != nil {
+		if err := c.mp.Shutdown(ctx); err != nil {
 			lastErr = err
 		}
-		c.ctrl = nil
+		c.mp = nil
 	}
 	return lastErr
 }
@@ -48,6 +48,11 @@ func (c *client) Shutdown(ctx context.Context) (lastErr error) {
 func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
 	if c.tp != nil {
 		if err := c.tp.ForceFlush(ctx); err != nil {
+			lastErr = err
+		}
+	}
+	if c.mp != nil {
+		if err := c.mp.ForceFlush(ctx); err != nil {
 			lastErr = err
 		}
 	}
