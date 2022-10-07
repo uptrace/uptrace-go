@@ -5,7 +5,7 @@ go 1.17
 replace github.com/uptrace/uptrace-go => ../..
 
 require (
-	github.com/uptrace/uptrace-go v1.9.0
+	github.com/uptrace/uptrace-go v1.10.0
 	go.opentelemetry.io/otel v1.10.0
 	go.opentelemetry.io/otel/trace v1.10.0
 )
