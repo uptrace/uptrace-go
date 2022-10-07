@@ -5,7 +5,8 @@ include = ["zerolog.log"]
 [sinks.out]
 type = "http"
 inputs = ["in"]
-encoding.codec = "ndjson"
+encoding.codec = "json"
+framing.method = "newline_delimited"
 compression = "gzip"
 uri = "https://api.uptrace.dev/api/v1/vector/logs"
 headers.uptrace-dsn = "https://<token>@uptrace.dev/<project_id>"
