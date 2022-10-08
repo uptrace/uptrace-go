@@ -5,8 +5,8 @@ go 1.17
 replace github.com/uptrace/uptrace-go => ../..
 
 require (
-	github.com/uptrace/opentelemetry-go-extra/otelzap v0.1.16
-	github.com/uptrace/uptrace-go v1.10.0
+	github.com/uptrace/opentelemetry-go-extra/otelzap v0.1.17
+	github.com/uptrace/uptrace-go v1.10.1
 	go.opentelemetry.io/otel v1.10.0
 	go.uber.org/zap v1.23.0
 )
@@ -17,7 +17,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.16 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.17 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.36.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.10.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.32.1 // indirect
