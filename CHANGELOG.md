@@ -4,7 +4,7 @@
 
 - Updated OpenTelemetry to
   [v1.10.0](https://github.com/open-telemetry/opentelemetry-go/releases/tag/v1.10.0). This release
-  has **known issues** with exporting metrics so stay on v1.9.0 if you affected.
+  has **known issues** with exporting metrics so stay on v1.9.0 if you are affected.
 
 ## v1.9.0
 
