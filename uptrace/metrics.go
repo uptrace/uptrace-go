@@ -62,5 +62,10 @@ func otlpmetricClient(ctx context.Context, dsn *DSN) (metric.Exporter, error) {
 }
 
 func statelessTemporalitySelector(kind view.InstrumentKind) metricdata.Temporality {
-	return metricdata.DeltaTemporality
+	switch kind {
+	case view.SyncCounter, view.AsyncCounter, view.SyncHistogram:
+		return metricdata.DeltaTemporality
+	default:
+		return metricdata.CumulativeTemporality
+	}
 }
