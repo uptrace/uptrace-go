@@ -2,8 +2,6 @@ module github.com/uptrace/uptrace-go
 
 go 1.18
 
-retract v1.10.0
-
 require (
 	github.com/stretchr/testify v1.8.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.36.1

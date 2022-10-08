@@ -24,7 +24,7 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 
 	reader := metric.NewPeriodicReader(
 		exp,
-		metric.WithInterval(20*time.Second),
+		metric.WithInterval(60*time.Second),
 		metric.WithTemporalitySelector(statelessTemporalitySelector),
 	)
 	provider := metric.NewMeterProvider(
@@ -62,6 +62,7 @@ func otlpmetricClient(ctx context.Context, dsn *DSN) (metric.Exporter, error) {
 }
 
 func statelessTemporalitySelector(kind view.InstrumentKind) metricdata.Temporality {
+	return metricdata.CumulativeTemporality
 	switch kind {
 	case view.SyncCounter, view.AsyncCounter, view.SyncHistogram:
 		return metricdata.DeltaTemporality
