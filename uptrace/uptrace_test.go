@@ -32,7 +32,7 @@ func TestUnknownToken(t *testing.T) {
 	var logger Logger
 	uptrace.SetLogger(&logger)
 
-	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("https://UNKNOWN@api.uptrace.dev/2"))
+	uptrace.ConfigureOpentelemetry(uptrace.WithDSN("https://UNKNOWN@uptrace.dev/2"))
 
 	uptrace.ReportError(ctx, errors.New("hello"))
 	err := uptrace.Shutdown(ctx)

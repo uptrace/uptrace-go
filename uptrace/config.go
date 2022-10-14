@@ -98,7 +98,7 @@ func (fn option) apply(conf *config) {
 }
 
 // WithDSN configures a data source name that is used to connect to Uptrace, for example,
-// `https://<token>@api.uptrace.dev/<project_id>`.
+// `https://<token>@uptrace.dev/<project_id>`.
 //
 // The default is to use UPTRACE_DSN environment variable.
 func WithDSN(dsn string) Option {

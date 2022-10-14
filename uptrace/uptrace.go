@@ -70,7 +70,7 @@ var (
 		Token:     "<token>",
 
 		Scheme: "https",
-		Host:   "api.uptrace.dev",
+		Host:   "uptrace.dev",
 	})
 	atomicClient atomic.Value
 )

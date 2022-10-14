@@ -141,7 +141,7 @@ See [documentation](https://uptrace.dev/get/uptrace-go.html#resource-detectors) 
 
   ```go
   uptrace.ConfigureOpentelemetry(
-      uptrace.WithDSN("https://<token>@api.uptrace.dev/<project_id>"),
+      uptrace.WithDSN("https://<token>@uptrace.dev/<project_id>"),
       uptrace.WithServiceName("myservice"),
       uptrace.WithServiceVersion("1.0.0"),
   )
@@ -153,7 +153,7 @@ See [documentation](https://uptrace.dev/get/uptrace-go.html#resource-detectors) 
   uptrace.ConfigureOpentelemetry(
       uptrace.WithMetricsDisabled(),
 
-      uptrace.WithDSN("https://<token>@api.uptrace.dev/<project_id>"),
+      uptrace.WithDSN("https://<token>@uptrace.dev/<project_id>"),
       uptrace.WithServiceName("myservice"),
       uptrace.WithServiceVersion("1.0.0"),
   )

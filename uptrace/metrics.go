@@ -19,6 +19,7 @@ import (
 func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	exp, err := otlpmetricClient(ctx, client.dsn)
 	if err != nil {
+		internal.Logger.Printf("otlpmetricClient failed: %s", err)
 		return
 	}
 

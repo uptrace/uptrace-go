@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
-
-	"github.com/uptrace/uptrace-go/uptrace"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/metric/view"
 )
 
 var meter = global.MeterProvider().Meter("app_or_package_name")
@@ -23,30 +25,46 @@ var meter = global.MeterProvider().Meter("app_or_package_name")
 func main() {
 	ctx := context.Background()
 
-	// Configure OpenTelemetry with sensible defaults.
-	uptrace.ConfigureOpentelemetry(
-		// copy your project DSN here or use UPTRACE_DSN env var
-		// uptrace.WithDSN("https://<key>@api.uptrace.dev/<project_id>"),
+	// // Configure OpenTelemetry with sensible defaults.
+	// uptrace.ConfigureOpentelemetry(
+	// 	// copy your project DSN here or use UPTRACE_DSN env var
+	// 	// uptrace.WithDSN("https://<key>@uptrace.dev/<project_id>"),
 
-		uptrace.WithServiceName("myservice"),
-		uptrace.WithServiceVersion("1.0.0"),
+	// 	uptrace.WithServiceName("myservice"),
+	// 	uptrace.WithServiceVersion("1.0.0"),
+	// )
+	// // Send buffered spans and free resources.
+	// defer uptrace.Shutdown(ctx)
+
+	exp, err := stdoutmetric.New()
+	if err != nil {
+		panic(err)
+	}
+
+	reader := metric.NewPeriodicReader(
+		exp,
+		metric.WithInterval(10*time.Second),
+		metric.WithTemporalitySelector(statelessTemporalitySelector),
 	)
-	// Send buffered spans and free resources.
-	defer uptrace.Shutdown(ctx)
+	provider := metric.NewMeterProvider(
+		metric.WithReader(reader),
+	)
+
+	global.SetMeterProvider(provider)
 
 	// Synchronous instruments.
-	go counter(ctx)
-	go upDownCounter(ctx)
-	go histogram(ctx)
+	// go counter(ctx)
+	// go upDownCounter(ctx)
+	// go histogram(ctx)
 
-	// Asynchronous instruments.
-	go counterObserver(ctx)
+	// // Asynchronous instruments.
+	// go counterObserver(ctx)
 	go upDownCounterObserver(ctx)
-	go gaugeObserver(ctx)
+	// go gaugeObserver(ctx)
 
-	// Advanced.
-	go counterWithLabels(ctx)
-	go counterObserverAdvanced(ctx)
+	// // Advanced.
+	// go counterWithLabels(ctx)
+	// go counterObserverAdvanced(ctx)
 
 	fmt.Println("reporting measurements to Uptrace... (press Ctrl+C to stop)")
 
@@ -66,7 +84,7 @@ func counter(ctx context.Context) {
 
 	for {
 		counter.Add(ctx, 1)
-		time.Sleep(time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
 
@@ -202,36 +220,43 @@ func counterWithLabels(ctx context.Context) {
 // counterObserverAdvanced demonstrates how to measure monotonic (non-decreasing) numbers,
 // for example, number of requests or connections.
 func counterObserverAdvanced(ctx context.Context) {
-	// stats is our data source updated by some library.
-	var stats struct {
+	type Stats struct {
 		Hits   int64 // atomic
 		Misses int64 // atomic
 	}
+	// stats is our data source updated by some library.
+	var stats Stats
 
 	hitsCounter, _ := meter.AsyncInt64().Counter("some.prefix.cache_hits")
-	missesCounter, _ := meter.AsyncInt64().Counter("some.prefix.cache_misses")
+	var prev Stats
 
 	if err := meter.RegisterCallback(
 		[]instrument.Asynchronous{
 			hitsCounter,
-			missesCounter,
 		},
 		// SDK periodically calls this function to collect data.
 		func(ctx context.Context) {
-			hitsCounter.Observe(ctx, atomic.LoadInt64(&stats.Hits))
-			missesCounter.Observe(ctx, atomic.LoadInt64(&stats.Misses))
+			hitsCounter.Observe(ctx, atomic.LoadInt64(&stats.Hits)-prev.Hits)
+			prev = stats
 		},
 	); err != nil {
 		panic(err)
 	}
 
 	for {
-		if rand.Float64() < 0.3 {
-			atomic.AddInt64(&stats.Misses, 1)
-		} else {
-			atomic.AddInt64(&stats.Hits, 1)
-		}
+		atomic.AddInt64(&stats.Hits, 1)
+		time.Sleep(time.Second)
+	}
+}
 
-		time.Sleep(time.Millisecond)
+func statelessTemporalitySelector(kind view.InstrumentKind) metricdata.Temporality {
+	return metricdata.CumulativeTemporality
+
+	switch kind {
+	case view.SyncCounter, view.AsyncCounter, view.SyncHistogram:
+		fmt.Println("delta")
+		return metricdata.DeltaTemporality
+	default:
+		return metricdata.CumulativeTemporality
 	}
 }

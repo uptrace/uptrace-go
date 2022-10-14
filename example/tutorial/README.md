@@ -5,5 +5,5 @@ This is an application written for the tutorial
 It can be run with:
 
 ```bash
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<token>@uptrace.dev/<project_id>" go run .
 ```

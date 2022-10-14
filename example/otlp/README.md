@@ -5,5 +5,5 @@ This example shows how to configure
 to Uptrace.
 
 ```go
-UPTRACE_DSN="https://<token>@api.uptrace.dev/<project_id>" go run main.go
+UPTRACE_DSN="https://<token>@uptrace.dev/<project_id>" go run main.go
 ```
