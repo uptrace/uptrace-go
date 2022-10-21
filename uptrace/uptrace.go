@@ -3,6 +3,7 @@ package uptrace
 import (
 	"context"
 	"os"
+	"strings"
 	"sync/atomic"
 
 	"github.com/uptrace/uptrace-go/internal"
@@ -26,33 +27,42 @@ func ConfigureOpentelemetry(opts ...Option) {
 	}
 
 	ctx := context.TODO()
-	cfg := newConfig(opts)
+	conf := newConfig(opts)
 
-	if !cfg.tracingEnabled && !cfg.metricsEnabled {
+	if !conf.tracingEnabled && !conf.metricsEnabled {
 		return
 	}
 
-	dsn, err := ParseDSN(cfg.dsn)
+	dsn, err := ParseDSN(conf.dsn)
 	if err != nil {
-		internal.Logger.Printf("uptrace is disabled: %s", err)
+		internal.Logger.Printf("invalid Uptrace DSN: %s (Uptrace is disabled)", err)
 		return
+	}
+
+	if dsn.ProjectID == "<project_id>" || dsn.Token == "<token>" {
+		internal.Logger.Printf("dummy Uptrace DSN detected: %q (Uptrace is disabled)", conf.dsn)
+		return
+	}
+
+	if strings.HasSuffix(dsn.Host, ":14318") {
+		internal.Logger.Printf("uptrace-go uses OTLP/gRPC exporter, but got host %q", dsn.Host)
 	}
 
 	client := newClient(dsn)
 
-	configurePropagator(cfg)
-	if cfg.tracingEnabled {
-		configureTracing(ctx, client, cfg)
+	configurePropagator(conf)
+	if conf.tracingEnabled {
+		configureTracing(ctx, client, conf)
 	}
-	if cfg.metricsEnabled {
-		configureMetrics(ctx, client, cfg)
+	if conf.metricsEnabled {
+		configureMetrics(ctx, client, conf)
 	}
 
 	atomicClient.Store(client)
 }
 
-func configurePropagator(cfg *config) {
-	textMapPropagator := cfg.textMapPropagator
+func configurePropagator(conf *config) {
+	textMapPropagator := conf.textMapPropagator
 	if textMapPropagator == nil {
 		textMapPropagator = propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{},

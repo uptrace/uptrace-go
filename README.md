@@ -11,7 +11,7 @@
 
 ## Introduction
 
-uptrace-go is an OpenTelemery distribution configured to export
+uptrace-go is an OpenTelemery Go distribution configured to export
 [traces](https://uptrace.dev/opentelemetry/distributed-tracing.html) and
 [metrics](https://uptrace.dev/opentelemetry/metrics.html) to Uptrace.
 
