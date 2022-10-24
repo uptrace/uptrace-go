@@ -2,7 +2,11 @@ package uptrace
 
 import (
 	"context"
+	cryptorand "crypto/rand"
+	"encoding/binary"
+	"math/rand"
 	"runtime"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -10,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding/gzip"
 
@@ -21,6 +26,7 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 	if provider == nil {
 		var opts []sdktrace.TracerProviderOption
 
+		opts = append(opts, sdktrace.WithIDGenerator(defaultIDGenerator()))
 		if res := conf.newResource(); res != nil {
 			opts = append(opts, sdktrace.WithResource(res))
 		}
@@ -97,4 +103,48 @@ func queueSize() int {
 		return max
 	}
 	return n
+}
+
+//------------------------------------------------------------------------------
+
+type idGenerator struct {
+	sync.Mutex
+	randSource *rand.Rand
+}
+
+var _ sdktrace.IDGenerator = (*idGenerator)(nil)
+
+// NewIDs returns a new trace and span ID.
+func (gen *idGenerator) NewIDs(ctx context.Context) (trace.TraceID, trace.SpanID) {
+	now := time.Now()
+
+	gen.Lock()
+	defer gen.Unlock()
+
+	tid := trace.TraceID{}
+	// TraceIDRatioBased sampler expects first 8 bytes to be random.
+	_, _ = gen.randSource.Read(tid[:8])
+	binary.BigEndian.PutUint64(tid[8:], uint64(now.UnixNano()))
+
+	sid := trace.SpanID{}
+	_, _ = gen.randSource.Read(sid[:])
+
+	return tid, sid
+}
+
+// NewSpanID returns a ID for a new span in the trace with traceID.
+func (gen *idGenerator) NewSpanID(ctx context.Context, traceID trace.TraceID) trace.SpanID {
+	gen.Lock()
+	defer gen.Unlock()
+	sid := trace.SpanID{}
+	_, _ = gen.randSource.Read(sid[:])
+	return sid
+}
+
+func defaultIDGenerator() *idGenerator {
+	gen := &idGenerator{}
+	var rngSeed int64
+	_ = binary.Read(cryptorand.Reader, binary.LittleEndian, &rngSeed)
+	gen.randSource = rand.New(rand.NewSource(rngSeed))
+	return gen
 }
