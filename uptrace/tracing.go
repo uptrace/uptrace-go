@@ -107,7 +107,7 @@ func queueSize() int {
 
 //------------------------------------------------------------------------------
 
-var prec = int64(time.Second / 100)
+const prec = int64(time.Second / 100)
 
 type idGenerator struct {
 	sync.Mutex
