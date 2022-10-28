@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPrecision(t *testing.T) {
-	dur := time.Duration(math.MaxUint32) * time.Duration(prec)
-	require.Equal(t, "11930h27m52.95s", dur.String())
+func TestSpanPrecision(t *testing.T) {
+	dur := time.Duration(math.MaxUint32) * time.Duration(spanIDPrec)
+	require.Equal(t, "1193h2m47.295s", dur.String())
 }
 
 func TestIDGenerator(t *testing.T) {
