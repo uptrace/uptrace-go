@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/rs/zerolog v1.28.0
-	github.com/uptrace/uptrace-go v1.11.2
+	github.com/uptrace/uptrace-go v1.11.3
 	go.opentelemetry.io/otel v1.11.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
@@ -34,7 +34,7 @@ require (
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	google.golang.org/genproto v0.0.0-20221025140454-527a21cfbd71 // indirect
+	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
