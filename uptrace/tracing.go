@@ -127,9 +127,8 @@ func (gen *idGenerator) NewIDs(ctx context.Context) (trace.TraceID, trace.SpanID
 	defer gen.Unlock()
 
 	tid := trace.TraceID{}
-	// TraceIDRatioBased sampler expects first 8 bytes to be random.
-	_, _ = gen.randSource.Read(tid[:8])
-	binary.LittleEndian.PutUint64(tid[8:], uint64(unixNano/traceIDPrec))
+	binary.LittleEndian.PutUint64(tid[:8], uint64(unixNano/traceIDPrec))
+	_, _ = gen.randSource.Read(tid[8:])
 
 	sid := trace.SpanID{}
 	_, _ = gen.randSource.Read(sid[:4])
