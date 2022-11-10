@@ -107,10 +107,7 @@ func queueSize() int {
 
 //------------------------------------------------------------------------------
 
-const (
-	spanIDPrec  = int64(time.Millisecond)
-	traceIDPrec = int64(time.Microsecond)
-)
+const spanIDPrec = int64(time.Millisecond)
 
 type idGenerator struct {
 	sync.Mutex
@@ -127,12 +124,12 @@ func (gen *idGenerator) NewIDs(ctx context.Context) (trace.TraceID, trace.SpanID
 	defer gen.Unlock()
 
 	tid := trace.TraceID{}
-	binary.LittleEndian.PutUint64(tid[:8], uint64(unixNano/traceIDPrec))
+	binary.BigEndian.PutUint64(tid[:8], uint64(unixNano))
 	_, _ = gen.randSource.Read(tid[8:])
 
 	sid := trace.SpanID{}
-	_, _ = gen.randSource.Read(sid[:4])
-	binary.LittleEndian.PutUint32(sid[4:], uint32(unixNano/spanIDPrec))
+	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
+	_, _ = gen.randSource.Read(sid[4:])
 
 	return tid, sid
 }
@@ -145,8 +142,8 @@ func (gen *idGenerator) NewSpanID(ctx context.Context, traceID trace.TraceID) tr
 	defer gen.Unlock()
 
 	sid := trace.SpanID{}
-	_, _ = gen.randSource.Read(sid[:4])
-	binary.LittleEndian.PutUint32(sid[4:], uint32(unixNano/spanIDPrec))
+	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
+	_, _ = gen.randSource.Read(sid[4:])
 
 	return sid
 }
