@@ -22,6 +22,7 @@ func handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	uptrace.ConfigureOpentelemetry(
+		// FIXME
 		uptrace.WithDSN("https://<token>@uptrace.dev/<project_id>"),
 
 		uptrace.WithServiceName("myservice"),
