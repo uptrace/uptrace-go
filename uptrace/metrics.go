@@ -25,7 +25,7 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 
 	reader := metric.NewPeriodicReader(
 		exp,
-		metric.WithInterval(60*time.Second),
+		metric.WithInterval(15*time.Second),
 		metric.WithTemporalitySelector(statelessTemporalitySelector),
 	)
 	provider := metric.NewMeterProvider(
