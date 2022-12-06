@@ -17,7 +17,7 @@ import (
 )
 
 func configureMetrics(ctx context.Context, client *client, cfg *config) {
-	exp, err := otlpmetricClient(ctx, client.dsn)
+	exp, err := otlpmetricClient(ctx, cfg, client.dsn)
 	if err != nil {
 		internal.Logger.Printf("otlpmetricClient failed: %s", err)
 		return
@@ -41,7 +41,7 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	}
 }
 
-func otlpmetricClient(ctx context.Context, dsn *DSN) (metric.Exporter, error) {
+func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (metric.Exporter, error) {
 	options := []otlpmetricgrpc.Option{
 		otlpmetricgrpc.WithEndpoint(dsn.OTLPHost()),
 		otlpmetricgrpc.WithHeaders(map[string]string{
@@ -51,7 +51,10 @@ func otlpmetricClient(ctx context.Context, dsn *DSN) (metric.Exporter, error) {
 		otlpmetricgrpc.WithCompressor(gzip.Name),
 	}
 
-	if dsn.Scheme == "https" {
+	if conf.tlsConf != nil {
+		creds := credentials.NewTLS(conf.tlsConf)
+		options = append(options, otlpmetricgrpc.WithTLSCredentials(creds))
+	} else if dsn.Scheme == "https" {
 		// Create credentials using system certificates.
 		creds := credentials.NewClientTLSFromCert(nil, "")
 		options = append(options, otlpmetricgrpc.WithTLSCredentials(creds))
