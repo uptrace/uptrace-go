@@ -3,7 +3,7 @@ module test
 go 1.18
 
 require (
-	github.com/uptrace/uptrace-go v1.11.6
+	github.com/uptrace/uptrace-go v1.11.7
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0
 	go.opentelemetry.io/otel/trace v1.11.2
 )
