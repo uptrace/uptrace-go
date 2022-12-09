@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
-	"go.opentelemetry.io/otel/sdk/metric/view"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding/gzip"
 
@@ -26,7 +25,6 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	reader := metric.NewPeriodicReader(
 		exp,
 		metric.WithInterval(15*time.Second),
-		metric.WithTemporalitySelector(statelessTemporalitySelector),
 	)
 	provider := metric.NewMeterProvider(
 		metric.WithReader(reader),
@@ -49,6 +47,7 @@ func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (metric.Expor
 			"uptrace-dsn": dsn.String(),
 		}),
 		otlpmetricgrpc.WithCompressor(gzip.Name),
+		otlpmetricgrpc.WithTemporalitySelector(preferDeltaTemporalitySelector),
 	}
 
 	if conf.tlsConf != nil {
@@ -65,12 +64,13 @@ func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (metric.Expor
 	return otlpmetricgrpc.New(ctx, options...)
 }
 
-func statelessTemporalitySelector(kind view.InstrumentKind) metricdata.Temporality {
-	return metricdata.CumulativeTemporality
-	// switch kind {
-	// case view.SyncCounter, view.AsyncCounter, view.SyncHistogram:
-	// 	return metricdata.DeltaTemporality
-	// default:
-	// 	return metricdata.CumulativeTemporality
-	// }
+func preferDeltaTemporalitySelector(kind metric.InstrumentKind) metricdata.Temporality {
+	switch kind {
+	case metric.InstrumentKindSyncCounter,
+		metric.InstrumentKindAsyncCounter,
+		metric.InstrumentKindSyncHistogram:
+		return metricdata.DeltaTemporality
+	default:
+		return metricdata.CumulativeTemporality
+	}
 }
