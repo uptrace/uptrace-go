@@ -2,17 +2,10 @@ package uptrace
 
 import (
 	"context"
-	"math"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestSpanPrecision(t *testing.T) {
-	dur := time.Duration(math.MaxUint32) * time.Duration(spanIDPrec)
-	require.Equal(t, "1193h2m47.295s", dur.String())
-}
 
 func TestIDGenerator(t *testing.T) {
 	ctx := context.Background()

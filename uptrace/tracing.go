@@ -107,8 +107,6 @@ func queueSize() int {
 
 //------------------------------------------------------------------------------
 
-const spanIDPrec = int64(time.Millisecond)
-
 type idGenerator struct {
 	sync.Mutex
 	randSource *rand.Rand
@@ -128,23 +126,17 @@ func (gen *idGenerator) NewIDs(ctx context.Context) (trace.TraceID, trace.SpanID
 	_, _ = gen.randSource.Read(tid[8:])
 
 	sid := trace.SpanID{}
-	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
-	_, _ = gen.randSource.Read(sid[4:])
+	_, _ = gen.randSource.Read(sid[:])
 
 	return tid, sid
 }
 
 // NewSpanID returns a ID for a new span in the trace with traceID.
 func (gen *idGenerator) NewSpanID(ctx context.Context, traceID trace.TraceID) trace.SpanID {
-	unixNano := time.Now().UnixNano()
-
 	gen.Lock()
 	defer gen.Unlock()
-
 	sid := trace.SpanID{}
-	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
-	_, _ = gen.randSource.Read(sid[4:])
-
+	_, _ = gen.randSource.Read(sid[:])
 	return sid
 }
 
