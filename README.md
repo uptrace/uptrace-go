@@ -2,10 +2,10 @@
 
 ![build workflow](https://github.com/uptrace/uptrace-go/actions/workflows/build.yml/badge.svg)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go/uptrace)
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/get/uptrace-go.html)
+[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/get/opentelemetry-go.html)
 [![Chat](https://img.shields.io/badge/-telegram-red?color=white&logo=telegram&logoColor=black)](https://t.me/uptrace)
 
-<a href="https://uptrace.dev/get/uptrace-go.html">
+<a href="https://uptrace.dev/get/opentelemetry-go.html">
   <img src="https://uptrace.dev/get/devicon/go-original.svg" height="200px" />
 </a>
 
@@ -79,7 +79,7 @@ func main() {
 ## Links
 
 - [Examples](example)
-- [Documentation](https://uptrace.dev/get/uptrace-go.html)
+- [Documentation](https://uptrace.dev/get/opentelemetry-go.html)
 - [OpenTelemetry Instrumentations](https://uptrace.dev/opentelemetry/instrumentations/?lang=go)
 - [OpenTelemetry Gin](https://uptrace.dev/opentelemetry/instrumentations/go-gin.html)
 - [OpenTelemetry Golang GRPC](https://uptrace.dev/opentelemetry/instrumentations/go-grpc.html)
