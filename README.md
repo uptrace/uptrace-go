@@ -45,7 +45,7 @@ func main() {
 	// Configure OpenTelemetry with sensible defaults.
 	uptrace.ConfigureOpentelemetry(
 		// copy your project DSN here or use UPTRACE_DSN env var
-		// uptrace.WithDSN("https://<key>@uptrace.dev/<project_id>"),
+		// uptrace.WithDSN("https://<token>@uptrace.dev/<project_id>"),
 
 		uptrace.WithServiceName("myservice"),
 		uptrace.WithServiceVersion("1.0.0"),
@@ -80,4 +80,6 @@ func main() {
 
 - [Examples](example)
 - [Documentation](https://uptrace.dev/get/uptrace-go.html)
-- [Instrumentations](https://uptrace.dev/opentelemetry/instrumentations/?lang=go)
+- [OpenTelemetry Instrumentations](https://uptrace.dev/opentelemetry/instrumentations/?lang=go)
+- [OpenTelemetry Gin](https://uptrace.dev/opentelemetry/instrumentations/go-gin.html)
+- [OpenTelemetry Golang GRPC](https://uptrace.dev/opentelemetry/instrumentations/go-grpc.html)
