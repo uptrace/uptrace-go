@@ -107,7 +107,7 @@ func WithDSN(dsn string) Option {
 	})
 }
 
-// WithServiceVersion configures `service.name` resource attribute.
+// WithServiceName configures `service.name` resource attribute.
 func WithServiceName(serviceName string) Option {
 	return option(func(conf *config) {
 		attr := semconv.ServiceNameKey.String(serviceName)
@@ -196,7 +196,7 @@ func WithTracingDisabled() TracingOption {
 	return WithTracingEnabled(false)
 }
 
-// TracerProvider overwrites the default Uptrace tracer provider.
+// WithTracerProvider overwrites the default Uptrace tracer provider.
 // You can use it to configure Uptrace distro to use OTLP exporter.
 func WithTracerProvider(provider *sdktrace.TracerProvider) TracingOption {
 	return tracingOption(func(conf *config) {
