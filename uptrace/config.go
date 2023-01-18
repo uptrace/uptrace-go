@@ -198,6 +198,9 @@ func WithTracingDisabled() TracingOption {
 
 // WithTracerProvider overwrites the default Uptrace tracer provider.
 // You can use it to configure Uptrace distro to use OTLP exporter.
+//
+// When this option is used, you might need to call otel.SetTracerProvider
+// to register the provider as the global trace provider.
 func WithTracerProvider(provider *sdktrace.TracerProvider) TracingOption {
 	return tracingOption(func(conf *config) {
 		conf.tracerProvider = provider
