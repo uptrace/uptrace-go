@@ -68,15 +68,8 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	if len(u.Path) > 0 {
 		dsn.ProjectID = u.Path[1:]
 	}
-	if dsn.ProjectID == "" {
-		return nil, fmt.Errorf("DSN=%q does not have a project id", dsnStr)
-	}
-
 	if u.User != nil {
 		dsn.Token = u.User.Username()
-	}
-	if dsn.Token == "" {
-		return nil, fmt.Errorf("DSN=%q does not have a token", dsnStr)
 	}
 
 	return &dsn, nil
