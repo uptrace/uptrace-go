@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
 
@@ -58,7 +59,7 @@ func main() {
 // counter demonstrates how to measure non-decreasing numbers, for example,
 // number of requests or connections.
 func counter(ctx context.Context) {
-	counter, _ := meter.SyncInt64().Counter(
+	counter, _ := meter.Int64Counter(
 		"some.prefix.counter",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
@@ -73,7 +74,7 @@ func counter(ctx context.Context) {
 // upDownCounter demonstrates how to measure numbers that can go up and down, for example,
 // number of goroutines or customers.
 func upDownCounter(ctx context.Context) {
-	counter, _ := meter.SyncInt64().UpDownCounter(
+	counter, _ := meter.Int64UpDownCounter(
 		"some.prefix.up_down_counter",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
@@ -94,7 +95,7 @@ func upDownCounter(ctx context.Context) {
 // request or query timings. With this instrument you get total number of records,
 // avg/min/max values, and heatmaps/percentiles.
 func histogram(ctx context.Context) {
-	durRecorder, _ := meter.SyncInt64().Histogram(
+	durRecorder, _ := meter.Int64Histogram(
 		"some.prefix.histogram",
 		instrument.WithUnit("microseconds"),
 		instrument.WithDescription("TODO"),
@@ -111,21 +112,19 @@ func histogram(ctx context.Context) {
 // counterObserver demonstrates how to measure monotonic (non-decreasing) numbers,
 // for example, number of requests or connections.
 func counterObserver(ctx context.Context) {
-	counter, _ := meter.AsyncInt64().Counter(
+	counter, _ := meter.Int64ObservableCounter(
 		"some.prefix.counter_observer",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
 	)
 
 	var number int64
-	if err := meter.RegisterCallback(
-		[]instrument.Asynchronous{
-			counter,
-		},
+	if _, err := meter.RegisterCallback(
 		// SDK periodically calls this function to collect data.
-		func(ctx context.Context) {
+		func(ctx context.Context, o metric.Observer) error {
 			number++
-			counter.Observe(ctx, number)
+			o.ObserveInt64(counter, number)
+			return nil
 		},
 	); err != nil {
 		panic(err)
@@ -135,7 +134,7 @@ func counterObserver(ctx context.Context) {
 // upDownCounterObserver demonstrates how to measure numbers that can go up and down,
 // for example, number of goroutines or customers.
 func upDownCounterObserver(ctx context.Context) {
-	counter, err := meter.AsyncInt64().UpDownCounter(
+	counter, err := meter.Int64ObservableUpDownCounter(
 		"some.prefix.up_down_counter_async",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
@@ -144,13 +143,11 @@ func upDownCounterObserver(ctx context.Context) {
 		panic(err)
 	}
 
-	if err := meter.RegisterCallback(
-		[]instrument.Asynchronous{
-			counter,
-		},
-		func(ctx context.Context) {
+	if _, err := meter.RegisterCallback(
+		func(ctx context.Context, o metric.Observer) error {
 			num := runtime.NumGoroutine()
-			counter.Observe(ctx, int64(num))
+			o.ObserveInt64(counter, int64(num))
+			return nil
 		},
 	); err != nil {
 		panic(err)
@@ -160,18 +157,16 @@ func upDownCounterObserver(ctx context.Context) {
 // gaugeObserver demonstrates how to measure non-additive numbers that can go up and down,
 // for example, cache hit rate or memory utilization.
 func gaugeObserver(ctx context.Context) {
-	gauge, _ := meter.AsyncFloat64().Gauge(
+	gauge, _ := meter.Float64ObservableGauge(
 		"some.prefix.gauge_observer",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("TODO"),
 	)
 
-	if err := meter.RegisterCallback(
-		[]instrument.Asynchronous{
-			gauge,
-		},
-		func(ctx context.Context) {
-			gauge.Observe(ctx, rand.Float64())
+	if _, err := meter.RegisterCallback(
+		func(ctx context.Context, o metric.Observer) error {
+			o.ObserveFloat64(gauge, rand.Float64())
+			return nil
 		},
 	); err != nil {
 		panic(err)
@@ -182,7 +177,7 @@ func gaugeObserver(ctx context.Context) {
 // to measurements. Using this simple trick, you can get number of hits, misses,
 // sum = hits + misses, and hit_rate = hits / (hits + misses).
 func counterWithLabels(ctx context.Context) {
-	counter, _ := meter.SyncInt64().Counter(
+	counter, _ := meter.Int64Counter(
 		"some.prefix.cache",
 		instrument.WithDescription("Cache hits and misses"),
 	)
@@ -208,18 +203,15 @@ func counterObserverAdvanced(ctx context.Context) {
 		Misses int64 // atomic
 	}
 
-	hitsCounter, _ := meter.AsyncInt64().Counter("some.prefix.cache_hits")
-	missesCounter, _ := meter.AsyncInt64().Counter("some.prefix.cache_misses")
+	hitsCounter, _ := meter.Int64ObservableCounter("some.prefix.cache_hits")
+	missesCounter, _ := meter.Int64ObservableCounter("some.prefix.cache_misses")
 
-	if err := meter.RegisterCallback(
-		[]instrument.Asynchronous{
-			hitsCounter,
-			missesCounter,
-		},
+	if _, err := meter.RegisterCallback(
 		// SDK periodically calls this function to collect data.
-		func(ctx context.Context) {
-			hitsCounter.Observe(ctx, atomic.LoadInt64(&stats.Hits))
-			missesCounter.Observe(ctx, atomic.LoadInt64(&stats.Misses))
+		func(ctx context.Context, o metric.Observer) error {
+			o.ObserveInt64(hitsCounter, atomic.LoadInt64(&stats.Hits))
+			o.ObserveInt64(missesCounter, atomic.LoadInt64(&stats.Misses))
+			return nil
 		},
 	); err != nil {
 		panic(err)
