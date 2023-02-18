@@ -49,6 +49,7 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 		sdktrace.WithMaxQueueSize(queueSize),
 		sdktrace.WithMaxExportBatchSize(queueSize),
 		sdktrace.WithBatchTimeout(10 * time.Second),
+		sdktrace.WithExportTimeout(10 * time.Second),
 	}
 	bspOptions = append(bspOptions, conf.bspOptions...)
 

@@ -15,8 +15,8 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 )
 
-func configureMetrics(ctx context.Context, client *client, cfg *config) {
-	exp, err := otlpmetricClient(ctx, cfg, client.dsn)
+func configureMetrics(ctx context.Context, client *client, conf *config) {
+	exp, err := otlpmetricClient(ctx, conf, client.dsn)
 	if err != nil {
 		internal.Logger.Printf("otlpmetricClient failed: %s", err)
 		return
@@ -28,7 +28,7 @@ func configureMetrics(ctx context.Context, client *client, cfg *config) {
 	)
 	provider := metric.NewMeterProvider(
 		metric.WithReader(reader),
-		metric.WithResource(cfg.newResource()),
+		metric.WithResource(conf.newResource()),
 	)
 
 	global.SetMeterProvider(provider)
