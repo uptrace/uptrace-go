@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
@@ -38,6 +39,7 @@ type config struct {
 	// Metrics options
 
 	metricsEnabled bool
+	metricOptions  []metric.Option
 }
 
 func newConfig(opts []Option) *config {
@@ -269,4 +271,10 @@ func WithMetricsEnabled(on bool) MetricsOption {
 // WithMetricsDisabled disables metrics.
 func WithMetricsDisabled() MetricsOption {
 	return WithMetricsEnabled(false)
+}
+
+func WithMetricOption(options ...metric.Option) MetricsOption {
+	return metricsOption(func(conf *config) {
+		conf.metricOptions = append(conf.metricOptions, options...)
+	})
 }
