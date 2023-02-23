@@ -26,10 +26,9 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 		exp,
 		metric.WithInterval(15*time.Second),
 	)
-	provider := metric.NewMeterProvider(
-		metric.WithReader(reader),
-		metric.WithResource(conf.newResource()),
-	)
+
+	providerOptions := append(conf.metricOptions, metric.WithReader(reader), metric.WithResource(conf.newResource()))
+	provider := metric.NewMeterProvider(providerOptions...)
 
 	global.SetMeterProvider(provider)
 	client.mp = provider
