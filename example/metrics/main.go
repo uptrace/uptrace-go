@@ -149,6 +149,7 @@ func upDownCounterObserver(ctx context.Context) {
 			o.ObserveInt64(counter, int64(num))
 			return nil
 		},
+		counter,
 	); err != nil {
 		panic(err)
 	}
@@ -168,6 +169,7 @@ func gaugeObserver(ctx context.Context) {
 			o.ObserveFloat64(gauge, rand.Float64())
 			return nil
 		},
+		gauge,
 	); err != nil {
 		panic(err)
 	}
@@ -213,6 +215,8 @@ func counterObserverAdvanced(ctx context.Context) {
 			o.ObserveInt64(missesCounter, atomic.LoadInt64(&stats.Misses))
 			return nil
 		},
+		hitsCounter,
+		missesCounter,
 	); err != nil {
 		panic(err)
 	}
