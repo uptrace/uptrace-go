@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
+	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-
+	"go.opentelemetry.io/otel/sdk/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -40,7 +39,8 @@ func main() {
 	// Call shutdown to flush the buffers when program exits.
 	defer bsp.Shutdown(ctx)
 
-	tracerProvider := sdktrace.NewTracerProvider()
+	idg := xray.NewIDGenerator()
+	tracerProvider := sdktrace.NewTracerProvider(trace.WithIDGenerator(idg))
 	tracerProvider.RegisterSpanProcessor(bsp)
 
 	// Install our tracer provider and we are done.
@@ -49,15 +49,6 @@ func main() {
 	tracer := otel.Tracer("app_or_package_name")
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()
-
-	_, child1 := tracer.Start(ctx, "child1")
-	child1.SetAttributes(attribute.String("key1", "value1"))
-	child1.RecordError(errors.New("error1"))
-	child1.End()
-
-	_, child2 := tracer.Start(ctx, "child2")
-	child2.SetAttributes(attribute.Int("key2", 42), attribute.Float64("key3", 123.456))
-	child2.End()
 
 	fmt.Println("trace id:", span.SpanContext().TraceID())
 }

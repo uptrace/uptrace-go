@@ -63,13 +63,21 @@ func main() {
 
 	// The passed ctx carries the parent span (main).
 	// That is how OpenTelemetry manages span relations.
-	_, child1 := tracer.Start(ctx, "child1-of-main")
-	child1.SetAttributes(attribute.String("key1", "value1"))
+	_, child1 := tracer.Start(ctx, "GET /posts/:id")
+	child1.SetAttributes(
+		attribute.String("http.method", "GET"),
+		attribute.String("http.route", "/posts/:id"),
+		attribute.String("http.url", "http://localhost:8080/posts/123"),
+		attribute.Int("http.status_code", 200),
+	)
 	child1.RecordError(errors.New("error1"))
 	child1.End()
 
-	_, child2 := tracer.Start(ctx, "child2-of-main")
-	child2.SetAttributes(attribute.Int("key2", 42), attribute.Float64("key3", 123.456))
+	_, child2 := tracer.Start(ctx, "SELECT")
+	child2.SetAttributes(
+		attribute.String("db.system", "mysql"),
+		attribute.String("db.statement", "SELECT * FROM posts LIMIT 100"),
+	)
 	child2.End()
 
 	fmt.Printf("trace: %s\n", uptrace.TraceURL(main))
