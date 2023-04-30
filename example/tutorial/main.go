@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 

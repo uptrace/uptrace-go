@@ -9,6 +9,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/rs/zerolog"
+
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 
