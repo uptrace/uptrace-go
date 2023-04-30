@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 func handlerFunc(w http.ResponseWriter, r *http.Request) {
