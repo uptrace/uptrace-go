@@ -186,10 +186,10 @@ func counterWithLabels(ctx context.Context) {
 	for {
 		if rand.Float64() < 0.3 {
 			// increment hits
-			counter.Add(ctx, 1, attribute.String("type", "hits"))
+			counter.Add(ctx, 1, metric.WithAttributes(attribute.String("type", "hits")))
 		} else {
 			// increments misses
-			counter.Add(ctx, 1, attribute.String("type", "misses"))
+			counter.Add(ctx, 1, metric.WithAttributes(attribute.String("type", "misses")))
 		}
 
 		time.Sleep(time.Millisecond)
