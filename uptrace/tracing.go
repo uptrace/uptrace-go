@@ -26,7 +26,7 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 	if provider == nil {
 		var opts []sdktrace.TracerProviderOption
 
-		opts = append(opts, sdktrace.WithIDGenerator(defaultIDGenerator()))
+		opts = append(opts, sdktrace.WithIDGenerator(newIDGenerator()))
 		if res := conf.newResource(); res != nil {
 			opts = append(opts, sdktrace.WithResource(res))
 		}
@@ -108,9 +108,19 @@ func queueSize() int {
 
 //------------------------------------------------------------------------------
 
+const spanIDPrec = int64(time.Millisecond)
+
 type idGenerator struct {
 	sync.Mutex
 	randSource *rand.Rand
+}
+
+func newIDGenerator() *idGenerator {
+	gen := &idGenerator{}
+	var rngSeed int64
+	_ = binary.Read(cryptorand.Reader, binary.LittleEndian, &rngSeed)
+	gen.randSource = rand.New(rand.NewSource(rngSeed))
+	return gen
 }
 
 var _ sdktrace.IDGenerator = (*idGenerator)(nil)
@@ -127,24 +137,22 @@ func (gen *idGenerator) NewIDs(ctx context.Context) (trace.TraceID, trace.SpanID
 	_, _ = gen.randSource.Read(tid[8:])
 
 	sid := trace.SpanID{}
-	_, _ = gen.randSource.Read(sid[:])
+	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
+	_, _ = gen.randSource.Read(sid[4:])
 
 	return tid, sid
 }
 
 // NewSpanID returns a ID for a new span in the trace with traceID.
 func (gen *idGenerator) NewSpanID(ctx context.Context, traceID trace.TraceID) trace.SpanID {
+	unixNano := time.Now().UnixNano()
+
 	gen.Lock()
 	defer gen.Unlock()
-	sid := trace.SpanID{}
-	_, _ = gen.randSource.Read(sid[:])
-	return sid
-}
 
-func defaultIDGenerator() *idGenerator {
-	gen := &idGenerator{}
-	var rngSeed int64
-	_ = binary.Read(cryptorand.Reader, binary.LittleEndian, &rngSeed)
-	gen.randSource = rand.New(rand.NewSource(rngSeed))
-	return gen
+	sid := trace.SpanID{}
+	binary.BigEndian.PutUint32(sid[:4], uint32(unixNano/spanIDPrec))
+	_, _ = gen.randSource.Read(sid[4:])
+
+	return sid
 }
