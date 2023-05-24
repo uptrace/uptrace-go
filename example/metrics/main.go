@@ -13,13 +13,11 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/instrument"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 
-var meter = global.MeterProvider().Meter("app_or_package_name")
+var meter = otel.MeterProvider().Meter("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
@@ -61,8 +59,8 @@ func main() {
 func counter(ctx context.Context) {
 	counter, _ := meter.Int64Counter(
 		"some.prefix.counter",
-		instrument.WithUnit("1"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("1"),
+		metric.WithDescription("TODO"),
 	)
 
 	for {
@@ -76,8 +74,8 @@ func counter(ctx context.Context) {
 func upDownCounter(ctx context.Context) {
 	counter, _ := meter.Int64UpDownCounter(
 		"some.prefix.up_down_counter",
-		instrument.WithUnit("1"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("1"),
+		metric.WithDescription("TODO"),
 	)
 
 	for {
@@ -97,8 +95,8 @@ func upDownCounter(ctx context.Context) {
 func histogram(ctx context.Context) {
 	durRecorder, _ := meter.Int64Histogram(
 		"some.prefix.histogram",
-		instrument.WithUnit("microseconds"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("microseconds"),
+		metric.WithDescription("TODO"),
 	)
 
 	for {
@@ -114,8 +112,8 @@ func histogram(ctx context.Context) {
 func counterObserver(ctx context.Context) {
 	counter, _ := meter.Int64ObservableCounter(
 		"some.prefix.counter_observer",
-		instrument.WithUnit("1"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("1"),
+		metric.WithDescription("TODO"),
 	)
 
 	var number int64
@@ -136,8 +134,8 @@ func counterObserver(ctx context.Context) {
 func upDownCounterObserver(ctx context.Context) {
 	counter, err := meter.Int64ObservableUpDownCounter(
 		"some.prefix.up_down_counter_async",
-		instrument.WithUnit("1"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("1"),
+		metric.WithDescription("TODO"),
 	)
 	if err != nil {
 		panic(err)
@@ -160,8 +158,8 @@ func upDownCounterObserver(ctx context.Context) {
 func gaugeObserver(ctx context.Context) {
 	gauge, _ := meter.Float64ObservableGauge(
 		"some.prefix.gauge_observer",
-		instrument.WithUnit("1"),
-		instrument.WithDescription("TODO"),
+		metric.WithUnit("1"),
+		metric.WithDescription("TODO"),
 	)
 
 	if _, err := meter.RegisterCallback(
@@ -181,7 +179,7 @@ func gaugeObserver(ctx context.Context) {
 func counterWithLabels(ctx context.Context) {
 	counter, _ := meter.Int64Counter(
 		"some.prefix.cache",
-		instrument.WithDescription("Cache hits and misses"),
+		metric.WithDescription("Cache hits and misses"),
 	)
 	for {
 		if rand.Float64() < 0.3 {
