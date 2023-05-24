@@ -6,7 +6,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.2.0
-	github.com/uptrace/uptrace-go v1.15.0
+	github.com/uptrace/uptrace-go v1.16.0
 	go.opentelemetry.io/otel v1.16.0
 	go.uber.org/zap v1.24.0
 )
