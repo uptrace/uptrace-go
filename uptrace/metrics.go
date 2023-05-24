@@ -5,8 +5,8 @@ import (
 	"time"
 
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"google.golang.org/grpc/credentials"
@@ -30,7 +30,7 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 	providerOptions := append(conf.metricOptions, metric.WithReader(reader), metric.WithResource(conf.newResource()))
 	provider := metric.NewMeterProvider(providerOptions...)
 
-	global.SetMeterProvider(provider)
+	otel.SetMeterProvider(provider)
 	client.mp = provider
 
 	if err := runtimemetrics.Start(); err != nil {
