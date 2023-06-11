@@ -7,15 +7,22 @@ import (
 
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/credentials"
-	_ "google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/encoding/gzip"
 )
 
 func main() {
 	ctx := context.Background()
+
+	dsn := os.Getenv("UPTRACE_DSN")
+	if dsn == "" {
+		panic("UPTRACE_DSN environment variable is required")
+	}
+	fmt.Println("using DSN:", dsn)
 
 	// Create credentials using system certificates.
 	creds := credentials.NewClientTLSFromCert(nil, "")
@@ -25,9 +32,9 @@ func main() {
 		otlptracegrpc.WithTLSCredentials(creds),
 		otlptracegrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
-			"uptrace-dsn": os.Getenv("UPTRACE_DSN"),
+			"uptrace-dsn": dsn,
 		}),
-		otlptracegrpc.WithCompressor("gzip"),
+		otlptracegrpc.WithCompressor(gzip.Name),
 	)
 	if err != nil {
 		panic(err)
@@ -39,8 +46,22 @@ func main() {
 	// Call shutdown to flush the buffers when program exits.
 	defer bsp.Shutdown(ctx)
 
-	idg := xray.NewIDGenerator()
-	tracerProvider := sdktrace.NewTracerProvider(trace.WithIDGenerator(idg))
+	resource, err := resource.New(ctx,
+		resource.WithFromEnv(),
+		resource.WithTelemetrySDK(),
+		resource.WithHost(),
+		resource.WithAttributes(
+			attribute.String("service.name", "myservice"),
+			attribute.String("service.version", "1.0.0"),
+		))
+	if err != nil {
+		panic(err)
+	}
+
+	tracerProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithResource(resource),
+		sdktrace.WithIDGenerator(xray.NewIDGenerator()),
+	)
 	tracerProvider.RegisterSpanProcessor(bsp)
 
 	// Install our tracer provider and we are done.
@@ -50,5 +71,5 @@ func main() {
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()
 
-	fmt.Println("trace id:", span.SpanContext().TraceID())
+	fmt.Printf("trace: https://app.uptrace.dev/traces/%s\n", span.SpanContext().TraceID())
 }

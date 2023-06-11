@@ -7,7 +7,7 @@ import (
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/sdk/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding/gzip"
@@ -22,13 +22,16 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 		return
 	}
 
-	reader := metric.NewPeriodicReader(
+	reader := sdkmetric.NewPeriodicReader(
 		exp,
-		metric.WithInterval(15*time.Second),
+		sdkmetric.WithInterval(15*time.Second),
 	)
 
-	providerOptions := append(conf.metricOptions, metric.WithReader(reader), metric.WithResource(conf.newResource()))
-	provider := metric.NewMeterProvider(providerOptions...)
+	providerOptions := append(conf.metricOptions,
+		sdkmetric.WithReader(reader),
+		sdkmetric.WithResource(conf.newResource()),
+	)
+	provider := sdkmetric.NewMeterProvider(providerOptions...)
 
 	otel.SetMeterProvider(provider)
 	client.mp = provider
@@ -38,7 +41,7 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 	}
 }
 
-func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (metric.Exporter, error) {
+func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (sdkmetric.Exporter, error) {
 	options := []otlpmetricgrpc.Option{
 		otlpmetricgrpc.WithEndpoint(dsn.OTLPHost()),
 		otlpmetricgrpc.WithHeaders(map[string]string{
@@ -63,11 +66,11 @@ func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (metric.Expor
 	return otlpmetricgrpc.New(ctx, options...)
 }
 
-func preferDeltaTemporalitySelector(kind metric.InstrumentKind) metricdata.Temporality {
+func preferDeltaTemporalitySelector(kind sdkmetric.InstrumentKind) metricdata.Temporality {
 	switch kind {
-	case metric.InstrumentKindCounter,
-		metric.InstrumentKindObservableCounter,
-		metric.InstrumentKindHistogram:
+	case sdkmetric.InstrumentKindCounter,
+		sdkmetric.InstrumentKindObservableCounter,
+		sdkmetric.InstrumentKindHistogram:
 		return metricdata.DeltaTemporality
 	default:
 		return metricdata.CumulativeTemporality
