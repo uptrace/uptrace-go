@@ -11,13 +11,14 @@ import (
 	"syscall"
 	"time"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
 
-var meter = otel.MeterProvider().Meter("app_or_package_name")
+var meter = otel.Meter("app_or_package_name")
 
 func main() {
 	ctx := context.Background()
