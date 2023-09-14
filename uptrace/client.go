@@ -61,7 +61,9 @@ func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
 
 // TraceURL returns the trace URL for the span.
 func (c *client) TraceURL(span trace.Span) string {
-	return fmt.Sprintf("%s/traces/%s", c.dsn.AppAddr(), span.SpanContext().TraceID())
+	sctx := span.SpanContext()
+	return fmt.Sprintf("%s/traces/%s?span_id=%s",
+		c.dsn.AppAddr(), sctx.TraceID(), sctx.SpanID().String())
 }
 
 // ReportError reports an error as a span event creating a dummy span if necessary.
