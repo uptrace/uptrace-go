@@ -1,6 +1,6 @@
 module github.com/uptrace/uptrace-go/example/aws-lambda/function
 
-go 1.18
+go 1.20
 
 replace github.com/uptrace/uptrace-go => ../../..
 

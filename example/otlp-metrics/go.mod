@@ -1,6 +1,6 @@
 module github.com/uptrace/uptrace-go/example/otlp-metrics
 
-go 1.18
+go 1.20
 
 require (
 	go.opentelemetry.io/otel v1.19.0

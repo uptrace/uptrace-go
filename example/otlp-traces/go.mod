@@ -1,6 +1,6 @@
 module github.com/uptrace/uptrace-go/example/otlp-traces
 
-go 1.18
+go 1.20
 
 require (
 	go.opentelemetry.io/contrib/propagators/aws v1.20.0

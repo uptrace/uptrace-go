@@ -1,6 +1,6 @@
 module github.com/uptrace/uptrace-go/example/otel-api
 
-go 1.18
+go 1.20
 
 replace github.com/uptrace/uptrace-go => ../..
 
