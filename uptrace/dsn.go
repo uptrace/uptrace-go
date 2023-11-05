@@ -24,14 +24,14 @@ func (dsn *DSN) SiteURL() string {
 	if dsn.Host == "uptrace.dev" {
 		return "https://app.uptrace.dev"
 	}
-	return dsn.Scheme + "://" + net.JoinHostPort(dsn.Host, dsn.HTTPPort)
+	return dsn.Scheme + "://" + joinHostPort(dsn.Host, dsn.HTTPPort)
 }
 
 func (dsn *DSN) OTLPEndpoint() string {
 	if dsn.Host == "uptrace.dev" {
 		return "otlp.uptrace.dev:4317"
 	}
-	return net.JoinHostPort(dsn.Host, dsn.GRPCPort)
+	return joinHostPort(dsn.Host, dsn.GRPCPort)
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {
@@ -83,4 +83,11 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	}
 
 	return &dsn, nil
+}
+
+func joinHostPort(host, port string) string {
+	if port == "" {
+		return host
+	}
+	return net.JoinHostPort(host, port)
 }

@@ -17,9 +17,14 @@ func TestParseDSN(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"https://key@uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
-		{"https://key@api.uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
-		{"https://key@localhost:1234/1", "localhost:1234", "https://localhost:1234"},
+		{"https://token@uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
+		{"https://token@api.uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
+		{
+			"https://token@demo.uptrace.dev/1?grpc=4317",
+			"demo.uptrace.dev:4317",
+			"https://demo.uptrace.dev",
+		},
+		{"https://token@localhost:1234/1", "localhost:1234", "https://localhost:1234"},
 		{"http://token@localhost:14317/project_id", "localhost:14317", "http://localhost:14318"},
 		{
 			"https://AQDan_E_EPe3QAF9fMP0PiVr5UWOu4q5@demo-api.uptrace.dev:4317/1",
