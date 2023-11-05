@@ -76,9 +76,13 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	}
 
 	if dsn.GRPCPort == "" {
-		dsn.GRPCPort = dsn.HTTPPort
-		if dsn.HTTPPort == "14317" {
-			dsn.HTTPPort = "14318"
+		if dsn.HTTPPort != "" {
+			dsn.GRPCPort = dsn.HTTPPort
+			if dsn.HTTPPort == "14317" {
+				dsn.HTTPPort = "14318"
+			}
+		} else {
+			dsn.GRPCPort = "4317"
 		}
 	}
 
