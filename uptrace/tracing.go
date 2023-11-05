@@ -70,7 +70,7 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 
 func otlpTraceClient(conf *config, dsn *DSN) otlptrace.Client {
 	options := []otlptracegrpc.Option{
-		otlptracegrpc.WithEndpoint(dsn.OTLPHost()),
+		otlptracegrpc.WithEndpoint(dsn.OTLPEndpoint()),
 		otlptracegrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn.String(),

@@ -9,33 +9,29 @@ import (
 type DSN struct {
 	original string
 
-	Scheme string
-	Host   string
-
-	ProjectID string
-	Token     string
+	Scheme   string
+	Host     string
+	HTTPPort string
+	GRPCPort string
+	Token    string
 }
 
 func (dsn *DSN) String() string {
 	return dsn.original
 }
 
-func (dsn *DSN) AppAddr() string {
+func (dsn *DSN) SiteURL() string {
 	if dsn.Host == "uptrace.dev" {
 		return "https://app.uptrace.dev"
 	}
-	host, _, err := net.SplitHostPort(dsn.Host)
-	if err != nil {
-		return dsn.Host
-	}
-	return dsn.Scheme + "://" + net.JoinHostPort(host, "14318")
+	return dsn.Scheme + "://" + net.JoinHostPort(dsn.Host, dsn.HTTPPort)
 }
 
-func (dsn *DSN) OTLPHost() string {
+func (dsn *DSN) OTLPEndpoint() string {
 	if dsn.Host == "uptrace.dev" {
 		return "otlp.uptrace.dev:4317"
 	}
-	return dsn.Host
+	return net.JoinHostPort(dsn.Host, dsn.GRPCPort)
 }
 
 func ParseDSN(dsnStr string) (*DSN, error) {
@@ -48,28 +44,42 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 		return nil, fmt.Errorf("can't parse DSN=%q: %s", dsnStr, err)
 	}
 
-	dsn := DSN{
-		original: dsnStr,
-	}
-
-	dsn.Scheme = u.Scheme
-	if dsn.Scheme == "" {
+	if u.Scheme == "" {
 		return nil, fmt.Errorf("DSN=%q does not have a scheme", dsnStr)
 	}
-
-	dsn.Host = u.Host
-	if dsn.Host == "" {
+	if u.Host == "" {
 		return nil, fmt.Errorf("DSN=%q does not have a host", dsnStr)
 	}
+	if u.User == nil {
+		return nil, fmt.Errorf("DSN=%q does not have a token", dsnStr)
+	}
+
+	dsn := DSN{
+		original: dsnStr,
+		Scheme:   u.Scheme,
+		Host:     u.Host,
+		Token:    u.User.Username(),
+	}
+
+	if host, port, err := net.SplitHostPort(u.Host); err == nil {
+		dsn.Host = host
+		dsn.HTTPPort = port
+	}
+
 	if dsn.Host == "api.uptrace.dev" {
 		dsn.Host = "uptrace.dev"
 	}
 
-	if len(u.Path) > 0 {
-		dsn.ProjectID = u.Path[1:]
+	query := u.Query()
+	if grpc := query.Get("grpc"); grpc != "" {
+		dsn.GRPCPort = grpc
 	}
-	if u.User != nil {
-		dsn.Token = u.User.Username()
+
+	if dsn.GRPCPort == "" {
+		dsn.GRPCPort = dsn.HTTPPort
+		if dsn.HTTPPort == "14317" {
+			dsn.HTTPPort = "14318"
+		}
 	}
 
 	return &dsn, nil

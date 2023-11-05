@@ -39,7 +39,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 		return
 	}
 
-	if dsn.ProjectID == "<project_id>" || dsn.Token == "<token>" {
+	if dsn.Token == "<token>" {
 		internal.Logger.Printf("dummy Uptrace DSN detected: %q (Uptrace is disabled)", conf.dsn)
 		return
 	}
@@ -76,11 +76,10 @@ func configurePropagator(conf *config) {
 
 var (
 	fallbackClient = newClient(&DSN{
-		ProjectID: "<project_id>",
-		Token:     "<token>",
-
-		Scheme: "https",
-		Host:   "uptrace.dev",
+		Scheme:   "https",
+		Host:     "api.uptrace.dev",
+		GRPCPort: "4317",
+		Token:    "<token>",
 	})
 	atomicClient atomic.Value
 )

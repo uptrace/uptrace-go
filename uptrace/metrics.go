@@ -43,7 +43,7 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 
 func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (sdkmetric.Exporter, error) {
 	options := []otlpmetricgrpc.Option{
-		otlpmetricgrpc.WithEndpoint(dsn.OTLPHost()),
+		otlpmetricgrpc.WithEndpoint(dsn.OTLPEndpoint()),
 		otlpmetricgrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn.String(),
