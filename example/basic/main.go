@@ -7,6 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
 )
@@ -29,13 +30,13 @@ func main() {
 	tracer := otel.Tracer("app_or_package_name")
 
 	// Create a root span (a trace) to measure some operation.
-	ctx, main := tracer.Start(ctx, "main-operation")
+	ctx, main := tracer.Start(ctx, "main-operation", trace.WithSpanKind(trace.SpanKindClient))
 	// End the span when the operation we are measuring is done.
 	defer main.End()
 
 	// The passed ctx carries the parent span (main).
 	// That is how OpenTelemetry manages span relations.
-	_, child1 := tracer.Start(ctx, "GET /posts/:id")
+	_, child1 := tracer.Start(ctx, "GET /posts/:id", trace.WithSpanKind(trace.SpanKindServer))
 	child1.SetAttributes(
 		attribute.String("http.method", "GET"),
 		attribute.String("http.route", "/posts/:id"),
