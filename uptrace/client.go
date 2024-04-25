@@ -78,18 +78,12 @@ func (c *client) ReportError(ctx context.Context, err error, opts ...trace.Event
 }
 
 // ReportPanic is used with defer to report panics.
-func (c *client) ReportPanic(ctx context.Context) {
-	val := recover()
-	if val == nil {
-		return
-	}
+func (c *client) ReportPanic(ctx context.Context, val any) {
 	c.reportPanic(ctx, val)
 	// Force flush since we are about to exit on panic.
 	if c.tp != nil {
 		_ = c.tp.ForceFlush(ctx)
 	}
-	// Re-throw the panic.
-	panic(val)
 }
 
 func (c *client) reportPanic(ctx context.Context, val interface{}) {

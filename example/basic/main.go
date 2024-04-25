@@ -30,7 +30,7 @@ func main() {
 	tracer := otel.Tracer("app_or_package_name")
 
 	// Create a root span (a trace) to measure some operation.
-	ctx, main := tracer.Start(ctx, "main-operation", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, main := tracer.Start(ctx, "main-operation", trace.WithSpanKind(trace.SpanKindServer))
 	// End the span when the operation we are measuring is done.
 	defer main.End()
 
@@ -51,6 +51,11 @@ func main() {
 		attribute.String("db.system", "mysql"),
 		attribute.String("db.statement", "SELECT * FROM posts LIMIT 100"),
 	)
+	child2.AddEvent("hello", trace.WithAttributes(
+		attribute.String("log.severity", "error"),
+		attribute.String("log.message", "User not found"),
+		attribute.String("enduser.id", "123"),
+	))
 	child2.End()
 
 	fmt.Printf("trace: %s\n", uptrace.TraceURL(main))

@@ -100,8 +100,8 @@ func ReportError(ctx context.Context, err error, opts ...trace.EventOption) {
 	activeClient().ReportError(ctx, err, opts...)
 }
 
-func ReportPanic(ctx context.Context) {
-	activeClient().ReportPanic(ctx)
+func ReportPanic(ctx context.Context, val any) {
+	activeClient().ReportPanic(ctx, val)
 }
 
 func Shutdown(ctx context.Context) error {
