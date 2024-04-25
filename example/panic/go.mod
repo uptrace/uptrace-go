@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 replace github.com/uptrace/uptrace-go => ../..
 
-require github.com/uptrace/uptrace-go v1.25.0
+require github.com/uptrace/uptrace-go v1.26.0
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
