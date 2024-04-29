@@ -2,7 +2,7 @@
 
 This example shows how to configure
 [OTLP](https://github.com/open-telemetry/opentelemetry-go/tree/main/exporters/otlp) to export traces
-to Uptrace using GRPC transport.
+to Uptrace using HTTP transport.
 
 To run this example, you need to
 [create an Uptrace project](https://uptrace.dev/get/get-started.html) and pass your project DSN via
