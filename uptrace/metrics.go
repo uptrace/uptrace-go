@@ -6,11 +6,9 @@ import (
 
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/encoding/gzip"
 
 	"github.com/uptrace/uptrace-go/internal"
 )
@@ -42,28 +40,23 @@ func configureMetrics(ctx context.Context, client *client, conf *config) {
 }
 
 func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (sdkmetric.Exporter, error) {
-	options := []otlpmetricgrpc.Option{
-		otlpmetricgrpc.WithEndpoint(dsn.OTLPEndpoint()),
-		otlpmetricgrpc.WithHeaders(map[string]string{
+	options := []otlpmetrichttp.Option{
+		otlpmetrichttp.WithEndpoint(dsn.OTLPHttpEndpoint()),
+		otlpmetrichttp.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn.String(),
 		}),
-		otlpmetricgrpc.WithCompressor(gzip.Name),
-		otlpmetricgrpc.WithTemporalitySelector(preferDeltaTemporalitySelector),
+		otlpmetrichttp.WithCompression(otlpmetrichttp.GzipCompression),
+		otlpmetrichttp.WithTemporalitySelector(preferDeltaTemporalitySelector),
 	}
 
 	if conf.tlsConf != nil {
-		creds := credentials.NewTLS(conf.tlsConf)
-		options = append(options, otlpmetricgrpc.WithTLSCredentials(creds))
-	} else if dsn.Scheme == "https" {
-		// Create credentials using system certificates.
-		creds := credentials.NewClientTLSFromCert(nil, "")
-		options = append(options, otlpmetricgrpc.WithTLSCredentials(creds))
-	} else {
-		options = append(options, otlpmetricgrpc.WithInsecure())
+		options = append(options, otlpmetrichttp.WithTLSClientConfig(conf.tlsConf))
+	} else if dsn.Scheme == "http" {
+		options = append(options, otlpmetrichttp.WithInsecure())
 	}
 
-	return otlpmetricgrpc.New(ctx, options...)
+	return otlpmetrichttp.New(ctx, options...)
 }
 
 func preferDeltaTemporalitySelector(kind sdkmetric.InstrumentKind) metricdata.Temporality {

@@ -11,12 +11,10 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/encoding/gzip"
 
 	"github.com/uptrace/uptrace-go/internal"
 )
@@ -69,27 +67,22 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 }
 
 func otlpTraceClient(conf *config, dsn *DSN) otlptrace.Client {
-	options := []otlptracegrpc.Option{
-		otlptracegrpc.WithEndpoint(dsn.OTLPEndpoint()),
-		otlptracegrpc.WithHeaders(map[string]string{
+	options := []otlptracehttp.Option{
+		otlptracehttp.WithEndpoint(dsn.OTLPHttpEndpoint()),
+		otlptracehttp.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn.String(),
 		}),
-		otlptracegrpc.WithCompressor(gzip.Name),
+		otlptracehttp.WithCompression(otlptracehttp.GzipCompression),
 	}
 
 	if conf.tlsConf != nil {
-		creds := credentials.NewTLS(conf.tlsConf)
-		options = append(options, otlptracegrpc.WithTLSCredentials(creds))
-	} else if dsn.Scheme == "https" {
-		// Create credentials using system certificates.
-		creds := credentials.NewClientTLSFromCert(nil, "")
-		options = append(options, otlptracegrpc.WithTLSCredentials(creds))
-	} else {
-		options = append(options, otlptracegrpc.WithInsecure())
+		options = append(options, otlptracehttp.WithTLSClientConfig(conf.tlsConf))
+	} else if dsn.Scheme == "http" {
+		options = append(options, otlptracehttp.WithInsecure())
 	}
 
-	return otlptracegrpc.NewClient(options...)
+	return otlptracehttp.NewClient(options...)
 }
 
 func queueSize() int {
