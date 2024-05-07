@@ -76,6 +76,14 @@ func ParseDSN(dsnStr string) (*DSN, error) {
 	if dsn.Host == "api.uptrace.dev" {
 		dsn.Host = "uptrace.dev"
 	}
+	if dsn.HTTPPort == "" {
+		switch dsn.Scheme {
+		case "http":
+			dsn.HTTPPort = "80"
+		case "https":
+			dsn.HTTPPort = "443"
+		}
+	}
 
 	query := u.Query()
 	if grpc := query.Get("grpc"); grpc != "" {
