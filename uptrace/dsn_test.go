@@ -12,28 +12,52 @@ import (
 func TestParseDSN(t *testing.T) {
 	type Test struct {
 		dsn     string
-		otlp    string
+		grpc    string
+		http    string
 		siteURL string
 	}
 
 	tests := []Test{
-		{"https://token@uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
-		{"https://token@api.uptrace.dev/1", "otlp.uptrace.dev:4317", "https://app.uptrace.dev"},
+		{
+			"https://token@uptrace.dev/1",
+			"otlp.uptrace.dev:4317",
+			"otlp.uptrace.dev:443",
+			"https://app.uptrace.dev",
+		},
+		{
+			"https://token@api.uptrace.dev/1",
+			"otlp.uptrace.dev:4317",
+			"otlp.uptrace.dev:443",
+			"https://app.uptrace.dev",
+		},
 		{
 			"https://token@demo.uptrace.dev/1?grpc=4317",
 			"demo.uptrace.dev:4317",
-			"https://demo.uptrace.dev",
+			"demo.uptrace.dev:443",
+			"https://demo.uptrace.dev:443",
 		},
-		{"https://token@localhost:1234/1", "localhost:1234", "https://localhost:1234"},
-		{"http://token@localhost:14317/project_id", "localhost:14317", "http://localhost:14318"},
+		{
+			"https://token@localhost:1234/1",
+			"localhost:1234",
+			"localhost:1234",
+			"https://localhost:1234",
+		},
+		{
+			"http://token@localhost:14317/project_id",
+			"localhost:14317",
+			"localhost:14318",
+			"http://localhost:14318",
+		},
 		{
 			"https://AQDan_E_EPe3QAF9fMP0PiVr5UWOu4q5@demo-api.uptrace.dev:4317/1",
+			"demo-api.uptrace.dev:4317",
 			"demo-api.uptrace.dev:4317",
 			"https://demo-api.uptrace.dev:4317",
 		},
 		{
 			"http://Qcn7rcwWO_w0ePo7WmeUtw@localhost:14318?grpc=14317",
 			"localhost:14317",
+			"localhost:14318",
 			"http://localhost:14318",
 		},
 	}
@@ -41,7 +65,8 @@ func TestParseDSN(t *testing.T) {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			dsn, err := uptrace.ParseDSN(test.dsn)
 			require.NoError(t, err)
-			require.Equal(t, test.otlp, dsn.OTLPEndpoint())
+			require.Equal(t, test.grpc, dsn.OTLPGrpcEndpoint())
+			require.Equal(t, test.http, dsn.OTLPHttpEndpoint())
 			require.Equal(t, test.siteURL, dsn.SiteURL())
 		})
 	}
