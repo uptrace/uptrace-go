@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
-	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -42,7 +41,7 @@ type config struct {
 
 	// Logging options
 	loggingEnabled bool
-	loggerProvider *sdklog.LoggerProvider
+	//loggerProvider *sdklog.LoggerProvider
 }
 
 func newConfig(opts []Option) *config {
