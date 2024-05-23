@@ -29,7 +29,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 	ctx := context.TODO()
 	conf := newConfig(opts)
 
-	if !conf.tracingEnabled && !conf.metricsEnabled {
+	if !conf.tracingEnabled && !conf.metricsEnabled && !conf.loggingEnabled {
 		return
 	}
 
@@ -56,6 +56,9 @@ func ConfigureOpentelemetry(opts ...Option) {
 	}
 	if conf.metricsEnabled {
 		configureMetrics(ctx, client, conf)
+	}
+	if conf.loggingEnabled {
+		configureLogging(ctx, client, conf)
 	}
 
 	atomicClient.Store(client)

@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -28,7 +29,6 @@ type config struct {
 	tlsConf *tls.Config
 
 	// Tracing options
-
 	tracingEnabled    bool
 	textMapPropagator propagation.TextMapPropagator
 	tracerProvider    *sdktrace.TracerProvider
@@ -37,15 +37,19 @@ type config struct {
 	bspOptions        []sdktrace.BatchSpanProcessorOption
 
 	// Metrics options
-
 	metricsEnabled bool
 	metricOptions  []metric.Option
+
+	// Logging options
+	loggingEnabled bool
+	loggerProvider *sdklog.LoggerProvider
 }
 
 func newConfig(opts []Option) *config {
 	conf := &config{
 		tracingEnabled: true,
 		metricsEnabled: true,
+		loggingEnabled: true,
 	}
 
 	if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
@@ -278,3 +282,43 @@ func WithMetricOption(options ...metric.Option) MetricsOption {
 		conf.metricOptions = append(conf.metricOptions, options...)
 	})
 }
+
+//------------------------------------------------------------------------------
+
+type LoggingOption interface {
+	Option
+	logging()
+}
+
+type loggingOption func(conf *config)
+
+var _ LoggingOption = (*loggingOption)(nil)
+
+func (fn loggingOption) apply(conf *config) {
+	fn(conf)
+}
+
+func (fn loggingOption) logging() {}
+
+// WithLoggingDisabled disables logging.
+func WithLoggingDisabled() LoggingOption {
+	return WithLoggingEnabled(false)
+}
+
+// WithLoggingEnabled can be used to enable/disable logging.
+func WithLoggingEnabled(on bool) LoggingOption {
+	return loggingOption(func(conf *config) {
+		conf.loggingEnabled = on
+	})
+}
+
+// WithLoggerProvider overwrites the default Uptrace logger provider.
+// You can use it to configure Uptrace distro to use OTLP exporter.
+//
+// When this option is used, you might need to call otel.SetLoggerProvider
+// to register the provider as the global trace provider.
+// func WithLoggerProvider(provider *sdklog.LoggerProvider) LoggingOption {
+// 	return loggingOption(func(conf *config) {
+// 		conf.loggerProvider = provider
+// 	})
+// }

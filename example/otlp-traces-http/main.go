@@ -36,8 +36,8 @@ func main() {
 	}
 
 	bsp := sdktrace.NewBatchSpanProcessor(exporter,
-		sdktrace.WithMaxQueueSize(1000),
-		sdktrace.WithMaxExportBatchSize(1000))
+		sdktrace.WithMaxQueueSize(10_000),
+		sdktrace.WithMaxExportBatchSize(10_000))
 	// Call shutdown to flush the buffers when program exits.
 	defer bsp.Shutdown(ctx)
 

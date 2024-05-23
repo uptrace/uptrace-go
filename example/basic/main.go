@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -29,6 +31,9 @@ func main() {
 	// Create a tracer. Usually, tracer is a global variable.
 	tracer := otel.Tracer("app_or_package_name")
 
+	// Create a logger.
+	logger := otelslog.NewLogger("app_or_package_name")
+
 	// Create a root span (a trace) to measure some operation.
 	ctx, main := tracer.Start(ctx, "main-operation", trace.WithSpanKind(trace.SpanKindServer))
 	// End the span when the operation we are measuring is done.
@@ -43,7 +48,10 @@ func main() {
 		attribute.String("http.url", "http://localhost:8080/posts/123"),
 		attribute.Int("http.status_code", 200),
 	)
-	child1.RecordError(errors.New("error1"))
+	if err := errors.New("error1"); err != nil {
+		logger.ErrorContext(ctx, "something went wrong",
+			slog.Any("error", err))
+	}
 	child1.End()
 
 	_, child2 := tracer.Start(ctx, "SELECT")

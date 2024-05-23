@@ -70,7 +70,6 @@ func otlpTraceClient(conf *config, dsn *DSN) otlptrace.Client {
 	options := []otlptracehttp.Option{
 		otlptracehttp.WithEndpoint(dsn.OTLPHttpEndpoint()),
 		otlptracehttp.WithHeaders(map[string]string{
-			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn.String(),
 		}),
 		otlptracehttp.WithCompression(otlptracehttp.GzipCompression),
