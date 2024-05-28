@@ -3,6 +3,7 @@ package uptrace
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -101,11 +102,15 @@ func (c *client) reportPanic(ctx context.Context, val interface{}) {
 		defer span.End()
 	}
 
+	stackTrace := make([]byte, 2048)
+	n := runtime.Stack(stackTrace, false)
+
 	span.AddEvent(
 		"log",
 		trace.WithAttributes(
 			attribute.String("log.severity", "panic"),
 			attribute.String("log.message", fmt.Sprint(val)),
+			attribute.String("exception.stackstrace", string(stackTrace[:n])),
 		),
 	)
 }
