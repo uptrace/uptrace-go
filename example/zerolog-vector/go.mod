@@ -8,7 +8,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/rs/zerolog v1.33.0
-	github.com/uptrace/uptrace-go v1.28.0
+	github.com/uptrace/uptrace-go v1.29.0
 	go.opentelemetry.io/otel v1.29.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
