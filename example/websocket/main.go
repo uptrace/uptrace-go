@@ -29,7 +29,7 @@ func main() {
 	defer uptrace.Shutdown(ctx)
 
 	// Start a root span for a websocket connection.
-	ctx, span := tracer.Start(ctx, "websocket", trace.WithSpanKind(trace.SpanKindServer))
+	ctx, span := tracer.Start(ctx, "websocket-conn", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	fmt.Printf("websocket connection: %s\n", uptrace.TraceURL(span))
@@ -42,7 +42,8 @@ func main() {
 func handleWebsocketRequest(ctx context.Context) {
 	// Create another span so we can end it separately from the root span.
 	// The root span can stay open for hours.
-	ctx, span := tracer.Start(ctx, "websocket-request", trace.WithSpanKind(trace.SpanKindServer))
+	ctx, span := tracer.Start(ctx, "websocket-conn-new-request",
+		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// Save parent context.
