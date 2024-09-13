@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
-	"go.opentelemetry.io/otel/sdk/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -21,7 +21,7 @@ type client struct {
 	tracer trace.Tracer
 
 	tp *sdktrace.TracerProvider
-	mp *metric.MeterProvider
+	mp *sdkmetric.MeterProvider
 	lp *sdklog.LoggerProvider
 }
 
@@ -62,6 +62,11 @@ func (c *client) ForceFlush(ctx context.Context) (lastErr error) {
 	}
 	if c.mp != nil {
 		if err := c.mp.ForceFlush(ctx); err != nil {
+			lastErr = err
+		}
+	}
+	if c.lp != nil {
+		if err := c.lp.ForceFlush(ctx); err != nil {
 			lastErr = err
 		}
 	}
