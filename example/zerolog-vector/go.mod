@@ -8,7 +8,7 @@ replace github.com/uptrace/uptrace-go => ../..
 
 require (
 	github.com/rs/zerolog v1.33.0
-	github.com/uptrace/uptrace-go v1.30.0
+	github.com/uptrace/uptrace-go v1.30.1
 	go.opentelemetry.io/otel v1.30.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
@@ -22,7 +22,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.55.0 // indirect
-	go.opentelemetry.io/contrib/processors/baggagecopy v0.3.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.6.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.30.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.30.0 // indirect
