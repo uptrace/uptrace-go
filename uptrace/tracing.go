@@ -54,6 +54,11 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 	bsp := sdktrace.NewBatchSpanProcessor(exp, bspOptions...)
 	provider.RegisterSpanProcessor(bsp)
 
+	// Register additional span processors.
+	for _, sp := range conf.spanProcessors {
+		provider.RegisterSpanProcessor(sp)
+	}
+
 	if conf.prettyPrint {
 		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {

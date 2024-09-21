@@ -7,6 +7,7 @@ import (
 
 	"github.com/uptrace/uptrace-go/internal"
 
+	"go.opentelemetry.io/contrib/processors/baggagecopy"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -32,6 +33,7 @@ type config struct {
 	textMapPropagator propagation.TextMapPropagator
 	tracerProvider    *sdktrace.TracerProvider
 	traceSampler      sdktrace.Sampler
+	spanProcessors    []sdktrace.SpanProcessor
 	prettyPrint       bool
 	bspOptions        []sdktrace.BatchSpanProcessorOption
 
@@ -217,6 +219,23 @@ func WithTraceSampler(sampler sdktrace.Sampler) TracingOption {
 	return tracingOption(func(conf *config) {
 		conf.traceSampler = sampler
 	})
+}
+
+// WithSpanProcessor configures an additional span processor.
+func WithSpanProcessor(sp sdktrace.SpanProcessor) TracingOption {
+	return tracingOption(func(conf *config) {
+		conf.spanProcessors = append(conf.spanProcessors, sp)
+	})
+}
+
+// WithBaggageSpanProcessor configures the The Baggage span processor.
+//
+// The Baggage span processor duplicates onto a span the attributes found in Baggage in the parent context at the moment the span is started. The passed filter determines which baggage members are added to the span.
+//
+// If filter is nil, all baggage members will be added.
+func WithBaggageSpanProcessor(filter baggagecopy.Filter) TracingOption {
+	sp := baggagecopy.NewSpanProcessor(filter)
+	return WithSpanProcessor(sp)
 }
 
 // WithPropagator sets the global TextMapPropagator used by OpenTelemetry.
