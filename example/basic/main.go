@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/uptrace/uptrace-go/uptrace"
@@ -38,6 +39,8 @@ func main() {
 	ctx, main := tracer.Start(ctx, "main-operation", trace.WithSpanKind(trace.SpanKindServer))
 	// End the span when the operation we are measuring is done.
 	defer main.End()
+
+	main.SetStatus(codes.Error, "hello")
 
 	// The passed ctx carries the parent span (main).
 	// That is how OpenTelemetry manages span relations.
