@@ -7,7 +7,7 @@ toolchain go1.22.4
 replace github.com/uptrace/uptrace-go => ../..
 
 require (
-	github.com/uptrace/uptrace-go v1.30.1
+	github.com/uptrace/uptrace-go v1.31.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/trace v1.31.0
 )
