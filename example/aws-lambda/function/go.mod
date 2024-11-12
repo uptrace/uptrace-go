@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-lambda-go v1.47.0
 	github.com/aws/aws-sdk-go-v2/config v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.3
-	github.com/uptrace/uptrace-go v1.31.0
+	github.com/uptrace/uptrace-go v1.32.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-lambda-go/otellambda v0.57.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.57.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.57.0
