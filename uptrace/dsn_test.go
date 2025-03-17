@@ -20,14 +20,14 @@ func TestParseDSN(t *testing.T) {
 	tests := []Test{
 		{
 			"https://token@uptrace.dev/1",
-			"otlp.uptrace.dev:4317",
-			"otlp.uptrace.dev:443",
+			"api.uptrace.dev:4317",
+			"api.uptrace.dev:443",
 			"https://app.uptrace.dev",
 		},
 		{
 			"https://token@api.uptrace.dev/1",
-			"otlp.uptrace.dev:4317",
-			"otlp.uptrace.dev:443",
+			"api.uptrace.dev:4317",
+			"api.uptrace.dev:443",
 			"https://app.uptrace.dev",
 		},
 		{

@@ -16,5 +16,5 @@ go_mod_tidy:
 	  echo "go mod tidy in $${dir}"; \
 	  (cd "$${dir}" && \
 	    go get -u ./... && \
-	    go mod tidy -go=1.22.7); \
+	    go mod tidy -go=1.23.0); \
 	done

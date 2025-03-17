@@ -60,7 +60,7 @@ func main() {
 
 func configureLogging(ctx context.Context, dsn string, resource *resource.Resource) func() {
 	exp, err := otlploghttp.New(ctx,
-		otlploghttp.WithEndpoint("otlp.uptrace.dev"),
+		otlploghttp.WithEndpoint("api.uptrace.dev"),
 		otlploghttp.WithHeaders(map[string]string{
 			"uptrace-dsn": dsn,
 		}),
@@ -92,7 +92,7 @@ func configureLogging(ctx context.Context, dsn string, resource *resource.Resour
 func configureTracing(ctx context.Context, dsn string, resource *resource.Resource) func() {
 	exporter, err := otlptracehttp.New(
 		ctx,
-		otlptracehttp.WithEndpoint("otlp.uptrace.dev"),
+		otlptracehttp.WithEndpoint("api.uptrace.dev"),
 		otlptracehttp.WithHeaders(map[string]string{
 			"uptrace-dsn": dsn,
 		}),

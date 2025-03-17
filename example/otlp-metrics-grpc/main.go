@@ -26,7 +26,7 @@ func main() {
 	fmt.Println("using DSN:", dsn)
 
 	exporter, err := otlpmetricgrpc.New(ctx,
-		otlpmetricgrpc.WithEndpoint("otlp.uptrace.dev:4317"),
+		otlpmetricgrpc.WithEndpoint("api.uptrace.dev:4317"),
 		otlpmetricgrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn,

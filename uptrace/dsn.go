@@ -29,14 +29,14 @@ func (dsn *DSN) SiteURL() string {
 
 func (dsn *DSN) OTLPGrpcEndpoint() string {
 	if dsn.Host == "uptrace.dev" {
-		return "otlp.uptrace.dev:4317"
+		return "api.uptrace.dev:4317"
 	}
 	return joinHostPort(dsn.Host, dsn.GRPCPort)
 }
 
 func (dsn *DSN) OTLPHttpEndpoint() string {
 	if dsn.Host == "uptrace.dev" {
-		return "otlp.uptrace.dev:443"
+		return "api.uptrace.dev:443"
 	}
 	return joinHostPort(dsn.Host, dsn.HTTPPort)
 }

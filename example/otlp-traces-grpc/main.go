@@ -28,7 +28,7 @@ func main() {
 	creds := credentials.NewClientTLSFromCert(nil, "")
 	exporter, err := otlptracegrpc.New(
 		ctx,
-		otlptracegrpc.WithEndpoint("otlp.uptrace.dev:4317"),
+		otlptracegrpc.WithEndpoint("api.uptrace.dev:4317"),
 		otlptracegrpc.WithTLSCredentials(creds),
 		otlptracegrpc.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.

@@ -24,7 +24,7 @@ func main() {
 
 	exporter, err := otlptracehttp.New(
 		ctx,
-		otlptracehttp.WithEndpoint("otlp.uptrace.dev"),
+		otlptracehttp.WithEndpoint("api.uptrace.dev"),
 		otlptracehttp.WithHeaders(map[string]string{
 			// Set the Uptrace DSN here or use UPTRACE_DSN env var.
 			"uptrace-dsn": dsn,
