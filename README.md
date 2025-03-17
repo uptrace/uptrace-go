@@ -2,18 +2,18 @@
 
 ![build workflow](https://github.com/uptrace/uptrace-go/actions/workflows/build.yml/badge.svg)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/uptrace-go/uptrace-go)](https://pkg.go.dev/github.com/uptrace/uptrace-go/uptrace)
-[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/get/opentelemetry-go.html)
+[![Documentation](https://img.shields.io/badge/uptrace-documentation-informational)](https://uptrace.dev/get/opentelemetry-go)
 [![Chat](https://img.shields.io/badge/-telegram-red?color=white&logo=telegram&logoColor=black)](https://t.me/uptrace)
 
-<a href="https://uptrace.dev/get/opentelemetry-go.html">
-  <img src="https://uptrace.dev/get/devicon/go-original.svg" height="200px" />
+<a href="https://uptrace.dev/get/opentelemetry-go">
+  <img src="https://uptrace.dev/devicon/go-original.svg" height="200px" />
 </a>
 
 ## Introduction
 
 uptrace-go is an OpenTelemery Go distribution configured to export
-[traces](https://uptrace.dev/opentelemetry/distributed-tracing.html) and
-[metrics](https://uptrace.dev/opentelemetry/metrics.html) to Uptrace.
+[traces](https://uptrace.dev/opentelemetry/distributed-tracing) and
+[metrics](https://uptrace.dev/opentelemetry/metrics) to Uptrace.
 
 ## Quickstart
 
@@ -87,7 +87,6 @@ func main() {
 ## Links
 
 - [Examples](example)
-- [Documentation](https://uptrace.dev/get/opentelemetry-go.html)
-- [OpenTelemetry Instrumentations](https://uptrace.dev/opentelemetry/instrumentations/?lang=go)
-- [OpenTelemetry Gin](https://uptrace.dev/opentelemetry/instrumentations/go-gin.html)
-- [OpenTelemetry Golang GRPC](https://uptrace.dev/opentelemetry/instrumentations/go-grpc.html)
+- [Documentation](https://uptrace.dev/get/opentelemetry-go)
+- [OpenTelemetry Gin](https://uptrace.dev/guides/opentelemetry-gin)
+- [OpenTelemetry Golang GRPC](https://uptrace.dev/guides/opentelemetry-go-grpc)
