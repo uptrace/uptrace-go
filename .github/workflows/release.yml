@@ -11,8 +11,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ncipollo/release-action@v1
-        with:
-          body:
-            Please refer to
-            [CHANGELOG.md](https://github.com/uptrace/uptrace-go/blob/master/CHANGELOG.md) for
-            details
