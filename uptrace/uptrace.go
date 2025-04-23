@@ -33,7 +33,7 @@ func ConfigureOpentelemetry(opts ...Option) {
 		return
 	}
 
-	dsn, err := ParseDSN(conf.dsn)
+	dsn, err := ParseDSN(conf.dsn[0])
 	if err != nil {
 		internal.Logger.Printf("invalid Uptrace DSN: %s (Uptrace is disabled)", err)
 		return
@@ -52,13 +52,13 @@ func ConfigureOpentelemetry(opts ...Option) {
 
 	configurePropagator(conf)
 	if conf.tracingEnabled {
-		configureTracing(ctx, client, conf)
+		client.tp = configureTracing(ctx, conf)
 	}
 	if conf.metricsEnabled {
-		configureMetrics(ctx, client, conf)
+		client.mp = configureMetrics(ctx, conf)
 	}
 	if conf.loggingEnabled {
-		configureLogging(ctx, client, conf)
+		client.lp = configureLogging(ctx, conf)
 	}
 
 	atomicClient.Store(client)

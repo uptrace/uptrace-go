@@ -4,6 +4,7 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	"encoding/binary"
+	"log/slog"
 	"math/rand"
 	"runtime"
 	"sync"
@@ -15,11 +16,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/uptrace/uptrace-go/internal"
 )
 
-func configureTracing(ctx context.Context, client *client, conf *config) {
+func configureTracing(ctx context.Context, conf *config) *sdktrace.TracerProvider {
 	provider := conf.tracerProvider
 	if provider == nil {
 		var opts []sdktrace.TracerProviderOption
@@ -36,23 +35,31 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 		otel.SetTracerProvider(provider)
 	}
 
-	exp, err := otlptrace.New(ctx, otlpTraceClient(conf, client.dsn))
-	if err != nil {
-		internal.Logger.Printf("otlptrace.New failed: %s", err)
-		return
-	}
+	for _, dsn := range conf.dsn {
+		dsn, err := ParseDSN(dsn)
+		if err != nil {
+			slog.Error("ParseDSN failed", slog.Any("err", err))
+			continue
+		}
 
-	queueSize := queueSize()
-	bspOptions := []sdktrace.BatchSpanProcessorOption{
-		sdktrace.WithMaxQueueSize(queueSize),
-		sdktrace.WithMaxExportBatchSize(queueSize),
-		sdktrace.WithBatchTimeout(10 * time.Second),
-		sdktrace.WithExportTimeout(10 * time.Second),
-	}
-	bspOptions = append(bspOptions, conf.bspOptions...)
+		exp, err := otlptrace.New(ctx, otlpTraceClient(conf, dsn))
+		if err != nil {
+			slog.Error("otlptrace.New failed", slog.Any("err", err))
+			continue
+		}
 
-	bsp := sdktrace.NewBatchSpanProcessor(exp, bspOptions...)
-	provider.RegisterSpanProcessor(bsp)
+		queueSize := queueSize()
+		bspOptions := []sdktrace.BatchSpanProcessorOption{
+			sdktrace.WithMaxQueueSize(queueSize),
+			sdktrace.WithMaxExportBatchSize(queueSize),
+			sdktrace.WithBatchTimeout(10 * time.Second),
+			sdktrace.WithExportTimeout(10 * time.Second),
+		}
+		bspOptions = append(bspOptions, conf.bspOptions...)
+
+		bsp := sdktrace.NewBatchSpanProcessor(exp, bspOptions...)
+		provider.RegisterSpanProcessor(bsp)
+	}
 
 	// Register additional span processors.
 	for _, sp := range conf.spanProcessors {
@@ -62,13 +69,13 @@ func configureTracing(ctx context.Context, client *client, conf *config) {
 	if conf.prettyPrint {
 		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
-			internal.Logger.Printf(err.Error())
+			slog.Error("stdouttrace.New failed", slog.Any("err", err))
 		} else {
 			provider.RegisterSpanProcessor(sdktrace.NewSimpleSpanProcessor(exporter))
 		}
 	}
 
-	client.tp = provider
+	return provider
 }
 
 func otlpTraceClient(conf *config, dsn *DSN) otlptrace.Client {

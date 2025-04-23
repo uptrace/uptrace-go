@@ -2,6 +2,7 @@ package uptrace
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -13,30 +14,40 @@ import (
 	"github.com/uptrace/uptrace-go/internal"
 )
 
-func configureMetrics(ctx context.Context, client *client, conf *config) {
-	exp, err := otlpmetricClient(ctx, conf, client.dsn)
-	if err != nil {
-		internal.Logger.Printf("otlpmetricClient failed: %s", err)
-		return
+func configureMetrics(ctx context.Context, conf *config) *sdkmetric.MeterProvider {
+	opts := conf.metricOptions
+	if res := conf.newResource(); res != nil {
+		opts = append(opts, sdkmetric.WithResource(res))
 	}
 
-	reader := sdkmetric.NewPeriodicReader(
-		exp,
-		sdkmetric.WithInterval(15*time.Second),
-	)
+	for _, dsn := range conf.dsn {
+		dsn, err := ParseDSN(dsn)
+		if err != nil {
+			slog.Error("ParseDSN failed", slog.Any("err", err))
+			continue
+		}
 
-	providerOptions := append(conf.metricOptions,
-		sdkmetric.WithReader(reader),
-		sdkmetric.WithResource(conf.newResource()),
-	)
-	provider := sdkmetric.NewMeterProvider(providerOptions...)
+		exp, err := otlpmetricClient(ctx, conf, dsn)
+		if err != nil {
+			internal.Logger.Printf("otlpmetricClient failed: %s", err)
+			continue
+		}
 
+		reader := sdkmetric.NewPeriodicReader(
+			exp,
+			sdkmetric.WithInterval(15*time.Second),
+		)
+		opts = append(opts, sdkmetric.WithReader(reader))
+	}
+
+	provider := sdkmetric.NewMeterProvider(opts...)
 	otel.SetMeterProvider(provider)
-	client.mp = provider
 
 	if err := runtimemetrics.Start(); err != nil {
-		internal.Logger.Printf("runtimemetrics.Start failed: %s", err)
+		slog.Error("runtimemetrics.Start failed", slog.Any("err", err))
 	}
+
+	return provider
 }
 
 func otlpmetricClient(ctx context.Context, conf *config, dsn *DSN) (sdkmetric.Exporter, error) {

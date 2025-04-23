@@ -2,39 +2,48 @@ package uptrace
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
-	"github.com/uptrace/uptrace-go/internal"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 )
 
-func configureLogging(ctx context.Context, client *client, conf *config) {
-	exp, err := newOtlpLogExporter(ctx, conf, client.dsn)
-	if err != nil {
-		internal.Logger.Printf("otlploghttp.New failed: %s", err)
-		return
-	}
-
-	queueSize := queueSize()
-	bspOptions := []sdklog.BatchProcessorOption{
-		sdklog.WithMaxQueueSize(queueSize),
-		sdklog.WithExportMaxBatchSize(queueSize),
-		sdklog.WithExportInterval(10 * time.Second),
-		sdklog.WithExportTimeout(10 * time.Second),
-	}
-	bsp := sdklog.NewBatchProcessor(exp, bspOptions...)
-
+func configureLogging(ctx context.Context, conf *config) *sdklog.LoggerProvider {
 	var opts []sdklog.LoggerProviderOption
-	opts = append(opts, sdklog.WithProcessor(bsp))
 	if res := conf.newResource(); res != nil {
 		opts = append(opts, sdklog.WithResource(res))
 	}
 
+	for _, dsn := range conf.dsn {
+		dsn, err := ParseDSN(dsn)
+		if err != nil {
+			slog.Error("ParseDSN failed", slog.Any("err", err))
+			continue
+		}
+
+		exp, err := newOtlpLogExporter(ctx, conf, dsn)
+		if err != nil {
+			slog.Error("otlploghttp.New failed: %s", slog.Any("err", err))
+			continue
+		}
+
+		queueSize := queueSize()
+		bspOptions := []sdklog.BatchProcessorOption{
+			sdklog.WithMaxQueueSize(queueSize),
+			sdklog.WithExportMaxBatchSize(queueSize),
+			sdklog.WithExportInterval(10 * time.Second),
+			sdklog.WithExportTimeout(10 * time.Second),
+		}
+		bsp := sdklog.NewBatchProcessor(exp, bspOptions...)
+		opts = append(opts, sdklog.WithProcessor(bsp))
+	}
+
 	provider := sdklog.NewLoggerProvider(opts...)
 	global.SetLoggerProvider(provider)
-	client.lp = provider
+
+	return provider
 }
 
 func newOtlpLogExporter(

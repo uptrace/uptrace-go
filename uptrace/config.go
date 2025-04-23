@@ -17,7 +17,7 @@ import (
 )
 
 type config struct {
-	dsn string
+	dsn []string
 
 	// Common options
 
@@ -53,7 +53,7 @@ func newConfig(opts []Option) *config {
 	}
 
 	if dsn, ok := os.LookupEnv("UPTRACE_DSN"); ok {
-		conf.dsn = dsn
+		conf.dsn = []string{dsn}
 	}
 
 	for _, opt := range opts {
@@ -107,7 +107,7 @@ func (fn option) apply(conf *config) {
 // `https://<token>@uptrace.dev/<project_id>`.
 //
 // The default is to use UPTRACE_DSN environment variable.
-func WithDSN(dsn string) Option {
+func WithDSN(dsn ...string) Option {
 	return option(func(conf *config) {
 		conf.dsn = dsn
 	})
