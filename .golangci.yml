@@ -1,3 +1,4 @@
+version: '2'
 issues:
   exclude-rules:
     - text: 'Error return value of `uptrace.Shutdown` is not checked'
