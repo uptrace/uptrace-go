@@ -15,6 +15,6 @@ go_mod_tidy:
 	set -e; for dir in $(PACKAGE_DIRS); do \
 	  echo "go mod tidy in $${dir}"; \
 	  (cd "$${dir}" && \
-	    go get -u ./... && \
-	    go mod tidy -go=1.23.0); \
+		go get -u ./... && \
+		go mod tidy -go=1.24.0); \
 	done
