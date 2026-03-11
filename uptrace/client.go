@@ -7,6 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -107,15 +108,16 @@ func (c *client) reportPanic(ctx context.Context, val interface{}) {
 		defer span.End()
 	}
 
-	stackTrace := make([]byte, 2048)
+	stackTrace := make([]byte, 10 << 10)
 	n := runtime.Stack(stackTrace, false)
 
+	span.SetStatus(codes.Error, fmt.Sprint(val))
 	span.AddEvent(
-		"log",
+		"exception",
 		trace.WithAttributes(
-			attribute.String("log.severity", "panic"),
-			attribute.String("log.message", fmt.Sprint(val)),
-			attribute.String("exception.stackstrace", string(stackTrace[:n])),
+			attribute.String("exception.type", fmt.Sprintf("%T", val)),
+			attribute.String("exception.message", fmt.Sprint(val)),
+			attribute.String("exception.stacktrace", string(stackTrace[:n])),
 		),
 	)
 }
