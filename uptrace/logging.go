@@ -42,7 +42,10 @@ func configureLogging(ctx context.Context, conf *config) *sdklog.LoggerProvider 
 
 		var processor sdklog.Processor = bsp
 		if conf.logMinSeverity != log.SeverityUndefined {
-			processor = minsev.NewLogProcessor(bsp, minsev.Severity(conf.logMinSeverity))
+			// Convert from log.Severity (1-24 scale) to minsev.Severity (-8 to 15 scale).
+			const sevOffset = int(log.SeverityTrace1) - int(minsev.SeverityTrace1)
+			sev := minsev.Severity(int(conf.logMinSeverity) - sevOffset)
+			processor = minsev.NewLogProcessor(bsp, sev)
 		}
 		opts = append(opts, sdklog.WithProcessor(processor))
 	}
