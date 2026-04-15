@@ -4,7 +4,7 @@ go 1.25.0
 
 replace github.com/uptrace/uptrace-go => ../..
 
-require github.com/uptrace/uptrace-go v1.41.1
+require github.com/uptrace/uptrace-go v1.43.0
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
