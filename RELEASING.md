@@ -4,7 +4,11 @@
 
 - You are on the `master` branch with a clean working tree
 - All changes intended for the release are already merged to `master`
-- Go is installed (modules use `go mod tidy -compat=1.18`)
+- Go 1.26+ is installed (required by OpenTelemetry Go v1.47+)
+
+To upgrade dependencies (e.g. a new OpenTelemetry release), run
+`make go_mod_tidy` on a separate branch, verify that `make test` passes and the
+examples build, and merge that PR before starting the release.
 
 ## Step 1: Run the release script
 
@@ -42,7 +46,8 @@ This script:
 
 1. Verifies that `uptrace/version.go` contains the version
 2. Creates and pushes the main tag (`v1.42.0`)
-3. Creates and pushes tags for sub-packages (e.g. `extra/otellogrus/v1.42.0`)
+3. Creates and pushes tags for nested Go modules, excluding `example/` and
+   `internal/` (currently there are none, so only the main tag is pushed)
 
 ## Step 4: Verify the GitHub release
 
