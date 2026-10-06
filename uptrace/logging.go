@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"go.opentelemetry.io/contrib/processors/minsev"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/log"
-	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 )
 
@@ -51,7 +51,7 @@ func configureLogging(ctx context.Context, conf *config) *sdklog.LoggerProvider 
 	}
 
 	provider := sdklog.NewLoggerProvider(opts...)
-	global.SetLoggerProvider(provider)
+	otel.SetLoggerProvider(provider)
 
 	return provider
 }

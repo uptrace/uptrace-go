@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -82,7 +81,7 @@ func configureLogging(ctx context.Context, dsn string, resource *resource.Resour
 		sdklog.WithResource(resource),
 	)
 
-	global.SetLoggerProvider(provider)
+	otel.SetLoggerProvider(provider)
 
 	return func() {
 		provider.Shutdown(ctx)
